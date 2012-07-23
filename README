@@ -1,1 +1,9 @@
 ShowStaff
+
+[Настройка]
+ - Скопировать app/config/parameters.ini.dist в app/config/parameters.ini и установить собственные параметры к базе данных.
+ - Выполнить php bin/vendors install
+
+[Документация по Symfony2]
+http://symfony-gu.ru/documentation/ru/html/index.html
+
