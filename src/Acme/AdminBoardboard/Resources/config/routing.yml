@@ -1,0 +1,4 @@
+
+adminboard:
+       pattern: adminboard
+       defaults: {_controller: AcmeAdminBoard:Hello:index}
