@@ -5,4 +5,4 @@
 
 adminboard:
       pattern: /adminboard/{name}
-      defaults: {_controller: AcmeAdminBoard:AdminBoard:index}
+      defaults: {_controller: AcmeAdminBoardBundle:AdminBoard:index}
