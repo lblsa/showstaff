@@ -3,6 +3,7 @@ namespace Acme\AdminBoard\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class AdminBoardController extends Controller
@@ -11,7 +12,7 @@ class AdminBoardController extends Controller
   {
 
  
-       return new Responce()'<html><body>Hello ' . $name. '!</body></html>';
+       return new Response()'<html><body>Hello ' . $name. '!</body></html>';
 
   }
 
