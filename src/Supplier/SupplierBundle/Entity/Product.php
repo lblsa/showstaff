@@ -35,6 +35,11 @@ class Product
      */
     private $unit;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="Company")
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    protected $company;
 
     /**
      * Get id
@@ -84,5 +89,25 @@ class Product
     public function getUnit()
     {
         return $this->unit;
+    }
+
+    /**
+     * Set company
+     *
+     * @param Supplier\SupplierBundle\Entity\Company $company
+     */
+    public function setCompany(\Supplier\SupplierBundle\Entity\Company $company)
+    {
+        $this->company = $company;
+    }
+
+    /**
+     * Get company
+     *
+     * @return Supplier\SupplierBundle\Entity\Company 
+     */
+    public function getCompany()
+    {
+        return $this->company;
     }
 }

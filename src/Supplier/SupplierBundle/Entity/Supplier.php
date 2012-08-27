@@ -34,6 +34,12 @@ class Supplier
 
 
     /**
+     * @ORM\ManyToOne(targetEntity="Company")
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    protected $company;
+    
+    /**
      * Get id
      *
      * @return integer 
@@ -62,5 +68,25 @@ class Supplier
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Set company
+     *
+     * @param Supplier\SupplierBundle\Entity\Company $company
+     */
+    public function setCompany(\Supplier\SupplierBundle\Entity\Company $company)
+    {
+        $this->company = $company;
+    }
+
+    /**
+     * Get company
+     *
+     * @return Supplier\SupplierBundle\Entity\Company 
+     */
+    public function getCompany()
+    {
+        return $this->company;
     }
 }
