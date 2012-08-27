@@ -45,14 +45,14 @@ class SupplierProducts
 
     /**
      * @ORM\ManyToOne(targetEntity="Product")
-     * @ORM\JoinColumn(name="product_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="product_id", referencedColumnName="id", onDelete="CASCADE")
      */
     protected $product;
 
 	//, inversedBy="products"
     /**
      * @ORM\ManyToOne(targetEntity="Supplier")
-     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", onDelete="CASCADE")
      */
     protected $supplier;
 

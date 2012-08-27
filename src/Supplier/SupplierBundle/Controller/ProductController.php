@@ -20,12 +20,23 @@ class ProductController extends Controller
 							'5' => 'бутылка',);
 	
     /**
-     * @Route("/product/index/{name}")
-     * @Template()
+     * @Route("/product/del/{id}", name="product_del")
      */
-    public function indexAction($name)
+    public function delAction($id)
     {
-        return array('name' => $name);
+		$product = $this->getDoctrine()
+						->getRepository('SupplierBundle:Product')
+						->find($id);
+						
+		if (!$product) {
+			throw $this->createNotFoundException('No product found for id '.$id);
+		}
+		
+		$em = $this->getDoctrine()->getEntityManager();				
+		$em->remove($product);
+		$em->flush();
+			
+        return $this->redirect($this->generateUrl('product_list'));
     }
     
 
@@ -69,6 +80,10 @@ class ProductController extends Controller
 						->getRepository('SupplierBundle:Product')
 						->find($id);
 		
+		if (!$product) {
+			throw $this->createNotFoundException('No product found for id '.$id);
+		}
+		
 		$form = $this->createForm(new ProductType($this->unit), $product);
 					
 		if ($request->getMethod() == 'POST')
@@ -97,8 +112,7 @@ class ProductController extends Controller
 	 */
 	public function listAction()
 	{
-		$repository = $this->getDoctrine()->getRepository('SupplierBundle:Product');
-		$products = $repository->findAll();
+		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
 		
 		return array( 'products' => $products, 'unit' => $this->unit);
 	}

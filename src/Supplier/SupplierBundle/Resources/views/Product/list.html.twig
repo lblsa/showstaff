@@ -11,6 +11,7 @@
 						<th>#</th>
 						<th>Name</th>
 						<th>Unit</th>
+						<th>Delete</th>
 					</tr>
 					 {% for product in products %}
 						<tr>
@@ -23,6 +24,11 @@
 								</p>
 							</td>
 							<td>{% if unit[product.unit] is defined  %}{{ unit[product.unit] }}{% endif %}</td>
+							<td>
+								<a href="{{ path('product_del', { 'id': product.id }) }}" class="btn btn-link del" title="Delete Item">
+									<i class="icon-remove"></i>
+								</a>
+							</td>
 						</tr>
 					{% else %}
 						<tr>

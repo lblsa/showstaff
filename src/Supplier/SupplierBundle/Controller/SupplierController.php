@@ -12,6 +12,28 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
 class SupplierController extends Controller
 {
+	
+    /**
+     * @Route("/supplier/del/{id}", name="supplier_del")
+     */
+    public function delAction($id)
+    {
+		$supplier = $this->getDoctrine()
+						->getRepository('SupplierBundle:Supplier')
+						->find($id);
+						
+		if (!$supplier) {
+			throw $this->createNotFoundException('No Supplier found for id '.$id);
+		}
+		
+		$em = $this->getDoctrine()->getEntityManager();		
+		$em->remove($supplier);
+		$em->flush();
+			
+        return $this->redirect($this->generateUrl('supplier_list'));
+    }
+	
+	
     /**
      * @Route("/supplier/create", name="supplier_create")
      * @Template()

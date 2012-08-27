@@ -20,6 +20,28 @@ class SupplierProductsController extends Controller
 							'4' => 'пучок',
 							'5' => 'бутылка',);
 	
+	
+	
+    /**
+     * @Route("/supplier/products/del/{id}", name="supplier_products_del")
+     */
+    public function delAction($id)
+    {
+		$supplier_product = $this->getDoctrine()
+						->getRepository('SupplierBundle:SupplierProducts')
+						->find($id);
+						
+		if (!$supplier_product) {
+			throw $this->createNotFoundException('No Supplier Products found for id '.$id);
+		}
+		
+		$em = $this->getDoctrine()->getEntityManager();					
+		$em->remove($supplier_product);
+		$em->flush();
+			
+        return $this->redirect($this->generateUrl('supplier_products_list'));
+    }
+	
 	 /**
      * @Route("/supplier/products/create", name="supplier_products_create")
      * @Template()
