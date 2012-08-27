@@ -1,0 +1,38 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+		<h2>Products</h2>
+			{% if products is defined and products|length > 0 %}
+				<table class="table table-striped">
+					<tr>
+						<th>#</th>
+						<th>Name</th>
+						<th>Unit</th>
+					</tr>
+					 {% for product in products %}
+						<tr>
+							<td>{{ product.id }}</td>
+							<td>
+								<p>
+									<a href="{{ path('product_edit', { 'id': product.id }) }}" class="btn btn-link">
+									<i class="icon-edit"></i>
+									</a>&nbsp;{{ product.name }}
+								</p>
+							</td>
+							<td>{% if unit[product.unit] is defined  %}{{ unit[product.unit] }}{% endif %}</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="3"><div class="alert alert-error">Empty Result</div></td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% else %}
+				<div class="alert alert-error">Empty Result</div>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

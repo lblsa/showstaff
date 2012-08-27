@@ -1,0 +1,13 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+	<div class="hero-unit">
+		<h2>Add Product</h2>
+		<form action="{{ path('product_create') }}" method="post" {{ form_enctype(form) }}>
+			{{ form_widget(form) }}
+
+			<input type="submit" value="Add" />
+		</form>
+	</div>
+
+{% endblock %}
