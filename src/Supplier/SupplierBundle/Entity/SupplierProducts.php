@@ -40,8 +40,21 @@ class SupplierProducts
      *
      * @ORM\Column(name="supplier_name", type="string", length=255)
      */
-    private $supplier_name;
+    private $supplierName;
 
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Product")
+     * @ORM\JoinColumn(name="product_id", referencedColumnName="id")
+     */
+    protected $product;
+
+	//, inversedBy="products"
+    /**
+     * @ORM\ManyToOne(targetEntity="Supplier")
+     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id")
+     */
+    protected $supplier;
 
     /**
      * Get id
@@ -100,7 +113,7 @@ class SupplierProducts
      */
     public function setSupplierName($supplierName)
     {
-        $this->supplier_name = $supplierName;
+        $this->supplierName = $supplierName;
     }
 
     /**
@@ -110,6 +123,46 @@ class SupplierProducts
      */
     public function getSupplierName()
     {
-        return $this->supplier_name;
+        return $this->supplierName;
+    }
+
+    /**
+     * Set product
+     *
+     * @param Supplier\SupplierBundle\Entity\Product $product
+     */
+    public function setProduct(\Supplier\SupplierBundle\Entity\Product $product)
+    {
+        $this->product = $product;
+    }
+
+    /**
+     * Get product
+     *
+     * @return Supplier\SupplierBundle\Entity\Product 
+     */
+    public function getProduct()
+    {
+        return $this->product;
+    }
+
+    /**
+     * Set supplier
+     *
+     * @param Supplier\SupplierBundle\Entity\Supplier $supplier
+     */
+    public function setSupplier(\Supplier\SupplierBundle\Entity\Supplier $supplier)
+    {
+        $this->supplier = $supplier;
+    }
+
+    /**
+     * Get supplier
+     *
+     * @return Supplier\SupplierBundle\Entity\Supplier 
+     */
+    public function getSupplier()
+    {
+        return $this->supplier;
     }
 }

@@ -12,4 +12,56 @@ use Doctrine\ORM\EntityRepository;
  */
 class SupplierProductsRepository extends EntityRepository
 {
+	
+	public function get()
+	{
+		$em = $this->getEntityManager();
+		$qb = $em->createQueryBuilder();
+		$qb->addSelect("supplier_products");
+		$qb->addSelect("product");
+		$qb->addSelect("supplier");
+
+		$qb->from('SupplierBundle:SupplierProducts','supplier_products');
+
+		$qb->leftJoin('supplier_products.product',  'product');
+		$qb->leftJoin('supplier_products.supplier',  'supplier');
+
+		$query = $qb->getQuery();
+
+		//die('DQL ' . $query->getSQL());
+		return $query->getResult();
+	}
+	
+	public function findAllOrderedBySupplier()
+	{
+		$query = $this->getEntityManager()
+			->createQuery('
+				SELECT a, p, c FROM AcmeStoreBundle:Product a
+				JOIN a.category p
+				JOIN a.supplier c');
+
+		try {
+			return $query->getResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			return null;
+		}
+            
+     }
+     
+     public function findByIdJoinedToProductSupplier($id) 
+     {    
+		$query = $this->getEntityManager()
+			->createQuery('
+				SELECT a, p, c FROM SupplierBundle:SupplierProducts p
+				JOIN p.product c
+				WHERE p.id = :id'
+			)->setParameter('id', $id);
+
+		try {
+			return $query->getSingleResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			return null;
+		}
+    }
+	
 }
