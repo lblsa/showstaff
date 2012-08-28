@@ -31,7 +31,7 @@ class SupplierProducts
     /**
      * @var boolean $prime
      *
-     * @ORM\Column(name="prime", type="boolean")
+     * @ORM\Column(name="primary_supplier", type="boolean")
      */
     private $prime;
 

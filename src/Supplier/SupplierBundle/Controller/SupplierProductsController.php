@@ -103,15 +103,48 @@ class SupplierProductsController extends Controller
 	
 	/**
 	 * @Route("/supplier/products/list", name="supplier_products_list")
+	 * @Route("/supplier/products/list.json", name="supplier_products_list_json")
 	 * @Template()
 	 */
 	public function listAction()
     {
-		
+		$request = Request::createFromGlobals();
+		$uri = $request->getPathInfo();
+	
 		$supplier_products = $this->getDoctrine()
 					->getRepository('SupplierBundle:SupplierProducts')
 					->get();
-					
-		return array('supplier_products' => $supplier_products, 'unit' => $this->unit);
+		if ($uri == '/supplier/products/list.json')
+		{
+			 $products_array = array();
+			 $success = 1;
+			 
+			 if (isset($supplier_products) && count($supplier_products) > 0)
+				foreach ($supplier_products AS $p)
+					$products_array[] = array(
+											'id' => $p->getId(), 
+											'supplier_name'=>$p->getSupplierName(), 
+											'primary_supplier'=>$p->getPrime(), 
+											'price'=>$p->getPrice(), 
+											'product'=>$p->getProduct()->getName(), 
+											'supplier'=>$p->getSupplier()->getName(), 
+											'unit' => isset($this->unit[$p->getProduct()->getUnit()])?$this->unit[$p->getProduct()->getUnit()]:'не установлен',
+											
+											);
+			 else
+				$success = 0;
+
+			 $result = array('success' => $success, 'result' =>$products_array);
+				
+			 $response = new Response(json_encode($products_array), 200);
+			 $response->headers->set('Content-Type', 'application/json');
+			 $response->sendContent();
+			 die();
+		}
+		else
+		{			
+			return array('supplier_products' => $supplier_products, 'unit' => $this->unit);
+		}
 	}
+	
 }

@@ -12,6 +12,15 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
 class SupplierController extends Controller
 {
+    /**
+     * @Route("/supplier", name="supplier")
+     * @Template()
+     */    
+    public function indexAction()
+    {
+		return array();
+	}
+	
 	
     /**
      * @Route("/supplier/del/{id}", name="supplier_del")

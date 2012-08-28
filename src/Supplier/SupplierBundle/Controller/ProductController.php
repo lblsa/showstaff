@@ -108,12 +108,44 @@ class ProductController extends Controller
 	
 	/**
 	 * @Route("/product/list", name="product_list")
+	 * @Route("/product/list.json", name="product_list_json")
 	 * @Template()
 	 */
 	public function listAction()
 	{
-		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
 		
-		return array( 'products' => $products, 'unit' => $this->unit);
+		$request = Request::createFromGlobals();
+		$uri = $request->getPathInfo();
+		
+		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
+
+		if ($uri == '/product/list.json')
+		{
+			 $products_array = array();
+			 $success = 1;
+			 
+			 if (isset($products) && count($products) > 0)
+			 {
+				foreach ($products AS $p)
+				{
+					//$products_array[$p->getId()] = array( 'name'=>$p->getName(), 'unit' => isset($this->unit[$p->getUnit()])?$this->unit[$p->getUnit()]:'не установлен');
+					$products_array[] = array( 'id' => $p->getId(), 'name'=>$p->getName(), 'unit' => isset($this->unit[$p->getUnit()])?$this->unit[$p->getUnit()]:'не установлен');
+				}
+			 }
+			 else
+			 {
+				$success = 0;
+			 }
+			 $result = array('success' => $success, 'result' =>$products_array);
+				
+			 $response = new Response(json_encode($products_array), 200);
+			 $response->headers->set('Content-Type', 'application/json');
+			 $response->sendContent();
+			 die();
+		}
+		else
+		{
+			return array( 'products' => $products, 'unit' => $this->unit);
+		}
 	}
 }

@@ -1,9 +1,50 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
 {% block body %}
-	<div class="hero-unit">
-		<h1>Hello {{ name }}!</h1>
-		<p>This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
-		<p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+	<div class="row-fluid">
+	  <div class="span4">
+		
+		<table class="table table-bordered table-striped" id="product_list">
+		 <thead>
+		  <tr>
+			<th>Название
+				<a href="#" class=""><i class="icon-arrow-up"></i></a>
+				<a href="#" class=""><i class="icon-arrow-down"></i></a>
+			</th>
+			<th>Еденица
+				<a href="#" class=""><i class="icon-arrow-up"></i></a>
+				<a href="#" class=""><i class="icon-arrow-down"></i></a>
+			</th>
+		  </tr>
+		 </thead>
+		</table>
+	  
+	  </div>
+	  <div class="span8">
+	 
+		<table class="table table-bordered table-striped" id="supplier_product_list">
+		  <thead>
+			  <tr>
+				<th>Название
+					<a href="#" class=""><i class="icon-arrow-up"></i></a>
+					<a href="#" class=""><i class="icon-arrow-down"></i></a>
+				</th>
+				<th>Цена
+					<a href="#" class=""><i class="icon-arrow-up"></i></a>
+					<a href="#" class=""><i class="icon-arrow-down"></i></a>
+				</th>
+				<th>Еденица
+					<a href="#" class=""><i class="icon-arrow-up"></i></a>
+					<a href="#" class=""><i class="icon-arrow-down"></i></a>
+				</th>
+				<th>Первичный
+					<a href="#" class=""><i class="icon-arrow-up"></i></a>
+					<a href="#" class=""><i class="icon-arrow-down"></i></a>
+				</th>
+			  </tr>
+		  </thead>
+		</table>
+	 
+	  </div>
 	</div>
 {% endblock %}
