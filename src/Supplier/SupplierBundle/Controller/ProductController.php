@@ -108,44 +108,85 @@ class ProductController extends Controller
 	
 	/**
 	 * @Route("/product/list", name="product_list")
-	 * @Route("/product/list.json", name="product_list_json")
 	 * @Template()
 	 */
 	public function listAction()
-	{
-		
-		$request = Request::createFromGlobals();
-		$uri = $request->getPathInfo();
-		
+	{		
 		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
-
-		if ($uri == '/product/list.json')
-		{
-			 $products_array = array();
-			 $success = 1;
+		return array( 'products' => $products, 'unit' => $this->unit);
+	}
+	
+	/**
+	 * @Route("/product/json/{id}", name="product_json_put")
+	 */
+	 public function eventAction()
+	 {
+		 if ($_POST['_method'] == 'PUT' && isset($_POST['model']))
+		 {
+			 $model = (array)json_decode($_POST['model']);
 			 
-			 if (isset($products) && count($products) > 0)
+			 if (isset($model['id']) && is_numeric($model['id']))
 			 {
-				foreach ($products AS $p)
-				{
-					//$products_array[$p->getId()] = array( 'name'=>$p->getName(), 'unit' => isset($this->unit[$p->getUnit()])?$this->unit[$p->getUnit()]:'не установлен');
-					$products_array[] = array( 'id' => $p->getId(), 'name'=>$p->getName(), 'unit' => isset($this->unit[$p->getUnit()])?$this->unit[$p->getUnit()]:'не установлен');
+				$product = $this->getDoctrine()
+								->getRepository('SupplierBundle:Product')
+								->find($model['id']);
+				
+				if (!$product) {
+					echo json_encode(array('success'=>0));
+					die();
+				}
+				
+				$validator = $this->get('validator');
+    
+				$product->setName($model['name']);
+				$product->setUnit((int)$model['unit']);
+				
+				$errors = $validator->validate($product);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+						
+					echo json_encode(array('success'=>0, 'errors'=>$errorMessage));
+					die();
+					
+				} else {
+					
+					$em = $this->getDoctrine()->getEntityManager();
+					$em->persist($product);
+					$em->flush();
+					
+					echo json_encode(array('success'=>1, 'id'=>$product->getId() ));
+					die();
+				
 				}
 			 }
-			 else
-			 {
-				$success = 0;
-			 }
-			 $result = array('success' => $success, 'result' =>$products_array);
-				
-			 $response = new Response(json_encode($products_array), 200);
-			 $response->headers->set('Content-Type', 'application/json');
-			 $response->sendContent();
-			 die();
-		}
-		else
-		{
-			return array( 'products' => $products, 'unit' => $this->unit);
-		}
-	}
+			 
+		 }
+	 }
+	 
+	
+	/**
+	 * @Route("/product/json", name="product_json")
+	 */
+	 public function jsonAction()
+	 { 
+		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
+		 $products_array = array();
+		
+		 if ($products)
+			foreach ($products AS $p)
+				$products_array[] = array( 	'id' => $p->getId(),
+											'name'=> $p->getName(), 
+											'unit' => $p->getUnit(),
+											);
+
+		 //$result = array('success' => $success, 'result' =>$products_array);
+			
+		 $response = new Response(json_encode($products_array), 200);
+		 $response->headers->set('Content-Type', 'application/json');
+		 $response->sendContent();
+		 die(); 
+	 }
 }

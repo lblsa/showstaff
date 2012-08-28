@@ -5622,3 +5622,10 @@ a.badge:hover {
 .affix {
   position: fixed;
 }
+.row-fluid .span6.unit {
+  width:100px;
+}
+
+.table td.p_unit {
+  width:230px;
+}

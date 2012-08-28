@@ -2,6 +2,7 @@
 
 namespace Supplier\SupplierBundle\Entity;
 
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -18,6 +19,8 @@ class Product
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
+	 * @Assert\NotBlank()
+     * @Assert\Type(type="integer", message="Id '{{ value }}' is not a valid {{ type }}.")
      */
     private $id;
 
@@ -25,6 +28,10 @@ class Product
      * @var string $name
      *
      * @ORM\Column(name="name", type="string", length=255)
+	 * @Assert\NotBlank()
+	 * @Assert\Type(type="string", message="Name '{{ value }}' is not a valid {{ type }}.")
+     * @Assert\MinLength(3)
+     * @Assert\MaxLength(255)
      */
     private $name;
 
@@ -32,12 +39,17 @@ class Product
      * @var integer $unit
      *
      * @ORM\Column(name="unit", type="integer", length=11)
+	 * @Assert\NotBlank()
+	 * @Assert\Type(type="integer", message="Unit '{{ value }}' is not a valid {{ type }}.")
+     * @Assert\Min(1)
+     * @Assert\Max(10)
      */
     private $unit;
 
     /**
      * @ORM\ManyToOne(targetEntity="Company")
      * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
+     * @Assert\Type(type="integer", message="Company '{{ value }}' is not a valid {{ type }}.")
      */
     protected $company;
 
