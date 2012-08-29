@@ -119,13 +119,13 @@ class ProductController extends Controller
 	/**
 	 * @Route("/product/json/{id}", name="product_json_put")
 	 */
-	 public function eventAction()
+	 public function eventAction($id)
 	 {
-		 if ($_POST['_method'] == 'PUT' && isset($_POST['model']))
+		 if (isset($_POST['_method']) && $_POST['_method'] == 'PUT' && isset($_POST['model']))
 		 {
 			 $model = (array)json_decode($_POST['model']);
 			 
-			 if (isset($model['id']) && is_numeric($model['id']))
+			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
 			 {
 				$product = $this->getDoctrine()
 								->getRepository('SupplierBundle:Product')
@@ -157,12 +157,35 @@ class ProductController extends Controller
 					$em->persist($product);
 					$em->flush();
 					
-					echo json_encode(array('success'=>1, 'id'=>$product->getId() ));
+					$attr = array('name' => $product->getName(), 'unit' => $product->getUnit());
+					
+					echo json_encode($attr);
+					//echo json_encode(array('success'=>1, 'id'=>$product->getId() ));
 					die();
 				
 				}
 			 }
 			 
+		 } else if (isset($_POST['_method']) && $_POST['_method'] == 'DELETE') {
+			 
+			$product = $this->getDoctrine()
+						->getRepository('SupplierBundle:Product')
+						->find($id);
+						
+			if (!$product) {
+				echo 0;
+				die();
+			}
+			
+			$em = $this->getDoctrine()->getEntityManager();				
+			$em->remove($product);
+			$em->flush();
+			 
+			 echo $id;
+			 die();
+		 } else {
+			 echo json_encode(array('success'=>0));
+			die(); 
 		 }
 	 }
 	 

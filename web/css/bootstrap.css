@@ -5625,7 +5625,9 @@ a.badge:hover {
 .row-fluid .span6.unit {
   width:100px;
 }
-
 .table td.p_unit {
-  width:230px;
+  width:200px;
+}
+.table td.p_name {
+  width:140px;
 }
