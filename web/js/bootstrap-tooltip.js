@@ -265,11 +265,11 @@
   $.fn.tooltip.defaults = {
     animation: true
   , placement: 'top'
-  , selector: false
+  , selector: 'td'
   , template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
   , trigger: 'hover'
   , title: ''
-  , delay: 0
+  , delay: { show: 100, hide: 0 }
   }
 
 }(window.jQuery);

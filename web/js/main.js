@@ -30,9 +30,8 @@ var ViewProducts = Backbone.View.extend({
 			var view = new ViewProduct({model:model});
 			var content = view.render().el;
 			this.$('.products').append(content);
-		})	
+		});
 	},
-
 });
 
 // view one product
@@ -41,7 +40,7 @@ var ViewProduct = Backbone.View.extend({
 	tagName: "tr",
 	className: "product",
 	
-	template: _.template(	'<td class="p_name"><%= name %></td>'+
+	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= name %></td>'+
 							'<td class="p_unit"><% print(units[unit]); %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
@@ -61,12 +60,7 @@ var ViewProduct = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		return this;
-	},
-	
-	renderJSON: function(){
-		var content = this.template(this.model);
-		this.$el.html(content);
+		$('.product').tooltip();  
 		return this;
 	},
 	
@@ -101,9 +95,6 @@ var ViewProduct = Backbone.View.extend({
 		return false;
 	},
 	
-	add: function() {
-		alert(45);
-	}
 })
 
 
@@ -181,6 +172,7 @@ var ProductsModel = Backbone.Model.extend({
 				   var view = new ViewProduct({model:model});
 				   var content = view.render().el;
 				   $('.products').prepend(content);
+				   $('.product').tooltip();  
 				   $('.name_add').val('');
 				   $(".alert-success").clone().appendTo('#form_add');
 				   $("#form_add .alert-success").fadeIn();
@@ -305,6 +297,7 @@ products.fetch();
 $(document).ready(function(){
 	
 	$('.create').toggle(function() {
+		$('i', this).attr('class', 'icon-minus-sign');
 		var option = '';
 		for(var key in units) {
 			option += '<option value="'+key+'" >'+units[key]+'</option>';
@@ -314,6 +307,7 @@ $(document).ready(function(){
 		$('.name_add').focus();
 		return false;
 	}, function() {
+		$('i', this).attr('class', 'icon-plus-sign');
 		$('#form_add').slideUp();
 		return false;
 	});
