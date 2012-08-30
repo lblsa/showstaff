@@ -19,7 +19,6 @@ class Product
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
-	 * @Assert\NotBlank()
      * @Assert\Type(type="integer", message="Id '{{ value }}' is not a valid {{ type }}.")
      */
     private $id;
@@ -40,7 +39,7 @@ class Product
      *
      * @ORM\Column(name="unit", type="integer", length=11)
 	 * @Assert\NotBlank()
-	 * @Assert\Type(type="integer", message="Unit '{{ value }}' is not a valid {{ type }}.")
+	 * @Assert\Type(type="numeric", message="Unit '{{ value }}' is not a valid {{ type }}.")
      * @Assert\Min(1)
      * @Assert\Max(10)
      */

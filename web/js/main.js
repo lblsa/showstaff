@@ -2,6 +2,50 @@
  * Delete product OR supplier_products
  ***************************************/
 $(document).ready(function(){
+	
+	var Products = Backbone.Collection.extend({
+	  
+	  model: ProductsModel,
+	  
+	  url: '/product/json',
+	  
+	  initialize: function(){
+		  this.bind('add', this.addProduct);
+	  },
+	  
+	  addProduct: function(product){
+		product.save();
+		var view = new ViewProduct({model:product});
+		var content = view.render().el;
+		$('.products').append(content);
+	  }
+	  
+	});
+	
+	products = new Products; // init collection
+	var view_products = new ViewProducts({collection: products}); // initialize view
+	$('#product_list').append(view_products.render().el); // add template
+	products.fetch();
+	
+	$('.create').toggle(function() {
+		var option = '';
+		for(var key in units) {
+			option += '<option value="'+key+'" >'+units[key]+'</option>';
+		}
+		$('#form_add').slideDown();
+		$('.unit_add').html(option);
+		$('.name_add').focus();
+		return false;
+	}, function() {
+		$('#form_add').slideUp();
+		return false;
+	});
+	
+	$('.add_product').click(function() {
+		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
+		return false;
+	})
+	
     $('.del').click(function(){
 		return confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?");
 	});
@@ -74,7 +118,7 @@ var ViewProduct = Backbone.View.extend({
 	
 	render: function(){
 		var content = this.template(this.model.toJSON());
-		this.$el.append(content);
+		this.$el.html(content);
 		return this;
 	},
 	
@@ -105,7 +149,7 @@ var ViewProduct = Backbone.View.extend({
 
 	remove: function() {
 		if ( confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?") ) {
-			this.model.destroy({wait: true});
+			this.model.destroy({wait: true });
 		}
 	},
 	
@@ -117,11 +161,27 @@ var ViewProduct = Backbone.View.extend({
 
 // Model products
 var ProductsModel = Backbone.Model.extend({
+  save: function(key, value, options) {
+	  alert('save');
+  },
+  
+  methodUrl:  function(method){
+	if(method == "delete"){
+			return "/product/" + this.attributes.id+"/delete";
+		}else if(method == "update"){
+			return "/product/" + this.attributes.id+"/update";
+		}else if(method == "create"){
+			return "/product/create";
+		} 
+		return false;
+  },
+
   sync: function(method, model, options) {
         var productOptions = options;
         
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
+				console.log(status);
 				if (resp == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
@@ -149,55 +209,13 @@ var ProductsModel = Backbone.Model.extend({
 			};
 		}
 		
+        if (model.methodUrl && model.methodUrl(method.toLowerCase())) {
+      	   options = options || {};
+      	   options.url = model.methodUrl(method.toLowerCase());
+        }
+		
 		Backbone.sync.call(this, method, model, productOptions);
    }
-});
-
-
-$(document).ready(function () {
-
-	var Products = Backbone.Collection.extend({
-	  
-	  model: ProductsModel,
-	  
-	  url: '/product/json',
-	  
-	  initialize: function(){
-		  this.bind('add', this.addProduct);
-	  },
-	  
-	  addProduct: function(product){
-		product.save({wait: true});
-		var view = new ViewProduct({model:product});
-		var content = view.render().el;
-		$('.products').append(content);
-	  }
-	  
-	});
-	
-	products = new Products; // init collection
-	var view_products = new ViewProducts({collection: products}); // initialize view
-	$('#product_list').append(view_products.render().el); // add template
-	products.fetch();
-	
-	$('.create').toggle(function() {
-		var option = '';
-		for(var key in units) {
-			option += '<option value="'+key+'" >'+units[key]+'</option>';
-		}
-		$('#form_add').slideDown();
-		$('.unit_add').html(option);
-		$('.name_add').focus();
-		return false;
-	}, function() {
-		$('#form_add').slideUp();
-		return false;
-	});
-	
-	$('.add_product').click(function() {
-		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
-		return false;
-	})
 });
 
 /****************************************

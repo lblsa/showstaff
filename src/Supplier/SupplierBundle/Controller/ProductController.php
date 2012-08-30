@@ -117,9 +117,9 @@ class ProductController extends Controller
 	}
 	
 	/**
-	 * @Route("/product/json/{id}", name="product_json_put")
+	 * @Route("/product/{id}/update", name="product_ajax_update")
 	 */
-	 public function eventAction($id)
+	 public function ajaxupdateAction($id)
 	 {
 		 if (isset($_POST['_method']) && $_POST['_method'] == 'PUT' && isset($_POST['model']))
 		 {
@@ -166,23 +166,6 @@ class ProductController extends Controller
 				}
 			 }
 			 
-		 } else if (isset($_POST['_method']) && $_POST['_method'] == 'DELETE') {
-			 
-			$product = $this->getDoctrine()
-						->getRepository('SupplierBundle:Product')
-						->find($id);
-						
-			if (!$product) {
-				echo 0;
-				die();
-			}
-			
-			$em = $this->getDoctrine()->getEntityManager();				
-			$em->remove($product);
-			$em->flush();
-			 
-			 echo $id;
-			 die();
 		 } else {
 			 echo json_encode(array('success'=>0));
 			die(); 
@@ -191,9 +174,57 @@ class ProductController extends Controller
 	 
 	
 	/**
+	 * @Route("/product/{id}/delete", name="product_ajax_delete")
+	 */
+	public function ajaxdeleteAction($id)
+	{
+		$product = $this->getDoctrine()
+					->getRepository('SupplierBundle:Product')
+					->find($id);
+					
+		if (!$product) {
+			echo 0;
+			die();
+		}
+		
+		if(0){
+			$em = $this->getDoctrine()->getEntityManager();				
+			$em->remove($product);
+			$em->flush();
+		}
+		
+		echo $id;
+		die();
+	}
+	
+	
+	/**
 	 * @Route("/product/json", name="product_json")
 	 */
 	 public function jsonAction()
+	 { 
+		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
+		 $products_array = array();
+		
+		 if ($products)
+			foreach ($products AS $p)
+				$products_array[] = array( 	'id' => $p->getId(),
+											'name'=> $p->getName(), 
+											'unit' => $p->getUnit(),
+											);
+
+		 //$result = array('success' => $success, 'result' =>$products_array);
+			
+		 $response = new Response(json_encode($products_array), 200);
+		 $response->headers->set('Content-Type', 'application/json');
+		 $response->sendContent();
+		 die(); 
+	 }
+	
+	/**
+	 * @Route("/product/create", name="product_ajax_create")
+	 */
+	 public function ajaxcreateAction()
 	 { 
 		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
 		 $products_array = array();
