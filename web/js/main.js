@@ -1,62 +1,4 @@
 /****************************************
- * Delete product OR supplier_products
- ***************************************/
-$(document).ready(function(){
-	
-	var Products = Backbone.Collection.extend({
-	  
-	  model: ProductsModel,
-	  
-	  url: '/product/json',
-	  
-	  initialize: function(){
-		  this.bind('add', this.addProduct);
-	  },
-	  
-	  addProduct: function(product){
-		product.save();
-		var view = new ViewProduct({model:product});
-		var content = view.render().el;
-		$('.products').append(content);
-	  }
-	  
-	});
-	
-	products = new Products; // init collection
-	var view_products = new ViewProducts({collection: products}); // initialize view
-	$('#product_list').append(view_products.render().el); // add template
-	products.fetch();
-	
-	$('.create').toggle(function() {
-		var option = '';
-		for(var key in units) {
-			option += '<option value="'+key+'" >'+units[key]+'</option>';
-		}
-		$('#form_add').slideDown();
-		$('.unit_add').html(option);
-		$('.name_add').focus();
-		return false;
-	}, function() {
-		$('#form_add').slideUp();
-		return false;
-	});
-	
-	$('.add_product').click(function() {
-		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
-		return false;
-	})
-	
-    $('.del').click(function(){
-		return confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?");
-	});
-	
-    $('.del_supplier_product').click(function(){
-		return confirm ("Вы действительно хотите удалить элемент?");
-	});
-})
-
-
-/****************************************
  * Products
  ****************************************/
 var units = {1:'кг', 
@@ -67,6 +9,7 @@ var units = {1:'кг',
 
 Backbone.emulateHTTP = true;
 Backbone.emulateJSON = true;
+
 // view list products
 var ViewProducts = Backbone.View.extend({
 	
@@ -123,7 +66,8 @@ var ViewProduct = Backbone.View.extend({
 	},
 	
 	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="'+ this.model.get('name') +'">');
+		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
+		$('.p_name input', this.el).val(this.model.get('name'));
 		var option = '';
 		for(var key in units) {
 			option += '<option value="'+key+'"'+ ((this.model.get('unit') == key)?' selected="selected"':'') +'>'+units[key]+'</option>';
@@ -138,9 +82,9 @@ var ViewProduct = Backbone.View.extend({
 		this.model.save({
 						name: $('.name', this.el).val(), 
 						unit: $('.unit', this.el).val()
-						});
+						},{wait: true});
 		
-		return this.render().el;
+		//return this.render().el;
 	},
 	
 	cancel: function() {
@@ -151,19 +95,13 @@ var ViewProduct = Backbone.View.extend({
 		if ( confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?") ) {
 			this.model.destroy({wait: true });
 		}
-	},
-	
-	create: function() {
-		alert(12);
-	}
-	
+		return false;
+	},	
 })
+
 
 // Model products
 var ProductsModel = Backbone.Model.extend({
-  save: function(key, value, options) {
-	  alert('save');
-  },
   
   methodUrl:  function(method){
 	if(method == "delete"){
@@ -171,7 +109,7 @@ var ProductsModel = Backbone.Model.extend({
 		}else if(method == "update"){
 			return "/product/" + this.attributes.id+"/update";
 		}else if(method == "create"){
-			return "/product/create";
+			return "/product/create/ajax";
 		} 
 		return false;
   },
@@ -181,7 +119,7 @@ var ProductsModel = Backbone.Model.extend({
         
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
-				console.log(status);
+				//console.log(status);
 				if (resp == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
@@ -199,11 +137,26 @@ var ProductsModel = Backbone.Model.extend({
         if (method == 'update') {
 			productOptions.success = function(resp, status, xhr) {
 				if (resp.has_error) {
-				   console.log('Error', resp);
+				   //if isset has_error we can show errors
+				   $('.p_unit', model.view.el).append('<div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'Ошибка (' + resp.errors + '). '+
+													'Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
 				} else {
-				   console.log('Ok', resp);
-				   return;
+				   if (resp != 0) {
+					   model.set(resp,{silent: true});
+					   console.log(model);
+					   model.view.render();
+					   return;
+				   } else {
+					   $('.p_unit', model.view.el).append('<div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
+					   model.set(model.previousAttributes(),{silent: true});
+					   model.view.render();
+					   return;
+				   }
 				}
 				return options.success(resp, status, xhr);
 			};
@@ -217,6 +170,27 @@ var ProductsModel = Backbone.Model.extend({
 		Backbone.sync.call(this, method, model, productOptions);
    }
 });
+
+// Collection products
+var Products = Backbone.Collection.extend({
+  
+  model: ProductsModel,
+  
+  url: '/product/json',
+  
+  initialize: function(){
+	  this.bind('add', this.addProduct);
+  },
+  
+  addProduct: function(product){
+	product.save();
+	var view = new ViewProduct({model:product});
+	var content = view.render().el;
+	$('.products').append(content);
+  }
+  
+});
+
 
 /****************************************
  * Supplier Products
@@ -290,3 +264,44 @@ supplier_products = new SupplierProducts; // init collection
 var view_supplier_products = new ViewSupplierProducts({collection: supplier_products}); // init view
 $('#supplier_product_list').append(view_supplier_products.render().el); // add main template
 supplier_products.fetch();
+
+
+/****************************************
+ * 
+ ***************************************/
+ 
+$(document).ready(function(){
+	
+	var products = new Products; // init collection
+	
+	var view_products = new ViewProducts({collection: products}); // initialize view
+	$('#product_list').append(view_products.render().el); // add template
+	products.fetch();
+	
+	$('.create').toggle(function() {
+		var option = '';
+		for(var key in units) {
+			option += '<option value="'+key+'" >'+units[key]+'</option>';
+		}
+		$('#form_add').slideDown();
+		$('.unit_add').html(option);
+		$('.name_add').focus();
+		return false;
+	}, function() {
+		$('#form_add').slideUp();
+		return false;
+	});
+	
+	$('.add_product').click(function() {
+		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
+		return false;
+	})
+	
+    $('.del').click(function(){
+		return confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?");
+	});
+	
+    $('.del_supplier_product').click(function(){
+		return confirm ("Вы действительно хотите удалить элемент?");
+	});
+})

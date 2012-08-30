@@ -61,6 +61,7 @@ class ProductController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($product);
 				$em->flush();
+				
 				return $this->redirect($this->generateUrl('product_list'));
 			}
 		}
@@ -121,7 +122,7 @@ class ProductController extends Controller
 	 */
 	 public function ajaxupdateAction($id)
 	 {
-		 if (isset($_POST['_method']) && $_POST['_method'] == 'PUT' && isset($_POST['model']))
+		 if (isset($_POST['model']))
 		 {
 			 $model = (array)json_decode($_POST['model']);
 			 
@@ -131,13 +132,78 @@ class ProductController extends Controller
 								->getRepository('SupplierBundle:Product')
 								->find($model['id']);
 				
-				if (!$product) {
-					echo json_encode(array('success'=>0));
-					die();
-				}
+				if (!$product)
+					die(0);
 				
 				$validator = $this->get('validator');
     
+				$product->setName($model['name']);
+				$product->setUnit((int)$model['unit']);
+				
+				$errors = $validator->validate($product);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+						
+					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					die();
+					
+				} else {
+					
+					$em = $this->getDoctrine()->getEntityManager();
+					$em->persist($product);
+					$em->flush();
+					
+					$attr = array('name' => $product->getName(), 'unit' => $product->getUnit());
+					
+					echo json_encode($attr);
+					//echo json_encode(array('success'=>1, 'id'=>$product->getId() ));
+					die();
+				
+				}
+			 }
+			 
+		 } else
+			die(0);
+	 }
+	 
+	
+	/**
+	 * @Route("/product/{id}/delete", name="product_ajax_delete")
+	 */
+	public function ajaxdeleteAction($id)
+	{
+		$product = $this->getDoctrine()
+					->getRepository('SupplierBundle:Product')
+					->find($id);
+					
+		if (!$product)
+			die(0);
+		
+		if(0){
+			$em = $this->getDoctrine()->getEntityManager();				
+			$em->remove($product);
+			$em->flush();
+		}
+
+		die($id);
+	}
+	
+
+	/**
+	 * @Route("/product/create/ajax", name="product_ajax_create")
+	 */
+	 public function ajaxcreateAction()
+	 {
+		 if (isset($_POST['model']))
+		 {
+			 $model = (array)json_decode($_POST['model']);
+			 if (isset($model['name']))
+			 {
+				$validator = $this->get('validator');
+				$product = new Product();
 				$product->setName($model['name']);
 				$product->setUnit((int)$model['unit']);
 				
@@ -157,74 +223,24 @@ class ProductController extends Controller
 					$em->persist($product);
 					$em->flush();
 					
-					$attr = array('name' => $product->getName(), 'unit' => $product->getUnit());
+					$attr = array('id' => $product->getId(), 'name' => $product->getName(), 'unit' => $product->getUnit());
 					
 					echo json_encode($attr);
-					//echo json_encode(array('success'=>1, 'id'=>$product->getId() ));
 					die();
 				
 				}
-			 }
-			 
-		 } else {
-			 echo json_encode(array('success'=>0));
-			die(); 
-		 }
+			} else
+				die(0);
+		} else
+			die(0);
 	 }
-	 
-	
-	/**
-	 * @Route("/product/{id}/delete", name="product_ajax_delete")
-	 */
-	public function ajaxdeleteAction($id)
-	{
-		$product = $this->getDoctrine()
-					->getRepository('SupplierBundle:Product')
-					->find($id);
-					
-		if (!$product) {
-			echo 0;
-			die();
-		}
-		
-		if(0){
-			$em = $this->getDoctrine()->getEntityManager();				
-			$em->remove($product);
-			$em->flush();
-		}
-		
-		echo $id;
-		die();
-	}
+
 	
 	
 	/**
 	 * @Route("/product/json", name="product_json")
 	 */
 	 public function jsonAction()
-	 { 
-		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
-		 $products_array = array();
-		
-		 if ($products)
-			foreach ($products AS $p)
-				$products_array[] = array( 	'id' => $p->getId(),
-											'name'=> $p->getName(), 
-											'unit' => $p->getUnit(),
-											);
-
-		 //$result = array('success' => $success, 'result' =>$products_array);
-			
-		 $response = new Response(json_encode($products_array), 200);
-		 $response->headers->set('Content-Type', 'application/json');
-		 $response->sendContent();
-		 die(); 
-	 }
-	
-	/**
-	 * @Route("/product/create", name="product_ajax_create")
-	 */
-	 public function ajaxcreateAction()
 	 { 
 		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
 		 $products_array = array();
