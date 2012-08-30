@@ -5631,3 +5631,9 @@ a.badge:hover {
 .table td.p_name {
   width:140px;
 }
+#form_add .alert{
+  margin-top:14px;
+}
+#form_add {
+  padding-top:14px;
+}

@@ -182,7 +182,7 @@ class ProductController extends Controller
 		if (!$product)
 			die(0);
 		
-		if(0){
+		if(1){
 			$em = $this->getDoctrine()->getEntityManager();				
 			$em->remove($product);
 			$em->flush();
@@ -214,7 +214,7 @@ class ProductController extends Controller
 					foreach($errors AS $error)
 						$errorMessage[] = $error->getMessage();
 						
-					echo json_encode(array('success'=>0, 'errors'=>$errorMessage));
+					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
 					die();
 					
 				} else {
@@ -229,10 +229,12 @@ class ProductController extends Controller
 					die();
 				
 				}
-			} else
-				die(0);
-		} else
-			die(0);
+			}
+		}
+		
+		echo json_encode(array('has_error'=>1, 'errors'=> 'Некорректный запрос'));
+		die();
+	 
 	 }
 
 	

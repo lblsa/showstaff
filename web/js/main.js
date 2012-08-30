@@ -56,11 +56,16 @@ var ViewProduct = Backbone.View.extend({
 	initialize: function() {
 		_.bindAll(this);
 		this.model.view = this;
-		this.model.on('add', this.create);
 	},
 	
 	render: function(){
 		var content = this.template(this.model.toJSON());
+		this.$el.html(content);
+		return this;
+	},
+	
+	renderJSON: function(){
+		var content = this.template(this.model);
 		this.$el.html(content);
 		return this;
 	},
@@ -83,8 +88,6 @@ var ViewProduct = Backbone.View.extend({
 						name: $('.name', this.el).val(), 
 						unit: $('.unit', this.el).val()
 						},{wait: true});
-		
-		//return this.render().el;
 	},
 	
 	cancel: function() {
@@ -96,7 +99,11 @@ var ViewProduct = Backbone.View.extend({
 			this.model.destroy({wait: true });
 		}
 		return false;
-	},	
+	},
+	
+	add: function() {
+		alert(45);
+	}
 })
 
 
@@ -146,7 +153,6 @@ var ProductsModel = Backbone.Model.extend({
 				} else {
 				   if (resp != 0) {
 					   model.set(resp,{silent: true});
-					   console.log(model);
 					   model.view.render();
 					   return;
 				   } else {
@@ -157,6 +163,28 @@ var ProductsModel = Backbone.Model.extend({
 					   model.view.render();
 					   return;
 				   }
+				}
+				return options.success(resp, status, xhr);
+			};
+		}
+		
+		if (method == 'create') {
+			productOptions.success = function(resp, status, xhr) {
+				if (resp.has_error) {
+				   //if isset has_error we can show errors
+				   $('.alert-error strong').html(' (' + resp.errors + '). ');
+				   $(".alert-error").clone().appendTo('#form_add');
+				   $('#form_add .alert-error').fadeIn();
+				   return;
+				} else {
+				   model.set(resp, {silent:true});
+				   var view = new ViewProduct({model:model});
+				   var content = view.render().el;
+				   $('.products').prepend(content);
+				   $('.name_add').val('');
+				   $(".alert-success").clone().appendTo('#form_add');
+				   $("#form_add .alert-success").fadeIn();
+				   return;
 				}
 				return options.success(resp, status, xhr);
 			};
@@ -183,10 +211,7 @@ var Products = Backbone.Collection.extend({
   },
   
   addProduct: function(product){
-	product.save();
-	var view = new ViewProduct({model:product});
-	var content = view.render().el;
-	$('.products').append(content);
+	product.save({wait: true});
   }
   
 });
@@ -269,14 +294,15 @@ supplier_products.fetch();
 /****************************************
  * 
  ***************************************/
+	
+var products = new Products; // init collection
+
+var view_products = new ViewProducts({collection: products}); // initialize view
+$('#product_list').append(view_products.render().el); // add template
+products.fetch(); 
+
  
 $(document).ready(function(){
-	
-	var products = new Products; // init collection
-	
-	var view_products = new ViewProducts({collection: products}); // initialize view
-	$('#product_list').append(view_products.render().el); // add template
-	products.fetch();
 	
 	$('.create').toggle(function() {
 		var option = '';
