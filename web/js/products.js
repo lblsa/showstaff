@@ -259,6 +259,13 @@ products.comparator = function(product) {
 };
 
 $('#product_list').append(view_products.render().el); // add template
+
+$('#preloader').width($('#add_row').width());
+$('#preloader').height($('#add_row').height());
+var p = $('#add_row').position();
+$('#preloader').css({'left':p.left, 'top': p.top});
+$('#preloader').fadeIn('fast');
+
 products.fetch(); 
 
  

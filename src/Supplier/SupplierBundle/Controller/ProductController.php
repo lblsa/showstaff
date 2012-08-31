@@ -124,7 +124,7 @@ class ProductController extends Controller
 	 {
 		 if (isset($_POST['model']))
 		 {
-			 sleep(5);
+			 //sleep(5);
 			 $model = (array)json_decode($_POST['model']);
 			 
 			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
@@ -179,7 +179,7 @@ class ProductController extends Controller
 		$product = $this->getDoctrine()
 					->getRepository('SupplierBundle:Product')
 					->find($id);
-		sleep(5);	
+		//sleep(5);	
 		if (!$product)
 			die(0);
 		
@@ -247,7 +247,7 @@ class ProductController extends Controller
 	 { 
 		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
 		 $products_array = array();
-		
+		 //sleep(5);
 		 if ($products)
 			foreach ($products AS $p)
 				$products_array[] = array( 	'id' => $p->getId(),

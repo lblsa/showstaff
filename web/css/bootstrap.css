@@ -5634,6 +5634,9 @@ a.badge:hover {
 #form_add .alert{
   margin-top:14px;
 }
+#form_add_supplier_product {
+  padding-top:14px;
+}
 #form_add {
   padding-top:14px;
 }

@@ -7,6 +7,13 @@ var SupplierProductView = Backbone.View.extend({
 	tagName: "tr",
 	className: "supplier_product",
 	
+	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= name %></td>'+
+							'<td class="ps_price"><%= price %></td>'+
+							'<td><% print(units[unit]); %></td>'+
+							'<td><%= primary_supplier %>'+
+								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
+							'</td>'),
+	
 	events: {
 		'click': 'edit'
 	},
@@ -16,7 +23,8 @@ var SupplierProductView = Backbone.View.extend({
 	},
 	
 	render: function(){
-		this.$el.append('<td>'+ this.model.escape('supplier_name') +'<br>('+ this.model.escape('product') +')</td>');
+		var pr = products.get(this.model.escape('product'));
+		this.$el.append('<td>'+ this.model.escape('supplier_name') +'<br>('+ this.model.escape('product') + '-' + pr.get('name') +')</td>');
 		this.$el.append('<td>'+ this.model.escape('price') +'</td>');
 		this.$el.append('<td>'+ this.model.escape('unit') +'</td>');
 		this.$el.append('<td>'+ (this.model.escape('primary_supplier')?"Да":"Нет") + '</td>');
@@ -65,10 +73,31 @@ var SupplierProductsModel = Backbone.Model.extend({
 // get supplier products
 var SupplierProducts = Backbone.Collection.extend({
   model: SupplierProductsModel,
-  url: '/supplier/products/list.json'
+  url: '/supplier/products/json'
 });
 
 supplier_products = new SupplierProducts; // init collection
+
 var view_supplier_products = new ViewSupplierProducts({collection: supplier_products}); // init view
+
 $('#supplier_product_list').append(view_supplier_products.render().el); // add main template
+
 supplier_products.fetch();
+
+$(document).ready(function(){
+	
+	// show add form
+	$('#add_supplier_product').toggle(function() {
+		$('i', this).attr('class', 'icon-minus-sign');
+		$("#form_add_supplier_product .alert").remove();
+		$('.name_add_sp').val('');
+		$('#form_add_supplier_product').slideDown();
+		$('.name_add_sp').focus();
+		return false;
+	}, function() {
+		$('i', this).attr('class', 'icon-plus-sign');
+		$('#form_add_supplier_product').slideUp();
+		return false;
+	});
+	
+})
