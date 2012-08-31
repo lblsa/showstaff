@@ -1,4 +1,13 @@
+SupplierBundle:
+    resource: "@SupplierBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
 # Internal routing configuration to handle ESI
 #_internal:
 #   resource: "@FrameworkBundle/Resources/config/routing/internal.xml"
 #   prefix:   /_internal
+
+adminboard:
+      pattern: /adminboard/{name}
+      defaults: {_controller: AcmeAdminBoardBundle:AdminBoard:index}

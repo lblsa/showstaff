@@ -1,0 +1,57 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+		<h2>Supplier Products</h2>
+			{% if supplier_products is defined and supplier_products|length > 0 %}
+				<table class="table table-striped">
+					<tr>
+						<th>#</th>
+						<th>Supplier</th>
+						<th>Name</th>
+						<th>Price</th>
+						<th>Unit</th>
+						<th>Prime</th>
+						<th>Delete</th>
+					</tr>
+					 {% for product in supplier_products %}
+						<tr>
+							<td>
+								<a href="{{ path('supplier_products_edit', { 'id': product.id }) }}" class="btn btn-small" title="Edit">
+								<i class="icon-edit"></i>{{ product.id }}
+								</a>
+							</td>
+							<td>{{ product.supplier.name }}</td>
+							<td>
+								<p>
+									{{ product.supplierName }}<br>
+									<span>( {{ product.product.name }} )</span>
+								</p>
+							</td>
+							<td>{{ product.price/100 }}</td>
+							<td>{% if unit[product.product.unit] is defined %}
+									{{ unit[product.product.unit] }}
+								{% else %}
+									не установлен
+								{% endif %}</td>
+							<td>{% if product.prime %}Да{% else %}Нет{% endif %}</td>
+							<td>
+								<a href="{{ path('supplier_products_del', { 'id': product.id }) }}" class="btn btn-link del_supplier_product" title="Delete Item">
+									<i class="icon-remove"></i>
+								</a>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="2"><div class="alert alert-error">Empty Result</div></td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% else %}
+				<div class="alert alert-error">Empty Result</div>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}
