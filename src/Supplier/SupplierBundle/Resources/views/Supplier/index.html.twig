@@ -13,7 +13,7 @@
 			</th>
 			<th>Еденица</th>
 		  </tr>
-		  <tr>
+		  <tr id="add_row">
 			<th colspan="2" class="add">
 				<a href="#" id="add_product" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
 				<p class="form-inline hide" id="form_add">
@@ -38,10 +38,7 @@
 					<a href="#" class=""><i class="icon-arrow-up"></i></a>
 					<a href="#" class=""><i class="icon-arrow-down"></i></a>
 				</th>
-				<th>Еденица
-					<a href="#" class=""><i class="icon-arrow-up"></i></a>
-					<a href="#" class=""><i class="icon-arrow-down"></i></a>
-				</th>
+				<th>Еденица</th>
 				<th>Первичный
 					<a href="#" class=""><i class="icon-arrow-up"></i></a>
 					<a href="#" class=""><i class="icon-arrow-down"></i></a>
@@ -56,5 +53,8 @@
 </div>
 <div class="alert alert-success hide"><button type="button" class="close" data-dismiss="alert">×</button>
 	<strong>Продукт добавлен</strong>
+</div>
+<div class="progress progress-striped active hide" id="preloader">
+  <div class="bar" style="width: 100%;"></div>
 </div>
 {% endblock %}

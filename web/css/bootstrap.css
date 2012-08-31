@@ -5637,3 +5637,14 @@ a.badge:hover {
 #form_add {
   padding-top:14px;
 }
+#preloader.progress {
+  display: none;
+  position: absolute;
+  opacity: 0.7;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+}
+#preloader.progress .bar {
+  background-repeat: repeat;
+}

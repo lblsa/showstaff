@@ -57,10 +57,19 @@ var ViewProduct = Backbone.View.extend({
 		this.model.view = this;
 	},
 	
+	preloader: function() {
+		$('#preloader').width(this.$el.width());
+		$('#preloader').height(this.$el.height());
+		var p = this.$el.position();
+		$('#preloader').css({'left':p.left, 'top': p.top});
+		$('#preloader').fadeIn('fast');
+	},
+	
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.product').tooltip();  
+		$('.product').tooltip();
+		$('#preloader').fadeOut('fast'); 
 		return this;
 	},
 	
@@ -78,6 +87,7 @@ var ViewProduct = Backbone.View.extend({
 	},
 	
 	save: function() {
+		this.preloader();
 		this.model.save({
 						name: $('.name', this.el).val(), 
 						unit: $('.unit', this.el).val()
@@ -90,6 +100,7 @@ var ViewProduct = Backbone.View.extend({
 
 	remove: function() {
 		if ( confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?") ) {
+			this.preloader();
 			this.model.destroy({wait: true });
 		}
 		return false;
@@ -118,6 +129,7 @@ var ProductsModel = Backbone.Model.extend({
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
 				//console.log(status);
+				$('#preloader').fadeOut('fast');
 				if (resp == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
@@ -248,6 +260,7 @@ var ViewSupplierProducts = Backbone.View.extend({
 	initialize: function() {
 		_.bindAll(this);
 		this.collection.on('reset', this.renderAll);
+		this.collection.on('render', this.renderAll);
 	},
 	
 	render: function() {
@@ -313,6 +326,11 @@ $(document).ready(function(){
 	});
 	
 	$('.add_product').click(function() {
+		$('#preloader').width($('#add_row').width());
+		$('#preloader').height($('#add_row').height());
+		var p = $('#add_row').position();
+		$('#preloader').css({'left':p.left, 'top': p.top});
+		$('#preloader').fadeIn('fast');
 		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
 		return false;
 	})
