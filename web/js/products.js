@@ -239,7 +239,6 @@ var Products = Backbone.Collection.extend({
   },
   
   addProduct: function(product){
-	$("#form_add .alert").remove();
 	product.save({wait: true});
   }
   
@@ -290,12 +289,14 @@ $(document).ready(function(){
 	});
 	
 	$('.add_product').click(function() {
+		$("#form_add .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();
 		$('#preloader').css({'left':p.left, 'top': p.top});
 		$('#preloader').fadeIn('fast');
 		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
+		
 		return false;
 	})
 	
