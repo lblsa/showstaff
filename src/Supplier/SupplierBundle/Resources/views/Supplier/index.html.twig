@@ -28,9 +28,12 @@
 	  <div class="span8">
 		<h3>Поставщики</h3>
 		<table class="table table-bordered table-striped" id="suppliers">
+			<thead><th>
+				<p>Поставщик <a href="" class="btn btn-small pull-right" id="close_all">Свернуть все</a></p>
+			</th></thead>
 		</table>  
 		
-		<table class="table table-bordered table-striped" id="supplier_product_list">
+		<table class="table table-bordered table-striped hide" id="supplier_product_list">
 		  <thead id="supplier_products_header">
 			  <tr>
 				<th>Название
@@ -77,7 +80,6 @@
 <div class="alert alert-success hide"><button type="button" class="close" data-dismiss="alert">×</button>
 	<strong>Продукт добавлен</strong>
 </div>
-<div class="progress progress-striped active hide" id="preloader">
-  <div class="bar" style="width: 100%;"></div>
-</div>
+<div class="progress progress-striped active hide" id="preloader"><div class="bar" style="width: 100%;"></div></div>
+<div class="progress progress-striped green active hide" id="preloader_s"><div class="bar" style="width: 100%;"></div></div>
 {% endblock %}

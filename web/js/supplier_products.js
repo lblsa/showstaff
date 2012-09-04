@@ -1,7 +1,8 @@
 /****************************************
  * Supplier
  ****************************************/
-var SP = {}; 
+var SP = {}; // коллекции продуктром поставщика
+var VSP = {}; // коллекция видов
  
 var ViewSupplier = Backbone.View.extend({
 	
@@ -11,7 +12,7 @@ var ViewSupplier = Backbone.View.extend({
 	template: _.template(	'<td class="s_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><p>'+
 							'<%= name %>'+
 							' <a href="#" class="pull-right btn btn-small show visibl">Развернуть <i class="icon-plus-sign"></i></a></p>'+
-							'<div class="hide" id="sp_<%= id %>"></div></td>'),
+							'<div class="hide sp_list" id="sp_<%= id %>"></div></td>'),
 	
 	events: {
 		'click .show': 'show',
@@ -26,6 +27,15 @@ var ViewSupplier = Backbone.View.extend({
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
 		return this;
+	},
+	
+	preloader: function() {
+		$('#preloader_s').width($('#suppliers').width());
+		$('#preloader_s').height($('#suppliers').height());
+		var p = $('#suppliers').position();
+		$('#preloader_s').css({'left':p.left, 'top': p.top});
+		$('#preloader_s').show();
+		return;
 	},
 	
 	show: function() {
@@ -45,23 +55,15 @@ var ViewSupplier = Backbone.View.extend({
 			exist = 1;			
 		}
 		
-		//console.log(this.model.id);
+		VSP[model_id] = new ViewSupplierProducts({collection: SP[model_id]});
 		
-		view_supplier_products = new ViewSupplierProducts({collection: SP[model_id]});
-
-		console.log(view_supplier_products);
+		$('#sp_'+model_id, this.$el).html(VSP[model_id].render({id:model_id}).el);		
 		
-		$('#sp_'+model_id, this.$el).append(view_supplier_products.render({id:model_id}).el);
+		this.preloader();
 		
-		if (exist == 1)  {
+		if (exist == 1)
 			SP[model_id].trigger('reset');
-		} else {
-			$('#preloader').width(this.$el.width());
-			$('#preloader').height(this.$el.height());
-			var p = this.$el.position();
-			$('#preloader').css({'left':p.left, 'top': p.top});
-			$('#preloader').fadeIn('fast');
-		}
+	
 		$('.visibl', this.$el).removeClass('show');
 		$('.visibl', this.$el).addClass('hd');
 		$('.visibl', this.$el).html('Свернуть <i class="icon-minus-sign"></i>');
@@ -101,6 +103,7 @@ var ViewSuppliers = Backbone.View.extend({
 			var content = view.render().el;
 			this.$('.suppliers').append(content);
 		});
+		$('#preloader_s').hide();
 	},
 })
 
@@ -116,9 +119,16 @@ var Suppliers = Backbone.Collection.extend({
   url: '/supplier/json'
 });
 
-suppliers = new Suppliers; // init collection
+var suppliers = new Suppliers; // init collection
 var view_suppliers = new ViewSuppliers({collection: suppliers}); // init view
 $('#suppliers').append(view_suppliers.render().el); // add main template
+
+$('#preloader_s').width($('#suppliers').width());
+$('#preloader_s').height($('#suppliers').height());
+var p = $('#suppliers').position();
+$('#preloader_s').css({'left':p.left, 'top': p.top});
+$('#preloader_s').fadeIn('fast');
+
 suppliers.fetch();
 
 
@@ -174,36 +184,34 @@ var ViewSupplierProducts = Backbone.View.extend({
 	},
 	
 	renderAll: function() {
-		
-		$("#supplier_products_header").clone().appendTo(this.$el); // Добавляем шапку с заголовками/сортировками/формой
-		this.$el.append('<tbody class="supplier_products"></tbody>');
-		
-		$('#sp_'+this.args.id).slideDown();
-		
-		if (this.collection.length > 0) {
+		if (typeof(this.args.id) != 'undefined') {
+			$("#supplier_products_header").clone().appendTo(this.$el); // Добавляем шапку с заголовками/сортировками/формой
+			this.$el.append('<tbody class="supplier_products"></tbody>');
+			$('#preloader_s').hide();
+			$('#sp_'+this.args.id).slideDown();
+			var id = this.args.id;
+			if (this.collection.length > 0) {
+				$('#sp_'+this.args.id+' .supplier_products').html('');
+				this.collection.each(function(model){
+					var view = new SupplierProductView({model:model});
+					var content = view.render().el;
+					$('#sp_'+id+' .supplier_products').append(content);
+				});
+				
+				$('.supplier_products .supplier_product td').attr('style','background-color: #fff;');
+				$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd; background-color: #fff;');
 			
-			this.collection.each(function(model){
-				var view = new SupplierProductView({model:model});
-				var content = view.render().el;
-				this.$('.supplier_products').append(content);
-			});
+			} else {
 			
-			$('.supplier_products .supplier_product td').attr('style','background-color: #fff;');
-			$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd; background-color: #fff;');
-		
-		} else {
-		
-			this.$('.supplier_products').append('<tr><td colspan="4"><div class="alert">'+
-												'<button type="button" class="close" data-dismiss="alert">×</button>'+
-												'У данного поставщика еще нет продуктов</div></td></tr>');
+				this.$('.supplier_products').append('<tr><td colspan="4"><div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'У данного поставщика еще нет продуктов</div></td></tr>');
+			}
 		}
-		
-		$('#preloader').fadeOut('fast');
 		return this;
 	}
 
 });
-
 
 
 // Model supplier products
@@ -211,19 +219,18 @@ var SupplierProductsModel = Backbone.Model.extend({
 
 });
 
-
-// get supplier products
-/*var SupplierProducts = Backbone.Collection.extend({
-  model: SupplierProductsModel,
-  url: '/supplier/products/json'
-});*/
-//console.log(SupplierProducts.url);
-//supplier_products = new SupplierProducts; // init collection
-//var view_supplier_products = new ViewSupplierProducts({collection: supplier_products}); // init view
-//$('#supplier_product_list').append(view_supplier_products.render().el); // add main template
-//supplier_products.fetch();
-
 $(document).ready(function(){
+	
+	$('#close_all').click(function(){
+		$('.sp_list').html('');
+		$('.sp_list').slideUp('fast');
+		
+		$('.visibl').removeClass('hd');
+		$('.visibl').addClass('show');
+		$('.visibl').html('Развернуть <i class="icon-plus-sign"></i>');	
+		
+		return false;
+	});
 	
 	// show add form
 	$('#add_supplier_product').toggle(function() {
