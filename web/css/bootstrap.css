@@ -5651,3 +5651,6 @@ a.badge:hover {
 #preloader.progress .bar {
   background-repeat: repeat;
 }
+.s_name div {
+  padding-top:14px;
+}

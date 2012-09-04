@@ -3,7 +3,7 @@
 {% block body %}
 	<div class="row-fluid">
 	  <div class="span4">
-		
+		<h3>Продукты</h3>
 		<table class="table table-bordered table-striped" id="product_list">
 		 <thead>
 		  <tr>
@@ -26,8 +26,12 @@
 		</table>
 	  </div>
 	  <div class="span8">
+		<h3>Поставщики</h3>
+		<table class="table table-bordered table-striped" id="suppliers">
+		</table>  
+		
 		<table class="table table-bordered table-striped" id="supplier_product_list">
-		  <thead>
+		  <thead id="supplier_products_header">
 			  <tr>
 				<th>Название
 					<a href="#" class=""><i class="icon-arrow-up"></i></a>
@@ -45,7 +49,7 @@
 			  </tr>
 			  <tr>
 				<th colspan="4" class="add_supplier_product">
-					<a href="#" id="add_supplier_product" class="btn btn-small">Add new Supplier Product <i class="icon-plus-sign"></i></a>
+					<a href="#" id="add_supplier_product" class="btn btn-small">Добавить продукт поставщика <i class="icon-plus-sign"></i></a>
 					<p class="form-inline hide" id="form_add_supplier_product">
 						<input name="name" type="text" class="input-small name_add_sp" placeholder="Supplier Product Name">
 						<input name="price" type="text" class="input-small price_add_sp" placeholder="Supplier Price">

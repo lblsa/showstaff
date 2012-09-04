@@ -121,4 +121,27 @@ class SupplierController extends Controller
 		
 		return array( 'suppliers' => $suppliers);
 	}
+	
+	
+	
+	/**
+	 * @Route("/supplier/json", name="supplier_json")
+	 */
+	 public function jsonAction()
+	 {
+		 $suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findAll();
+		 $suppliers_array = array();
+		 //sleep(5);
+		 if ($suppliers)
+			foreach ($suppliers AS $p)
+				$suppliers_array[] = array( 	'id' => $p->getId(),
+												'name'=> $p->getName(), 
+											);
+			
+		 $response = new Response(json_encode($suppliers_array), 200);
+		 $response->headers->set('Content-Type', 'application/json');
+		 $response->sendContent();
+		 die(); 
+	 }
+
 }

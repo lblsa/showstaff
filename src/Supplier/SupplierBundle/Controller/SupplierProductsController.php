@@ -70,6 +70,7 @@ class SupplierProductsController extends Controller
 
 		return array('form' => $form->createView());
 	}
+	
 	 /**
      * @Route("/supplier/products/edit/{id}", name="supplier_products_edit")
      * @Template()
@@ -138,6 +139,35 @@ class SupplierProductsController extends Controller
 										'product_name'=>$p->getProduct()->getName(), 
 										'supplier'=>$p->getSupplier()->getId(),
 										'supplier_name'=>$p->getSupplier()->getName(),
+										'unit' => $p->getProduct()->getUnit(),										
+										);
+
+		 $response = new Response(json_encode($products_array), 200);
+		 $response->headers->set('Content-Type', 'application/json');
+		 $response->sendContent();
+		 die(); 
+	 }
+	 
+	 
+	/**
+	 * @Route("/supplier_products/supplier/{id}", name="supplier_products_by_supplier")
+	 */
+	 public function productsBySupplierAction($id)
+	 {
+		$supplier_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findBy(array('supplier' => $id));
+		$products_array = array();
+		sleep(3);
+		if ($supplier_products)
+			foreach ($supplier_products AS $p)
+				$products_array[] = array(
+										'id' => $p->getId(), 
+										'supplier_product_name'=>$p->getSupplierName(), 
+										'primary_supplier'=>$p->getPrime(), 
+										'price'=>$p->getPrice(), 
+										'product'=>$p->getProduct()->getId(), 
+										'product_name'=>$p->getProduct()->getName(), 
+										'supplier'=>$p->getSupplier()->getId(),
+										'supplier_name'=>$p->getSupplier()->getName(),
 										'unit' => $p->getProduct()->getUnit(),
 										
 										);
@@ -146,6 +176,5 @@ class SupplierProductsController extends Controller
 		 $response->headers->set('Content-Type', 'application/json');
 		 $response->sendContent();
 		 die(); 
-	 }
-	
+	 }	
 }
