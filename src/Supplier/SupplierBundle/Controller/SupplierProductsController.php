@@ -189,21 +189,28 @@ class SupplierProductsController extends Controller
 						->getRepository('SupplierBundle:SupplierProducts')
 						->find($id);
 				
+				$errors = array();
+				
 				if (!$supplier_product)
-					die(0);
+					$errors[] = 'Продукт поставщика не существует<!--'.$id.'-->';
 					
 				$supplier = $this->getDoctrine()
 								 ->getRepository('SupplierBundle:Supplier')
 								 ->find((int)$model['supplier']);
 				if (!$supplier)
-					die(0);
+					$errors[] = 'Поставщик не существует<!-- '.(int)$model['supplier'].' -->';
 					
 				$product = $this->getDoctrine()
 								->getRepository('SupplierBundle:Product')
 								->find((int)$model['product']);
 				if (!$product)
-					die(0);
-					
+					$errors[] = 'Продукт не существует<!--'.(int)$model['product'].'-->';
+				
+				if (count($errors) > 0) {
+					echo json_encode(array('has_error'=>1, 'errors'=>$errors));
+					die();
+				}
+				
 				$validator = $this->get('validator');
 				
 				$price = 0+$model['price'];
@@ -214,11 +221,13 @@ class SupplierProductsController extends Controller
 				$supplier_product->setSupplier($supplier);
 				$supplier_product->setProduct($product);
 				
+				
+				
 				$errors = $validator->validate($supplier_product);
 				
 				if (count($errors) > 0) {
 					
-					foreach($errors AS $error)
+					foreach($errors['validate'] AS $error)
 						$errorMessage[] = $error->getMessage();
 						
 					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
@@ -262,17 +271,24 @@ class SupplierProductsController extends Controller
 			 $model = (array)json_decode($_POST['model']);
 			 if (isset($model['supplier_product_name']) && isset($model['product']) && $supplier_id != 0)
 			 {
+				 
+				$errors = array();
 				$supplier = $this->getDoctrine()
 								 ->getRepository('SupplierBundle:Supplier')
 								 ->find((int)$model['supplier']);
 				if (!$supplier)
-					die(0);
+					$errors[] = 'Поставщик не существует<!-- '.(int)$model['supplier'].' -->';
 					
 				$product = $this->getDoctrine()
 								->getRepository('SupplierBundle:Product')
 								->find((int)$model['product']);
 				if (!$product)
-					die(0);
+					$errors[] = 'Продукт не существует<!--'.(int)$model['product'].'-->';
+		
+				if (count($errors) > 0) {
+					echo json_encode(array('has_error'=>1, 'errors'=>$errors));
+					die();
+				}
 		
 				$price = 0+$model['price'];
 		
