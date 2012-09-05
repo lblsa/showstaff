@@ -115,7 +115,7 @@ var ViewProduct = Backbone.View.extend({
 
 
 // Model products
-var ProductsModel = Backbone.Model.extend({
+var ProductsModel = Backbone.Model.extend({  
   
   methodUrl:  function(method){
 	if(method == "delete"){
@@ -133,11 +133,14 @@ var ProductsModel = Backbone.Model.extend({
         
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
-				//console.log(status);
 				$('#preloader').fadeOut('fast');
 				if (resp == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
+				   
+				   var SP = {};
+				   $('#close_all').click();
+				   
 					return;
 				} else {
 				   $('.p_unit', model.view.el).append('<div class="alert">'+
@@ -152,7 +155,6 @@ var ProductsModel = Backbone.Model.extend({
         if (method == 'update') {
 			productOptions.success = function(resp, status, xhr) {
 				if (resp.has_error) {
-				   //if isset has_error we can show errors
 				   $('#preloader').fadeOut('fast'); 
 				   $('.p_unit', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
@@ -163,6 +165,9 @@ var ProductsModel = Backbone.Model.extend({
 				   if (resp != 0) {
 					   model.set(resp,{silent: true});
 					   model.view.render();
+					   
+					   var SP = {};
+				       $('#close_all').click();
 					   
 					   //  for sort reload
 					   products.sort({silent: true});
@@ -206,6 +211,10 @@ var ProductsModel = Backbone.Model.extend({
 				   $(".alert-success").clone().appendTo('#form_add');
 				   $("#form_add .alert-success").fadeIn();
 				   
+				   var SP = {};
+				   $('#close_all').click();
+				   
+				   
 				   //  for sort reload
 				   view_products.remove()
 				   view_products = new ViewProducts({collection: products});
@@ -236,10 +245,16 @@ var Products = Backbone.Collection.extend({
   
   initialize: function(){
 	  this.bind('add', this.addProduct);
+	  this.on('sync', this.clearSP);
+	  //console.log(this);
   },
   
   addProduct: function(product){
 	product.save({wait: true});
+  },
+  
+  clearSP: function(){
+	  alert(1);
   }
   
 });
@@ -265,8 +280,9 @@ var p = $('#add_row').position();
 $('#preloader').css({'left':p.left, 'top': p.top});
 $('#preloader').fadeIn('fast');
 
-products.fetch(); 
+products.fetch();
 
+//view_products.on('sync', function() { alert('eee'); })
  
 $(document).ready(function(){
 	

@@ -223,6 +223,7 @@ a:hover {
 .navbar-fixed-top .container,
 .navbar-fixed-bottom .container {
   width: 940px;
+  position: relative;
 }
 
 .span12 {
@@ -1668,6 +1669,10 @@ input.search-query {
   padding-left: 0;
   margin-bottom: 0;
   vertical-align: middle;
+}
+
+.add_supplier_product .form-inline .checkbox, .add_supplier_product .form-inline label {
+  padding:0px 10px;
 }
 
 .form-search .radio input[type="radio"],
@@ -5328,6 +5333,10 @@ a.badge:hover {
           background-size: 40px 40px;
 }
 
+.progress-striped.green .bar {
+  background-color: green;
+}
+
 .progress.active .bar {
   -webkit-animation: progress-bar-stripes 2s linear infinite;
      -moz-animation: progress-bar-stripes 2s linear infinite;
@@ -5634,13 +5643,13 @@ a.badge:hover {
 #form_add .alert{
   margin-top:14px;
 }
-#form_add_supplier_product {
+.form_add_supplier_product {
   padding-top:14px;
 }
 #form_add {
   padding-top:14px;
 }
-#preloader.progress {
+#preloader.progress, #preloader_s.progress {
   display: none;
   position: absolute;
   opacity: 0.7;
@@ -5648,6 +5657,18 @@ a.badge:hover {
   -moz-border-radius: 0;
   border-radius: 0;
 }
-#preloader.progress .bar {
+#preloader.progress .bar, #preloader_s.progress .bar {
   background-repeat: repeat;
+}
+.s_name .sp_list {
+  padding-top:14px;
+}
+.s_name .alert {
+  margin-top:14px;
+}
+select.product {
+  width: 98px;
+}
+.row-fluid .supplier_product_name {
+  width: 294px;
 }
