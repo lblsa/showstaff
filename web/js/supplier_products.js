@@ -3,7 +3,7 @@
  ****************************************/
 var SP = {}; // коллекции продуктром поставщика
 var VSP = {}; // коллекция видов
- 
+
 var ViewSupplier = Backbone.View.extend({
 	
 	tagName: "tr",
@@ -44,12 +44,11 @@ var ViewSupplier = Backbone.View.extend({
 		var exist = 0;
 		if(typeof(SP[model_id]) == "undefined") {
 
-			var SupplierProducts = Backbone.Collection.extend({
-			  model: SupplierProductsModel,
+			var SupplierProductsCurent = SupplierProducts.extend({
 			  url: '/supplier_products/supplier/'+this.model.id,
 			});
 			
-			SP[model_id] = new SupplierProducts;	
+			SP[model_id] = new SupplierProductsCurent;	
 			SP[model_id].fetch();
 		} else {
 			exist = 1;			
@@ -142,27 +141,47 @@ var SupplierProductView = Backbone.View.extend({
 	
 	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= supplier_product_name %></td>'+
 							'<td class="ps_price"><%= price %></td>'+
-							'<td><% print(units[unit]); %></td>'+
-							'<td><%= primary_supplier %>'+
+							'<td><% print(units[products._byId[product].attributes.unit]); %></td>'+
+							'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
 	events: {
-		'click': 'edit'
+		'click .ps_name': 'edit',
+		'click .remove': 'remove',
 	},
 	
 	initialize: function() {
 		this.model.view = this;
 	},
 	
+	preloader: function() {
+		$('#preloader_s').width(this.$el.width());
+		$('#preloader_s').height(this.$el.height());
+		var p = this.$el.position();
+		$('#preloader_s').css({'left':p.left, 'top': p.top});
+		$('#preloader_s').fadeIn('fast');
+	},
+	
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
+		$('#preloader_s').fadeOut('fast');
 		return this;
 	},
 	
 	edit: function() {
 		console.log(this.model.get('id'));
+	},
+	
+	remove: function() {
+		if ( confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?") ) {
+			this.preloader();
+			this.model.destroy({wait: true });
+		}
+		console.log(this.model);
+		return false;
+		
 	}
 	
 })
@@ -172,6 +191,12 @@ var ViewSupplierProducts = Backbone.View.extend({
 	
 	tagName: "table",
 	className: "sproducts table table-bordered white",
+	
+	events: {
+		'click .add_supplier_product_show': 'show_form',
+		'click .close_form': 'close_form',
+		'click .add_supplier_product_btn': 'add',
+	},
 	
 	initialize: function() {
 		_.bindAll(this);
@@ -185,12 +210,16 @@ var ViewSupplierProducts = Backbone.View.extend({
 	
 	renderAll: function() {
 		if (typeof(this.args.id) != 'undefined') {
-			$("#supplier_products_header").clone().appendTo(this.$el); // Добавляем шапку с заголовками/сортировками/формой
-			this.$el.append('<tbody class="supplier_products"></tbody>');
+			$('#sp_'+this.args.id+' .sproducts').html('');
+			$("#supplier_product_list .supplier_products_header").clone().appendTo('#sp_'+this.args.id+' .sproducts'); // Добавляем шапку с заголовками/сортировками/формой
+			$('#sp_'+this.args.id+' .sproducts').append('<tbody class="supplier_products"></tbody>');
 			$('#preloader_s').hide();
 			$('#sp_'+this.args.id).slideDown();
+			
 			var id = this.args.id;
+			
 			if (this.collection.length > 0) {
+				
 				$('#sp_'+this.args.id+' .supplier_products').html('');
 				this.collection.each(function(model){
 					var view = new SupplierProductView({model:model});
@@ -203,20 +232,168 @@ var ViewSupplierProducts = Backbone.View.extend({
 			
 			} else {
 			
-				this.$('.supplier_products').append('<tr><td colspan="4"><div class="alert">'+
+				this.$('.supplier_products').append('<tr class="alert_row"><td colspan="4"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'У данного поставщика еще нет продуктов</div></td></tr>');
 			}
 		}
 		return this;
-	}
+	},
+	
+	show_form: function() {
+		var sid = this.args.id;
+		
+		//console.log(sid);
+		
+		$('#sp_'+sid+' .product_add_sp').html('');
+		
+		products.each(function(p){
+			var view = new OptionProducts({model:p});
+			$('#sp_'+sid+' .product_add_sp').append(view.render().el);
+		});
+		
+		$('#sp_'+sid+' .form_add_supplier_product').slideDown(function(){
+			$('#sp_'+sid+' .add_supplier_product_show').addClass('close_form');
+			$('#sp_'+sid+' .add_supplier_product_show i').attr('class', 'icon-minus-sign');
+		});
+		
+		$('#sp_'+sid+' .name_add_sp').focus();
+		return false;
+	},
+	
+	close_form: function() {
+		var sid = this.args.id;
+		$('#sp_'+sid+' .form_add_supplier_product').slideUp(function(){
+			$('#sp_'+sid+' .add_supplier_product_show').removeClass('close_form');
+			$('#sp_'+sid+' .add_supplier_product_show i').attr('class', 'icon-plus-sign');
+		});
+	},
+	
+	add: function() {
+		$('#preloader_s').width($('#suppliers').width());
+		$('#preloader_s').height($('#suppliers').height());
+		var p = $('#suppliers').position();
+		$('#preloader_s').css({'left':p.left, 'top': p.top});
+		$('#preloader_s').show();
+		
+		this.collection.add([{	supplier_product_name:	$('#sp_'+this.args.id+' .name_add_sp').val(), 
+								price:					$('#sp_'+this.args.id+' .price_add_sp').val(), 
+								product:				$('#sp_'+this.args.id+' .product_add_sp').val(), 
+								supplier:				this.args.id, 
+								primary_supplier:		$('#sp_'+this.args.id+' .primary_supplier_add_sp').is(':checked')?1:0,
+							}]);
+	},
 
 });
 
 
 // Model supplier products
-var SupplierProductsModel = Backbone.Model.extend({ 
+var SupplierProductsModel = Backbone.Model.extend({
+  methodUrl:  function(method){
+	 
+	 //console.log(this.attributes); 
+	 
+	if(method == "delete"){
+			return "/supplier_products/supplier/" + this.attributes.supplier + "/delete/" + this.attributes.id;
+		} else if(method == "update"){
+			return "/supplier_products/supplier/" + this.attributes.supplier + "/update/" + this.attributes.id;
+		} else if(method == "create"){
+			return "/supplier_products/supplier/" + this.attributes.supplier + "/create";
+		} 
+		return false;
+  },
+  
+  sync: function(method, model, options) {
+       var SProductOptions = options;
+       
+        if (method == 'delete') {
+			SProductOptions.success = function(resp, status, xhr) {
+				//console.log(status);
+				$('#preloader_s').fadeOut('fast');
+				if (resp == model.id) {
+					$(model.view.el).remove();
+					console.log(model.collection);
+					model.collection.remove(model, {silent: true});
+					return;
+				} else {
+				   $('.ps_prime', model.view.el).append('<div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
+				   return;
+				}
+				return options.success(resp, status, xhr);
+			};
+			SProductOptions.error = function(resp, status, xhr) {			
+				return options.success(resp, status, xhr);
+			}
+		}
+       
+		if (method == 'create') {
+			SProductOptions.success = function(resp, status, xhr) {
+				
+				$('#sp_'+model.attributes.supplier+' .alert').remove();
+				
+				console.log(resp);
+				
+				if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
+				   model.set(resp, {silent:true});
+				   var view = new SupplierProductView({model:model});
+				   var content = view.render().el;
+				   $('#sp_'+model.attributes.supplier+' .supplier_products').prepend(content);
+				   $("#up .alert-success").clone().appendTo('#sp_'+model.attributes.supplier+' .form_add_supplier_product');
+				   $('#sp_'+model.attributes.supplier+' .form_add_supplier_product .alert-success').fadeIn();
+				    
+				   $('#sp_'+model.attributes.supplier+' .name_add_sp').val('');
+				   $('#sp_'+model.attributes.supplier+' .price_add_sp').val('');
+				  
+				  
+				  //  for sort reload
+				   /*view_products.remove()
+				   view_products = new ViewProducts({collection: products});
+				   $('#product_list').append(view_products.render().el);
+				   view_products.renderAll()*/
+				   
+				   return;
+				   
+				} else {
+					
+				   $('#preloader_s').fadeOut('fast'); 
+				   
+				   if (resp != null && resp.has_error)
+						$('#up .alert-error strong').html(''+resp.errors);
+						
+				   $("#up .alert-error").clone().appendTo('.form_add_supplier_product');
+				   $('#sp_'+model.attributes.supplier+' .alert-error').fadeIn();
+				   return;
+				}
+				return options.success(resp, status, xhr);
+			};
+			SProductOptions.error = function(resp, status, xhr) {
+				return options.success(resp, status, xhr);
+			}
+		}
+		
+       if (model.methodUrl && model.methodUrl(method.toLowerCase())) {
+      	   options = options || {};
+      	   options.url = model.methodUrl(method.toLowerCase());
+        }
+		
+		Backbone.sync.call(this, method, model, SProductOptions);
+  },
+});
 
+// extend url in view ViewSupplier
+var SupplierProducts = Backbone.Collection.extend({
+  model: SupplierProductsModel,
+  
+  initialize: function(){
+	  this.bind('add', this.addProduct);
+  },
+  
+  addProduct: function(product){
+	product.save({wait: true});
+  },
+  
 });
 
 $(document).ready(function(){
@@ -224,7 +401,6 @@ $(document).ready(function(){
 	$('#close_all').click(function(){
 		$('.sp_list').html('');
 		$('.sp_list').slideUp('fast');
-		
 		$('.visibl').removeClass('hd');
 		$('.visibl').addClass('show');
 		$('.visibl').html('Развернуть <i class="icon-plus-sign"></i>');	
@@ -232,18 +408,23 @@ $(document).ready(function(){
 		return false;
 	});
 	
-	// show add form
-	$('#add_supplier_product').toggle(function() {
-		$('i', this).attr('class', 'icon-minus-sign');
-		$("#form_add_supplier_product .alert").remove();
-		$('.name_add_sp').val('');
-		$('#form_add_supplier_product').slideDown();
-		$('.name_add_sp').focus();
-		return false;
-	}, function() {
-		$('i', this).attr('class', 'icon-plus-sign');
-		$('#form_add_supplier_product').slideUp();
-		return false;
-	});
+})
+
+/**********************************************
+ * Option Product for add/edit Supplier Product
+ **********************************************/
+var OptionProducts = Backbone.View.extend({
+	
+	tagName: "option",
+	
+	template: _.template('<%= name %>'),
+	
+	render: function() {
+		var content = this.template(this.model.toJSON());
+		this.$el.html(content);
+		this.$el.attr('value', this.model.id)
+		return this;
+	},
 	
 })
+

@@ -156,7 +156,7 @@ class SupplierProductsController extends Controller
 	 {
 		$supplier_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findBy(array('supplier' => $id));
 		$products_array = array();
-		sleep(3);
+		//sleep(1);
 		if ($supplier_products)
 			foreach ($supplier_products AS $p)
 				$products_array[] = array(
@@ -164,17 +164,110 @@ class SupplierProductsController extends Controller
 										'supplier_product_name'=>$p->getSupplierName(), 
 										'primary_supplier'=>$p->getPrime(), 
 										'price'=>$p->getPrice(), 
-										'product'=>$p->getProduct()->getId(), 
-										'product_name'=>$p->getProduct()->getName(), 
+										'product'=>$p->getProduct()->getId(),
 										'supplier'=>$p->getSupplier()->getId(),
-										'supplier_name'=>$p->getSupplier()->getName(),
-										'unit' => $p->getProduct()->getUnit(),
-										
 										);
 
 		 $response = new Response(json_encode($products_array), 200);
 		 $response->headers->set('Content-Type', 'application/json');
 		 $response->sendContent();
 		 die(); 
+	 }
+	 
+	 
+	/**
+	 * @Route("/supplier_products/supplier/{supplier_id}/create", name="supplier_products_ajax_create")
+	 */
+	 public function ajaxcreateAction($supplier_id)
+	 {
+		 if (isset($_POST['model']))
+		 {
+			 $model = (array)json_decode($_POST['model']);
+			 if (isset($model['supplier_product_name']) && isset($model['product']) && $supplier_id != 0)
+			 {
+				$supplier = $this->getDoctrine()
+								 ->getRepository('SupplierBundle:Supplier')
+								 ->find((int)$model['supplier']);
+				if (!$supplier)
+					die(0);
+					
+				$product = $this->getDoctrine()
+								->getRepository('SupplierBundle:Product')
+								->find((int)$model['product']);
+				if (!$product)
+					die(0);
+		
+				$price = 0+$model['price'];
+		
+				$validator = $this->get('validator');
+				$supplier_product = new SupplierProducts();
+				$supplier_product->setSupplierName($model['supplier_product_name']);
+				$supplier_product->setPrime($model['primary_supplier']);
+				$supplier_product->setPrice($price);
+				$supplier_product->setSupplier($supplier);
+				$supplier_product->setProduct($product);
+				
+				$errors = $validator->validate($supplier_product);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+						
+					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					die();
+					
+				} else {
+					
+					$em = $this->getDoctrine()->getEntityManager();
+					$em->persist($supplier_product);
+					$em->flush();
+					
+					$attr = array(	'id' => $supplier_product->getId(), 
+									'supplier_product_name' => $supplier_product->getSupplierName(), 
+									'price' => $supplier_product->getPrice(), 
+									'supplier' => (int)$supplier_id, 
+									'primary_supplier' => $supplier_product->getPrime(), 
+									'product' => $supplier_product->getProduct()->getId());
+					
+					echo json_encode($attr);
+					die();
+				
+				}
+				
+			 } else {
+			
+				echo json_encode(array('has_error'=>1, 'errors'=>'Некорректный запрос'));
+				die();
+				
+			 }
+			 
+		 } else {
+			
+			echo json_encode(array('has_error'=>1, 'errors'=>'Некорректный запрос'));
+			die();
+			
+		 }
 	 }	
+	 
+	 
+	/**
+	 * @Route("/supplier_products/supplier/{supplier_id}/delete/{id}", name="supplier_products_ajax_delete")
+	 */
+	 public function ajaxdeleteAction($supplier_id, $id)
+	 {
+		$supplier_product = $this->getDoctrine()
+						->getRepository('SupplierBundle:SupplierProducts')
+						->find($id);
+						
+		if (!$supplier_product)
+			die(0);
+
+		$em = $this->getDoctrine()->getEntityManager();				
+		$em->remove($supplier_product);
+		$em->flush();
+	
+		echo $id;
+		die();
+	 }
 }

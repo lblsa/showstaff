@@ -23,8 +23,7 @@ class SupplierProductsType extends AbstractType
 			'preferred_choices' => array('0'),
 		));
 											
-		$builder->add('price',  'money', array(
-											'divisor' => 100, 
+		$builder->add('price',  'text', array(
 											'required'  => true));
 		
 		$builder->add('product','entity', array( 

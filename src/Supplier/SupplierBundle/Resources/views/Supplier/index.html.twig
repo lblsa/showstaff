@@ -33,8 +33,9 @@
 			</th></thead>
 		</table>  
 		
+		<!-- for clone -->
 		<table class="table table-bordered table-striped hide" id="supplier_product_list">
-		  <thead id="supplier_products_header">
+		  <thead class="supplier_products_header">
 			  <tr>
 				<th>Название
 					<a href="#" class=""><i class="icon-arrow-up"></i></a>
@@ -52,21 +53,19 @@
 			  </tr>
 			  <tr>
 				<th colspan="4" class="add_supplier_product">
-					<a href="#" id="add_supplier_product" class="btn btn-small">Добавить продукт поставщика <i class="icon-plus-sign"></i></a>
-					<p class="form-inline hide" id="form_add_supplier_product">
-						<input name="name" type="text" class="input-small name_add_sp" placeholder="Supplier Product Name">
-						<input name="price" type="text" class="input-small price_add_sp" placeholder="Supplier Price">
+					<a href="#" class="add_supplier_product_show btn btn-small">Добавить продукт поставщика <i class="icon-plus-sign"></i></a>
+					<p class="form-inline hide form_add_supplier_product">
+						<input name="name" type="text" class="input span5 name_add_sp" required="required" placeholder="Название">
+						<input name="price" type="text" class="input-small price_add_sp" required="required" placeholder="Цена">
+						
+						<label>
+							<select class="span1 product_add_sp" name="product"></select> Продукт
+						</label>
 						
 						<label class="checkbox">
 							<input name="primary_supplier" type="checkbox" value="1" class="input-small primary_supplier_add_sp"> Первичный
 						</label>
-						<label>
-							<select class="span1 supplier_product_add" name="product" placeholder="ILKAY"></select> Продукт
-						</label>
-						<label>
-							<select class="span1 supplier_add" name="supplier"></select> Поставщик
-						</label>
-						<a class="add_supplier_product btn btn-mini btn-success">add</a>
+						<a class="pull-right add_supplier_product_btn btn btn-mini btn-success">add</a>
 					</p>
 				</th>
 			  </tr>
@@ -74,12 +73,14 @@
 		</table>
 	  </div>
 	</div>
+<div id="up">
 <div class="alert hide alert-error"><button type="button" class="close" data-dismiss="alert">×</button>
-	Ошибка<strong> (This value is already used)</strong>. Попробуйте еще раз или обратитесь к администратору.
+	Ошибка.<strong></strong><br>Попробуйте еще раз или обратитесь к администратору.
 </div>
 <div class="alert alert-success hide"><button type="button" class="close" data-dismiss="alert">×</button>
 	<strong>Продукт добавлен</strong>
 </div>
 <div class="progress progress-striped active hide" id="preloader"><div class="bar" style="width: 100%;"></div></div>
 <div class="progress progress-striped green active hide" id="preloader_s"><div class="bar" style="width: 100%;"></div></div>
+</div>
 {% endblock %}

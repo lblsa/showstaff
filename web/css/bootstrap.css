@@ -1671,6 +1671,10 @@ input.search-query {
   vertical-align: middle;
 }
 
+.add_supplier_product .form-inline .checkbox, .add_supplier_product .form-inline label {
+  padding:0px 10px;
+}
+
 .form-search .radio input[type="radio"],
 .form-search .checkbox input[type="checkbox"],
 .form-inline .radio input[type="radio"],
@@ -5639,7 +5643,7 @@ a.badge:hover {
 #form_add .alert{
   margin-top:14px;
 }
-#form_add_supplier_product {
+.form_add_supplier_product {
   padding-top:14px;
 }
 #form_add {
@@ -5656,6 +5660,9 @@ a.badge:hover {
 #preloader.progress .bar, #preloader_s.progress .bar {
   background-repeat: repeat;
 }
-.s_name div {
+.s_name .sp_list {
   padding-top:14px;
+}
+.s_name .alert {
+  margin-top:14px;
 }
