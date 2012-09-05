@@ -227,7 +227,7 @@ class SupplierProductsController extends Controller
 				
 				if (count($errors) > 0) {
 					
-					foreach($errors['validate'] AS $error)
+					foreach($errors AS $error)
 						$errorMessage[] = $error->getMessage();
 						
 					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
