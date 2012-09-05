@@ -5666,3 +5666,9 @@ a.badge:hover {
 .s_name .alert {
   margin-top:14px;
 }
+select.product {
+  width: 98px;
+}
+.row-fluid .supplier_product_name {
+  width: 294px;
+}

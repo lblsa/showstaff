@@ -174,6 +174,83 @@ class SupplierProductsController extends Controller
 		 die(); 
 	 }
 	 
+	/**
+	 * @Route("/supplier_products/supplier/{supplier_id}/update/{id}", name="supplier_products_ajax_update")
+	 */
+	 public function ajaxupdateAction($supplier_id, $id)
+	 {
+		 if (isset($_POST['model']))
+		 {
+			 $model = (array)json_decode($_POST['model']);
+			 
+			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
+			 {
+				$supplier_product = $this->getDoctrine()
+						->getRepository('SupplierBundle:SupplierProducts')
+						->find($id);
+				
+				if (!$supplier_product)
+					die(0);
+					
+				$supplier = $this->getDoctrine()
+								 ->getRepository('SupplierBundle:Supplier')
+								 ->find((int)$model['supplier']);
+				if (!$supplier)
+					die(0);
+					
+				$product = $this->getDoctrine()
+								->getRepository('SupplierBundle:Product')
+								->find((int)$model['product']);
+				if (!$product)
+					die(0);
+					
+				$validator = $this->get('validator');
+				
+				$price = 0+$model['price'];
+				
+				$supplier_product->setSupplierName($model['supplier_product_name']);
+				$supplier_product->setPrime($model['primary_supplier']);
+				$supplier_product->setPrice($price);
+				$supplier_product->setSupplier($supplier);
+				$supplier_product->setProduct($product);
+				
+				$errors = $validator->validate($supplier_product);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+						
+					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					die();
+					
+				} else {
+					
+					$em = $this->getDoctrine()->getEntityManager();
+					$em->persist($supplier_product);
+					$em->flush();
+					
+					$attr = array(	'id' => $supplier_product->getId(), 
+									'supplier_product_name' => $supplier_product->getSupplierName(), 
+									'price' => $supplier_product->getPrice(), 
+									'supplier' => (int)$supplier_id, 
+									'primary_supplier' => $supplier_product->getPrime(), 
+									'product' => $supplier_product->getProduct()->getId());
+					
+					echo json_encode($attr);
+					die();
+				
+				}
+			 }
+			 
+		 } else {
+			
+			echo json_encode(array('has_error'=>1, 'errors'=>'Некорректный запрос'));
+			die();
+			
+		 }
+	 }
+	 
 	 
 	/**
 	 * @Route("/supplier_products/supplier/{supplier_id}/create", name="supplier_products_ajax_create")

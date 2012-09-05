@@ -1,7 +1,7 @@
 /****************************************
  * Supplier
  ****************************************/
-var SP = {}; // коллекции продуктром поставщика
+var SP = {}; // коллекции продуктров поставщика
 var VSP = {}; // коллекция видов
 
 var ViewSupplier = Backbone.View.extend({
@@ -48,7 +48,12 @@ var ViewSupplier = Backbone.View.extend({
 			  url: '/supplier_products/supplier/'+this.model.id,
 			});
 			
-			SP[model_id] = new SupplierProductsCurent;	
+			SP[model_id] = new SupplierProductsCurent;
+			
+			SP[model_id].comparator = function(product) {
+			  return product.get("supplier_product_name");
+			};
+			
 			SP[model_id].fetch();
 		} else {
 			exist = 1;			
@@ -128,6 +133,10 @@ var p = $('#suppliers').position();
 $('#preloader_s').css({'left':p.left, 'top': p.top});
 $('#preloader_s').fadeIn('fast');
 
+suppliers.comparator = function(supplier) {
+  return supplier.get("name");
+};
+
 suppliers.fetch();
 
 
@@ -141,14 +150,16 @@ var SupplierProductView = Backbone.View.extend({
 	
 	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= supplier_product_name %></td>'+
 							'<td class="ps_price"><%= price %></td>'+
-							'<td><% print(units[products._byId[product].attributes.unit]); %></td>'+
+							'<td class="ps_product"><% print(units[products._byId[product].attributes.unit]); %></td>'+
 							'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
 	events: {
-		'click .ps_name': 'edit',
+		'dblclick .ps_name': 'edit',
 		'click .remove': 'remove',
+		'click .save': 'save',
+		'click .cancel': 'cancel',
 	},
 	
 	initialize: function() {
@@ -171,7 +182,25 @@ var SupplierProductView = Backbone.View.extend({
 	},
 	
 	edit: function() {
-		console.log(this.model.get('id'));
+		$('.ps_name', this.el).html('<input type="text" value="'+this.model.get('supplier_product_name')+'" class="supplier_product_name">');
+		$('.ps_price', this.el).html('<input type="text" value="'+this.model.get('price')+'" class="price input-small">');
+		$('.ps_product', this.el).html('<select class="product"></select>');		
+		
+		var product_id = this.model.get('product');
+		products.each(function(p){
+			var view = new OptionProducts({model:p});
+			$('.product', this.el).append(view.render().el);
+			if(p.id == product_id) {
+				$(view.render().el).attr('selected','selected');
+			}
+		});
+		$('.ps_prime', this.el).html(	'<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
+										' <a class="save btn btn-mini btn-success">save</a>'+
+										' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+		
+		if (this.model.get('primary_supplier')) {
+			$('.primary_supplier', this.el).attr('checked','checked');
+		}
 	},
 	
 	remove: function() {
@@ -179,9 +208,22 @@ var SupplierProductView = Backbone.View.extend({
 			this.preloader();
 			this.model.destroy({wait: true });
 		}
-		console.log(this.model);
 		return false;
-		
+	},
+	
+	save: function() {
+		this.preloader();
+		this.model.save({
+							supplier_product_name: $('.supplier_product_name', this.el).val(), 
+							price: $('.price', this.el).val(),
+							product: $('.product', this.el).val(),
+							primary_supplier: $('.primary_supplier', this.el).is(':checked')?1:0,
+							supplier: this.model.attributes.supplier
+						},{wait: true});
+	},
+	
+	cancel: function() {
+		return this.render().el;	
 	}
 	
 })
@@ -227,8 +269,8 @@ var ViewSupplierProducts = Backbone.View.extend({
 					$('#sp_'+id+' .supplier_products').append(content);
 				});
 				
-				$('.supplier_products .supplier_product td').attr('style','background-color: #fff;');
-				$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd; background-color: #fff;');
+				//$('.supplier_products .supplier_product td').attr('style','background-color: #fff;');
+				$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd;');
 			
 			} else {
 			
@@ -327,7 +369,49 @@ var SupplierProductsModel = Backbone.Model.extend({
 				return options.success(resp, status, xhr);
 			}
 		}
-       
+
+        if (method == 'update') {
+			SProductOptions.success = function(resp, status, xhr) {
+				
+				if (resp != null && resp.has_error) {
+					
+				   $('#preloader_s').fadeOut('fast'); 
+				   $('.ps_prime', model.view.el).append('<div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'Ошибка (' + resp.errors + '). '+
+													'Попробуйте еще раз или обратитесь к администратору.</div>');
+				   return;
+				} else {
+					console.log(resp);
+				   if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
+					   model.set(resp,{silent: true});
+					   model.view.render();
+					   
+					   //  for sort reload
+					   /*products.sort({silent: true});
+					   
+					   view_products.remove()
+					   view_products = new ViewProducts({collection: products});
+					   $('#product_list').append(view_products.render().el);
+					   view_products.renderAll()*/
+					   
+					   return;
+				   } else {
+					   $('#preloader_s').fadeOut('fast'); 
+					   $('.ps_prime', model.view.el).append('<div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
+					   model.set(model.previousAttributes(),{silent: true});
+					   return;
+				   }
+				}
+				return options.success(resp, status, xhr);
+			};
+			SProductOptions.error = function(resp, status, xhr) {
+				return options.success(resp, status, xhr);
+			}
+		}
+
 		if (method == 'create') {
 			SProductOptions.success = function(resp, status, xhr) {
 				
