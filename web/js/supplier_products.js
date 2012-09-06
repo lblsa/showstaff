@@ -3,7 +3,7 @@
  ****************************************/
 var SP = {}; // коллекции продуктров поставщика
 var VSP = {}; // коллекция видов
-
+var SORT = {}; // Сортировка в коллекциях
 var ViewSupplier = Backbone.View.extend({
 	
 	tagName: "tr",
@@ -50,6 +50,8 @@ var ViewSupplier = Backbone.View.extend({
 			
 			SP[model_id] = new SupplierProductsCurent;
 			
+			SORT[model_id] = 'asc';
+			
 			SP[model_id].comparator = function(product) {
 			  return product.get("supplier_product_name");
 			};
@@ -61,7 +63,7 @@ var ViewSupplier = Backbone.View.extend({
 		
 		VSP[model_id] = new ViewSupplierProducts({collection: SP[model_id]});
 		
-		$('#sp_'+model_id, this.$el).html(VSP[model_id].render({id:model_id}).el);		
+		$('#sp_'+model_id).html(VSP[model_id].render({id:model_id}).el);		
 		
 		this.preloader();
 		
@@ -238,6 +240,9 @@ var ViewSupplierProducts = Backbone.View.extend({
 		'click .add_supplier_product_show': 'show_form',
 		'click .close_form': 'close_form',
 		'click .add_supplier_product_btn': 'add',
+		'click .sort_by_name': 'sort_by_name',
+		'click .sort_by_price': 'sort_by_price',
+		'click .sort_by_prime': 'sort_by_prime',
 	},
 	
 	initialize: function() {
@@ -258,28 +263,39 @@ var ViewSupplierProducts = Backbone.View.extend({
 			$('#preloader_s').hide();
 			$('#sp_'+this.args.id).slideDown();
 			
-			var id = this.args.id;
-			
-			if (this.collection.length > 0) {
-				
-				$('#sp_'+this.args.id+' .supplier_products').html('');
-				this.collection.each(function(model){
-					var view = new SupplierProductView({model:model});
-					var content = view.render().el;
-					$('#sp_'+id+' .supplier_products').append(content);
-				});
-				
-				//$('.supplier_products .supplier_product td').attr('style','background-color: #fff;');
-				$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd;');
-			
-			} else {
-			
-				this.$('.supplier_products').append('<tr class="alert_row"><td colspan="4"><div class="alert">'+
-													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'У данного поставщика еще нет продуктов</div></td></tr>');
-			}
+			this.renderProducts();
 		}
 		return this;
+	},
+	
+	renderProducts: function() {
+		
+		var id = this.args.id;
+		
+		if (this.collection.length > 0) {
+			
+			$('#sp_'+this.args.id+' .supplier_products').html('');
+			this.collection.each(function(model){
+				var view = new SupplierProductView({model:model});
+				var content = view.render().el;
+				
+				if (SORT[id] == 'desc')
+					$('#sp_'+id+' .supplier_products').prepend(content);
+				else
+					$('#sp_'+id+' .supplier_products').append(content);
+			});
+			
+			$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd;');
+		
+		} else {
+		
+			this.$('.supplier_products').append('<tr class="alert_row"><td colspan="4"><div class="alert">'+
+												'<button type="button" class="close" data-dismiss="alert">×</button>'+
+												'У данного поставщика еще нет продуктов</div></td></tr>');
+		}
+		
+		return this;
+		
 	},
 	
 	show_form: function() {
@@ -312,6 +328,8 @@ var ViewSupplierProducts = Backbone.View.extend({
 	},
 	
 	add: function() {
+		this.collection = SP[this.args.id];
+		
 		$('#preloader_s').width($('#suppliers').width());
 		$('#preloader_s').height($('#suppliers').height());
 		var p = $('#suppliers').position();
@@ -326,6 +344,68 @@ var ViewSupplierProducts = Backbone.View.extend({
 							}]);
 	},
 
+	sort_by_name: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("supplier_product_name");
+		};
+		
+		list.reset(SP[this.args.id].models, {silent:true})
+		this.collection = list;	
+		
+		if (SORT[this.args.id] == 'asc') {
+			SORT[this.args.id] = 'desc';
+			$('#sp_'+this.args.id+' .sort_by_name i').attr('class','icon-arrow-down');
+		} else {
+			SORT[this.args.id] = 'asc';
+			$('#sp_'+this.args.id+' .sort_by_name i').attr('class','icon-arrow-up');
+		}
+		
+		this.renderProducts();
+		
+		return false;
+	},
+	
+	sort_by_price: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("price");
+		};
+		
+		list.reset(SP[this.args.id].models, {silent:true})
+		this.collection = list;		
+		if (SORT[this.args.id] == 'asc') {
+			SORT[this.args.id] = 'desc';
+			$('#sp_'+this.args.id+' .sort_by_price i').attr('class','icon-arrow-down');
+		} else {
+			SORT[this.args.id] = 'asc';
+			$('#sp_'+this.args.id+' .sort_by_price i').attr('class','icon-arrow-up');
+		}
+		
+		this.renderProducts();
+		return false;
+	},
+	
+	sort_by_prime: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("primary_supplier");
+		};
+		
+		list.reset(SP[this.args.id].models, {silent:true})
+		this.collection = list;	
+		
+		if (SORT[this.args.id] == 'asc') {
+			SORT[this.args.id] = 'desc';
+			$('#sp_'+this.args.id+' .sort_by_prime i').attr('class','icon-arrow-down');
+		} else {
+			SORT[this.args.id] = 'asc';
+			$('#sp_'+this.args.id+' .sort_by_prime i').attr('class','icon-arrow-up');
+		}
+		
+		this.renderProducts();
+		return false;
+	}
 });
 
 
@@ -354,7 +434,6 @@ var SupplierProductsModel = Backbone.Model.extend({
 				$('#preloader_s').fadeOut('fast');
 				if (resp == model.id) {
 					$(model.view.el).remove();
-					console.log(model.collection);
 					model.collection.remove(model, {silent: true});
 					return;
 				} else {
@@ -382,18 +461,16 @@ var SupplierProductsModel = Backbone.Model.extend({
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
 				} else {
-					console.log(resp);
 				   if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
 					   model.set(resp,{silent: true});
 					   model.view.render();
 					   
 					   //  for sort reload
-					   /*products.sort({silent: true});
-					   
-					   view_products.remove()
-					   view_products = new ViewProducts({collection: products});
-					   $('#product_list').append(view_products.render().el);
-					   view_products.renderAll()*/
+					   SP[resp.supplier].sort({silent: true});
+					   VSP[resp.supplier].remove()
+					   VSP[resp.supplier] = new ViewSupplierProducts({collection: SP[resp.supplier]});
+					   $('#sp_'+resp.supplier).append(VSP[resp.supplier].render({id:resp.supplier}).el);
+					   VSP[resp.supplier].renderAll();
 					   
 					   return;
 				   } else {
@@ -417,8 +494,6 @@ var SupplierProductsModel = Backbone.Model.extend({
 				
 				$('#sp_'+model.attributes.supplier+' .alert').remove();
 				
-				console.log(resp);
-				
 				if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
 				   model.set(resp, {silent:true});
 				   var view = new SupplierProductView({model:model});
@@ -430,12 +505,12 @@ var SupplierProductsModel = Backbone.Model.extend({
 				   $('#sp_'+model.attributes.supplier+' .name_add_sp').val('');
 				   $('#sp_'+model.attributes.supplier+' .price_add_sp').val('');
 				  
-				  
-				  //  for sort reload
-				   /*view_products.remove()
-				   view_products = new ViewProducts({collection: products});
-				   $('#product_list').append(view_products.render().el);
-				   view_products.renderAll()*/
+				   //  for sort reload
+				   SP[model.attributes.supplier].sort({silent: true});
+				   VSP[model.attributes.supplier].remove()
+				   VSP[model.attributes.supplier] = new ViewSupplierProducts({collection: SP[model.attributes.supplier]});
+				   $('#sp_'+model.attributes.supplier).append(VSP[model.attributes.supplier].render({id:model.attributes.supplier}).el);
+				   VSP[model.attributes.supplier].renderAll();
 				   
 				   return;
 				   
@@ -511,4 +586,6 @@ var OptionProducts = Backbone.View.extend({
 	},
 	
 })
+
+
 
