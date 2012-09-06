@@ -63,7 +63,7 @@ var ViewSupplier = Backbone.View.extend({
 		
 		VSP[model_id] = new ViewSupplierProducts({collection: SP[model_id]});
 		
-		$('#sp_'+model_id, this.$el).html(VSP[model_id].render({id:model_id}).el);		
+		$('#sp_'+model_id).html(VSP[model_id].render({id:model_id}).el);		
 		
 		this.preloader();
 		
@@ -345,6 +345,13 @@ var ViewSupplierProducts = Backbone.View.extend({
 	},
 
 	sort_by_name: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("supplier_product_name");
+		};
+		
+		list.reset(SP[this.args.id].models, {silent:true})
+		this.collection = list;	
 		
 		if (SORT[this.args.id] == 'asc') {
 			SORT[this.args.id] = 'desc';
@@ -386,7 +393,8 @@ var ViewSupplierProducts = Backbone.View.extend({
 		};
 		
 		list.reset(SP[this.args.id].models, {silent:true})
-		this.collection = list;		
+		this.collection = list;	
+		
 		if (SORT[this.args.id] == 'asc') {
 			SORT[this.args.id] = 'desc';
 			$('#sp_'+this.args.id+' .sort_by_prime i').attr('class','icon-arrow-down');
@@ -426,7 +434,6 @@ var SupplierProductsModel = Backbone.Model.extend({
 				$('#preloader_s').fadeOut('fast');
 				if (resp == model.id) {
 					$(model.view.el).remove();
-					console.log(model.collection);
 					model.collection.remove(model, {silent: true});
 					return;
 				} else {
@@ -454,18 +461,16 @@ var SupplierProductsModel = Backbone.Model.extend({
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
 				} else {
-					console.log(resp);
 				   if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
 					   model.set(resp,{silent: true});
 					   model.view.render();
 					   
 					   //  for sort reload
-					   /*products.sort({silent: true});
-					   
-					   view_products.remove()
-					   view_products = new ViewProducts({collection: products});
-					   $('#product_list').append(view_products.render().el);
-					   view_products.renderAll()*/
+					   SP[resp.supplier].sort({silent: true});
+					   VSP[resp.supplier].remove()
+					   VSP[resp.supplier] = new ViewSupplierProducts({collection: SP[resp.supplier]});
+					   $('#sp_'+resp.supplier).append(VSP[resp.supplier].render({id:resp.supplier}).el);
+					   VSP[resp.supplier].renderAll();
 					   
 					   return;
 				   } else {
@@ -500,12 +505,12 @@ var SupplierProductsModel = Backbone.Model.extend({
 				   $('#sp_'+model.attributes.supplier+' .name_add_sp').val('');
 				   $('#sp_'+model.attributes.supplier+' .price_add_sp').val('');
 				  
-				  
-				  //  for sort reload
-				   /*view_products.remove()
-				   view_products = new ViewProducts({collection: products});
-				   $('#product_list').append(view_products.render().el);
-				   view_products.renderAll()*/
+				   //  for sort reload
+				   SP[model.attributes.supplier].sort({silent: true});
+				   VSP[model.attributes.supplier].remove()
+				   VSP[model.attributes.supplier] = new ViewSupplierProducts({collection: SP[model.attributes.supplier]});
+				   $('#sp_'+model.attributes.supplier).append(VSP[model.attributes.supplier].render({id:model.attributes.supplier}).el);
+				   VSP[model.attributes.supplier].renderAll();
 				   
 				   return;
 				   
