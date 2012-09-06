@@ -122,9 +122,8 @@ class ProductController extends Controller
 	 */
 	 public function ajaxupdateAction($id)
 	 {
-		 if (isset($_POST['model']))
+		 if (isset($_POST['model'])) 
 		 {
-			 //sleep(5);
 			 $model = (array)json_decode($_POST['model']);
 			 
 			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
