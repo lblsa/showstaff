@@ -1,0 +1,55 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+			<div class="navbar">
+			  <div class="navbar-inner">
+				<ul class="nav">
+				  <li><a href="">Supplier</a></li>
+				  <li><a href="{{ path('company') }}">Companies</a></li>
+				</ul>
+			  </div>
+			</div>
+		</div>
+		<div class="span12">
+			<h2>"{{ restaurant.name }}"</h2>
+			<table class="table table-striped">
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Address</th>
+					<th>Director</th>
+					<th>Company</th>
+					<th>Delete</th>
+				</tr>
+					<tr>
+						<td>{{ restaurant.id }}</td>
+						<td>
+							<p>
+								<a href="{{ path('restaurant_edit', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">
+								<i class="icon-edit"></i>
+								</a>&nbsp;&nbsp;
+								<a href="{{ path('restaurant_show', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">
+									{{ restaurant.name }}
+								</a>
+							</p>
+						</td>
+						<td>{{ restaurant.address }}</td>
+						<td>{{ restaurant.director }}</td>
+						<td>
+							<a href="{{ path('company_show', { 'id': company.id}) }}" class="btn btn-link">
+								{{ restaurant.name }}
+							</a>
+						</td>
+						<td>
+							<a href="{{ path('restaurant_del', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link del" title="Delete Item">
+								<i class="icon-remove"></i>
+							</a>
+						</td>
+					</tr>
+			</table>
+		</div>
+	</div>
+{% endblock %}
