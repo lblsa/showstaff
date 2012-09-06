@@ -2,18 +2,16 @@
 
 namespace Supplier\SupplierBundle\Entity;
 
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Supplier\SupplierBundle\Entity\Product
+ * Supplier\SupplierBundle\Entity\Restaurant
  *
  * @ORM\Table()
- * @ORM\Entity(repositoryClass="Supplier\SupplierBundle\Entity\ProductRepository")
- * @UniqueEntity("name")
+ * @ORM\Entity(repositoryClass="Supplier\SupplierBundle\Entity\RestaurantRepository")
  */
-class Product
+class Restaurant
 {
     /**
      * @var integer $id
@@ -21,15 +19,13 @@ class Product
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
-     * @Assert\Type(type="integer", message="Id '{{ value }}' is not a valid {{ type }}.")
      */
     private $id;
 
     /**
      * @var string $name
      *
-     * @ORM\Column(name="name", type="string", length=255, unique=true)
-	 * @Assert\NotBlank()
+     * @ORM\Column(name="name", type="string", length=255)
 	 * @Assert\Type(type="string", message="Name '{{ value }}' is not a valid {{ type }}.")
      * @Assert\MinLength(3)
      * @Assert\MaxLength(255)
@@ -37,22 +33,27 @@ class Product
     private $name;
 
     /**
-     * @var integer $unit
+     * @var string $address
      *
-     * @ORM\Column(name="unit", type="integer", length=11)
-	 * @Assert\NotBlank()
-	 * @Assert\Type(type="numeric", message="Unit '{{ value }}' is not a valid {{ type }}.")
-     * @Assert\Min(1)
-     * @Assert\Max(10)
+     * @ORM\Column(name="address", type="string", length=255, nullable=true)
+     * @Assert\MaxLength(255)
      */
-    private $unit;
+    private $address;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Company")
-     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
-     * @Assert\Type(type="integer", message="Company '{{ value }}' is not a valid {{ type }}.")
+     * @var string $director
+     *
+     * @ORM\Column(name="director", type="string", length=255, nullable=true)
+     * @Assert\MaxLength(255)
      */
-    protected $company;
+    private $director;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Company", inversedBy="restaurants")
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    private $company;
+
 
     /**
      * Get id
@@ -85,23 +86,43 @@ class Product
     }
 
     /**
-     * Set unit
+     * Set address
      *
-     * @param integer $unit
+     * @param string $address
      */
-    public function setUnit($unit)
+    public function setAddress($address)
     {
-        $this->unit = $unit;
+        $this->address = $address;
     }
 
     /**
-     * Get unit
+     * Get address
      *
-     * @return integer 
+     * @return string 
      */
-    public function getUnit()
+    public function getAddress()
     {
-        return $this->unit;
+        return $this->address;
+    }
+
+    /**
+     * Set director
+     *
+     * @param string $director
+     */
+    public function setDirector($director)
+    {
+        $this->director = $director;
+    }
+
+    /**
+     * Get director
+     *
+     * @return string 
+     */
+    public function getDirector()
+    {
+        return $this->director;
     }
 
     /**

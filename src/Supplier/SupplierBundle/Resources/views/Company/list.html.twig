@@ -1,0 +1,105 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+			<div class="navbar">
+			  <div class="navbar-inner">
+				<ul class="nav">
+				  <li><a href="">Supplier</a></li>
+				  <li class="active"><a href="{{ path('company') }}">Companies</a></li>
+				</ul>
+			  </div>
+			</div>
+		</div>
+		<div class="span12">
+			<h2>Companies</h2>
+			{% if companies is defined and companies|length > 0 %}
+				<table class="table table-striped">
+					<tr>
+						<th>#</th>
+						<th>Name</th>
+						<th>Restaurants</th>
+						<th>Extended name</th>
+						<th>INN</th>
+						<th>Delete</th>
+					</tr>
+					 {% for company in companies %}
+						<tr>
+							<td>{{ company.id }}</td>
+							<td>
+								<p>
+									<a href="{{ path('company_edit', { 'id': company.id }) }}" class="btn btn-link">
+									<i class="icon-edit"></i>
+									</a>&nbsp;&nbsp;
+									<a href="{{ path('company_show', { 'id': company.id }) }}" class="btn btn-link">
+										{{ company.name }}
+									</a>
+								</p>
+							</td>
+							<td>
+								<a href="{{ path('restaurant', { 'cid': company.id }) }}" class="btn btn-link">
+									Рестораны компании
+								</a>
+							</td>
+							<td>{{ company.extendedName }}</td>
+							<td>{{ company.inn }}</td>
+							<td>
+								<a href="{{ path('company_del', { 'id': company.id }) }}" class="btn btn-link del" title="Delete Item">
+									<i class="icon-remove"></i>
+								</a>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="3"><div class="alert alert-error">Empty Result</div></td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% else %}
+				<div class="alert alert-error">Empty Result</div>
+			{% endif %}
+		</div>
+		<div class="span12">
+			<legend>Add Company <a href="#" class="btn btn-small" id="form_add_company">Hide Form</a></legend>
+			<div class="form_add_company">
+				<form action="{{ path('company') }}" method="post" {{ form_enctype(form) }} class="form-horizontal">
+					
+					{{ form_errors(form) }}
+					
+					<div class="control-group">
+						{{ form_label(form.name, null, { 'attr': {'class': 'control-label'}}) }}
+						
+						<div class="controls">
+							{{ form_errors(form.name) }}
+							{{ form_widget(form.name) }}
+						</div>
+					</div>
+					<div class="control-group">
+						{{ form_label(form.extended_name, null, { 'attr': {'class': 'control-label'}}) }}
+						
+						<div class="controls">
+							{{ form_errors(form.extended_name) }}
+							{{ form_widget(form.extended_name) }}
+						</div>
+					</div>
+					<div class="control-group">
+						{{ form_label(form.inn, null, { 'attr': {'class': 'control-label'}}) }}
+						
+						<div class="controls">
+							{{ form_errors(form.inn) }}
+							{{ form_widget(form.inn) }}
+						</div>
+					</div>
+					{{ form_rest(form) }}
+					<div class="control-group">
+						<div class="controls">
+							<input type="submit" value="Add" />
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}
