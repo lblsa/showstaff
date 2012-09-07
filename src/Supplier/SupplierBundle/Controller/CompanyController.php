@@ -25,7 +25,7 @@ class CompanyController extends Controller
 		
 		$form = $this->createForm(new CompanyType(), $company);
 		if ($request->getMethod() == 'POST')
-		{			
+		{
 			$validator = $this->get('validator');
 			$form->bindRequest($request);
 
@@ -36,7 +36,17 @@ class CompanyController extends Controller
 				$em->persist($company);
 				$em->flush();
 				
-				return $this->redirect($this->generateUrl('company'));
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Company  #'.$company->getId().' is created');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('company'));
+				}
 			}
 		}
 		
@@ -48,21 +58,42 @@ class CompanyController extends Controller
     /**
      * @Route("/company/{id}/del", name="company_del")
      */
-    public function delAction($id)
+    public function delAction($id, Request $request)
     {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($id);
 						
-		if (!$company) {
-			throw $this->createNotFoundException('No company found for id '.$id);
+		if (!$company) 
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$id);
+			}
 		}
 		
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($company);
 		$em->flush();
-			
-        return $this->redirect($this->generateUrl('company'));
+		
+		if ($request->isXmlHttpRequest()) 
+		{
+			$result = array('has_error' => 0, 'result' => 'Company  #'.$id.' is removed');
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		else
+		{
+			return $this->redirect($this->generateUrl('company'));
+		}
     }
 	
     /**
@@ -76,7 +107,17 @@ class CompanyController extends Controller
 						->find($id);
 						
 		if (!$company) {
-			throw $this->createNotFoundException('No company found for id '.$id);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$id);
+			}
 		}
 		
 		$form = $this->createForm(new CompanyType(), $company);
@@ -92,7 +133,18 @@ class CompanyController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($company);
 				$em->flush();
-				return $this->redirect($this->generateUrl('company'));
+				
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Company #'.$id.' is updated');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('company'));
+				}
 			}
 		}
 
@@ -104,14 +156,24 @@ class CompanyController extends Controller
      * @Route("/company/{id}", name="company_show")
      * @Template()
      */
-    public function showAction($id)
+    public function showAction($id, Request $request)
     {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($id);
 						
 		if (!$company) {
-			throw $this->createNotFoundException('No company found for id '.$id);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$id);
+			}
 		}
 	
 		return array('company' => $company);

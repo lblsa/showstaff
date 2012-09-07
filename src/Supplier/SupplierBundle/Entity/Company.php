@@ -49,7 +49,6 @@ class Company
      * @var string $extendedName
      *
      * @ORM\Column(name="extended_name", type="text", nullable=true)
-     * @Assert\Blank()
      */
     private $extendedName;
 

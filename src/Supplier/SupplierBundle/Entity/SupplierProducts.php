@@ -27,7 +27,7 @@ class SupplierProducts
      *
      * @ORM\Column(name="price", type="float")
 	 * @Assert\NotBlank(message="<br>Price should not be blank")
-	 * @Assert\Type(type="integer", message="<br>Price '{{ value }}' is not a valid {{ type }}")
+	 * @Assert\Type(type="numeric", message="<br>Price '{{ value }}' is not a valid {{ type }}")
      * @Assert\Min(limit=0, message="<br>Price should have {{ limit }} characters or more")
      * @Assert\Max(limit=100000, message="<br>Price should have {{ limit }} characters or less")
      */

@@ -24,7 +24,17 @@ class RestaurantController extends Controller
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {
-			throw $this->createNotFoundException('No company found for id '.$cid);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$cid);
+			}
 		}
 		
 		$restaurant = new Restaurant();
@@ -43,7 +53,17 @@ class RestaurantController extends Controller
 				$em->persist($restaurant);
 				$em->flush();
 				
-				return $this->redirect($this->generateUrl('restaurant', array('cid' => $cid)));
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Restaurant #'.$restaurant->getId().' is created');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('restaurant', array('cid' => $cid)));
+				}
 			}
 		}
 		
@@ -56,21 +76,41 @@ class RestaurantController extends Controller
     /**
      * @Route("/company/{cid}/restaurant/{rid}/del", name="restaurant_del")
      */
-    public function delAction($cid, $rid)
+    public function delAction($cid, $rid, Request $request)
     {
 		$restaurant = $this->getDoctrine()
 						->getRepository('SupplierBundle:Restaurant')
 						->find($rid);
 						
 		if (!$restaurant) {
-			throw $this->createNotFoundException('No restaurant found for id '.$rid);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No restaurant found for id '.$rid);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No restaurant found for id '.$rid);
+			}
 		}
 		
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($restaurant);
 		$em->flush();
 			
-        return $this->redirect($this->generateUrl('restaurant', array('cid'=>$cid)));
+		if ($request->isXmlHttpRequest()) 
+		{
+			$result = array('has_error' => 0, 'result' => 'Restaurant #'.$rid.' is deleted');
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		else
+		{
+			return $this->redirect($this->generateUrl('restaurant', array('cid'=>$cid)));
+		}
     }
 	
     /**
@@ -82,7 +122,17 @@ class RestaurantController extends Controller
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {
-			throw $this->createNotFoundException('No company found for id '.$cid);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$cid);
+			}
 		}
 		
 		$restaurant = $this->getDoctrine()
@@ -90,7 +140,17 @@ class RestaurantController extends Controller
 						->find($rid);
 						
 		if (!$restaurant) {
-			throw $this->createNotFoundException('No restaurant found for id '.$rid);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No restaurant found for id '.$rid);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No restaurant found for id '.$rid);
+			}
 		}
 		
 		$form = $this->createForm(new RestaurantType(), $restaurant);
@@ -108,7 +168,17 @@ class RestaurantController extends Controller
 				$em->persist($restaurant);
 				$em->flush();
 				
-				return $this->redirect($this->generateUrl('restaurant', array('cid' => $cid)));
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Restaurant #'.$rid.' is updated');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('restaurant', array('cid' => $cid)));
+				}
 			}
 		}
 
@@ -127,7 +197,17 @@ class RestaurantController extends Controller
 						->find($cid);
 						
 		if (!$company) {
-			throw $this->createNotFoundException('No company found for id '.$cid);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$cid);
+			}
 		}
 		
 		$restaurant = $this->getDoctrine()
@@ -135,7 +215,17 @@ class RestaurantController extends Controller
 						->find($rid);
 						
 		if (!$restaurant) {
-			throw $this->createNotFoundException('No restaurant found for id '.$rid);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'result' => 'No restaurant found for id '.$rid);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No restaurant found for id '.$rid);
+			}
 		}
 	
 		return array('company' => $company, 'restaurant' => $restaurant);

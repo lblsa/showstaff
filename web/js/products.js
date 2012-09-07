@@ -144,7 +144,7 @@ var ProductsModel = Backbone.Model.extend({
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
 				$('#preloader').fadeOut('fast');
-				if (resp == model.id) {
+				if (resp != null && typeof(resp.result) != 'undefined' && resp.result == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
 				   
@@ -211,7 +211,7 @@ var ProductsModel = Backbone.Model.extend({
 		
 		if (method == 'create') {
 			productOptions.success = function(resp, status, xhr) {
-				if (resp != null && typeof(resp.has_error) != 'undefined') {
+				if (resp != null && typeof(resp.has_error) != 'undefined' && resp.has_error == 1) {
 				   //if isset has_error we can show errors
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.errors + '). ');

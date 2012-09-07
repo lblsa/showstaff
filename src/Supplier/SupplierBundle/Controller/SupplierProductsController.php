@@ -25,21 +25,41 @@ class SupplierProductsController extends Controller
     /**
      * @Route("/supplier/products/del/{id}", name="supplier_products_del")
      */
-    public function delAction($id)
+    public function delAction($id, Request $request)
     {
 		$supplier_product = $this->getDoctrine()
 						->getRepository('SupplierBundle:SupplierProducts')
 						->find($id);
 						
 		if (!$supplier_product) {
-			throw $this->createNotFoundException('No Supplier Products found for id '.$id);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'errors' => 'No Supplier Products found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No Supplier Products found for id '.$id);
+			}
 		}
 		
 		$em = $this->getDoctrine()->getEntityManager();					
 		$em->remove($supplier_product);
 		$em->flush();
-			
-        return $this->redirect($this->generateUrl('supplier_products_list'));
+		
+		if ($request->isXmlHttpRequest()) 
+		{
+			$result = array('has_error' => 0, 'errors' => 'Supplier Products found for id #'.$id.' is deleted');
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		else
+		{
+			return $this->redirect($this->generateUrl('supplier_products_list'));
+		}
     }
 	
 	 /**
@@ -63,7 +83,18 @@ class SupplierProductsController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($supplier_product);
 				$em->flush();
-				return $this->redirect($this->generateUrl('supplier_products_list'));
+				
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 1, 'errors' => 'Supplier Products #'.$supplier_product->getId.' is created');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('supplier_products_list'));
+				}
 			}
 		}
 
@@ -94,7 +125,18 @@ class SupplierProductsController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($supplier_product);
 				$em->flush();
-				return $this->redirect($this->generateUrl('supplier_products_list'));
+				
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 1, 'errors' => 'Supplier Products #'.$id.' is updated');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('supplier_products_list'));
+				}
 			}
 		}
 
@@ -127,7 +169,7 @@ class SupplierProductsController extends Controller
 					->get();
 					
 		 $products_array = array();
-		//sleep(1);
+
 		if ($supplier_products)
 			foreach ($supplier_products AS $p)
 				$products_array[] = array(
@@ -207,7 +249,9 @@ class SupplierProductsController extends Controller
 					$errors[] = 'Продукт не существует<!--'.(int)$model['product'].'-->';
 				
 				if (count($errors) > 0) {
-					echo json_encode(array('has_error'=>1, 'errors'=>$errors));
+					$result = array('has_error'=>1, 'errors'=>$errors);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 				}
 				
@@ -230,7 +274,9 @@ class SupplierProductsController extends Controller
 					foreach($errors['validate'] AS $error)
 						$errorMessage[] = $error->getMessage();
 						
-					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					$result = array('has_error'=>1, 'errors'=>$errors);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 					
 				} else {
@@ -246,18 +292,20 @@ class SupplierProductsController extends Controller
 									'primary_supplier' => $supplier_product->getPrime(), 
 									'product' => $supplier_product->getProduct()->getId());
 					
-					echo json_encode($attr);
+					$response = new Response(json_encode($attr), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 				
 				}
 			 }
 			 
-		 } else {
-			
-			echo json_encode(array('has_error'=>1, 'errors'=>'Некорректный запрос'));
-			die();
-			
 		 }
+			
+		$result = array('has_error'=>1, 'errors'=> 'Invalid request');
+		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+
 	 }
 	 
 	 
@@ -286,7 +334,9 @@ class SupplierProductsController extends Controller
 					$errors[] = 'Продукт не существует<!--'.(int)$model['product'].'-->';
 		
 				if (count($errors) > 0) {
-					echo json_encode(array('has_error'=>1, 'errors'=>$errors));
+					$result = array('has_error'=>1, 'errors'=>$errors);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 				}
 		
@@ -307,7 +357,9 @@ class SupplierProductsController extends Controller
 					foreach($errors AS $error)
 						$errorMessage[] = $error->getMessage();
 						
-					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					$result = array('has_error'=>1, 'errors'=>$errorMessage);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 					
 				} else {
@@ -323,25 +375,19 @@ class SupplierProductsController extends Controller
 									'primary_supplier' => $supplier_product->getPrime(), 
 									'product' => $supplier_product->getProduct()->getId());
 					
-					echo json_encode($attr);
+					$response = new Response(json_encode($attr), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 				
 				}
-				
-			 } else {
-			
-				echo json_encode(array('has_error'=>1, 'errors'=>'Некорректный запрос'));
-				die();
-				
-			 }
-			 
-		 } else {
-			
-			echo json_encode(array('has_error'=>1, 'errors'=>'Некорректный запрос'));
-			die();
-			
-		 }
-	 }	
+			}
+		}
+		
+		$result = array('has_error'=>1, 'errors'=> 'Invalid request');
+		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+	}	
 	 
 	 
 	/**
@@ -354,7 +400,19 @@ class SupplierProductsController extends Controller
 						->find($id);
 						
 		if (!$supplier_product)
-			die(0);
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'errors' => 'No Supplier Products found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No Supplier Products found for id '.$id);
+			}
+		}
 
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($supplier_product);
