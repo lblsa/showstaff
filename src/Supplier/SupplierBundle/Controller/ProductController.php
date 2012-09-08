@@ -29,14 +29,34 @@ class ProductController extends Controller
 						->find($id);
 						
 		if (!$product) {
-			throw $this->createNotFoundException('No product found for id '.$id);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'errors' => 'No product found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No product found for id '.$id);
+			}
 		}
 		
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($product);
 		$em->flush();
-			
-        return $this->redirect($this->generateUrl('product_list'));
+		
+		if ($request->isXmlHttpRequest()) 
+		{
+			$result = array('has_error' => 0, 'result' => 'Product #'.$id.' is deleted');
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		else
+		{
+			return $this->redirect($this->generateUrl('product_list'));
+		}
     }
     
 
@@ -62,7 +82,17 @@ class ProductController extends Controller
 				$em->persist($product);
 				$em->flush();
 				
-				return $this->redirect($this->generateUrl('product_list'));
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Product #'.$product->getId().' is created');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('product_list'));
+				}
 			}
 		}
 
@@ -98,7 +128,18 @@ class ProductController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($product);
 				$em->flush();
-				return $this->redirect($this->generateUrl('product_list'));
+				
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Product #'.$id.' is updated');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('product_list'));
+				}
 			}
 		}
 
@@ -122,9 +163,8 @@ class ProductController extends Controller
 	 */
 	 public function ajaxupdateAction($id)
 	 {
-		 if (isset($_POST['model']))
+		 if (isset($_POST['model'])) 
 		 {
-			 //sleep(5);
 			 $model = (array)json_decode($_POST['model']);
 			 
 			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
@@ -134,7 +174,12 @@ class ProductController extends Controller
 								->find($model['id']);
 				
 				if (!$product)
-					die(0);
+				{
+					$result = array('has_error' => 1, 'errors' => 'No product found for id '.$id);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
 				
 				$validator = $this->get('validator');
     
@@ -148,7 +193,9 @@ class ProductController extends Controller
 					foreach($errors AS $error)
 						$errorMessage[] = $error->getMessage();
 						
-					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					$result = array('has_error'=>1, 'errors'=>$errorMessage);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 					
 				} else {
@@ -157,17 +204,20 @@ class ProductController extends Controller
 					$em->persist($product);
 					$em->flush();
 					
-					$attr = array('name' => $product->getName(), 'unit' => $product->getUnit());
-					
-					echo json_encode($attr);
-					//echo json_encode(array('success'=>1, 'id'=>$product->getId() ));
+					$result = array('has_error'=> 0, 'name' => $product->getName(), 'unit' => $product->getUnit());
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 				
 				}
-			 }
-			 
-		 } else
-			die(0);
+			} 
+		}
+		 
+		$result = array('has_error'=> 1, 'errors' => 'Invalid request');
+		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+		 
 	 }
 	 
 	
@@ -179,17 +229,23 @@ class ProductController extends Controller
 		$product = $this->getDoctrine()
 					->getRepository('SupplierBundle:Product')
 					->find($id);
-		//sleep(5);	
 		if (!$product)
-			die(0);
-		
-		if(1){
-			$em = $this->getDoctrine()->getEntityManager();				
-			$em->remove($product);
-			$em->flush();
+		{
+			$result = array('has_error' => 1, 'errors' => 'No product found for id '.$id);
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
 		}
+		
 
-		die($id);
+		$em = $this->getDoctrine()->getEntityManager();				
+		$em->remove($product);
+		$em->flush();
+		
+		$result = array('has_error' => 0, 'result' => $id);
+		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
 	}
 	
 
@@ -201,6 +257,7 @@ class ProductController extends Controller
 		 if (isset($_POST['model']))
 		 {
 			 $model = (array)json_decode($_POST['model']);
+			 
 			 if (isset($model['name']))
 			 {
 				$validator = $this->get('validator');
@@ -215,7 +272,9 @@ class ProductController extends Controller
 					foreach($errors AS $error)
 						$errorMessage[] = $error->getMessage();
 						
-					echo json_encode(array('has_error'=>1, 'errors'=>$errorMessage));
+					$result = array('has_error'=>1, 'errors'=>$errorMessage);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 					
 				} else {
@@ -224,16 +283,19 @@ class ProductController extends Controller
 					$em->persist($product);
 					$em->flush();
 					
-					$attr = array('id' => $product->getId(), 'name' => $product->getName(), 'unit' => $product->getUnit());
+					$result = array('has_error'=> 0, 'id' => $product->getId(), 'name' => $product->getName(), 'unit' => $product->getUnit());
 					
-					echo json_encode($attr);
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
 					die();
 				
 				}
 			}
 		}
 		
-		echo json_encode(array('has_error'=>1, 'errors'=> 'Некорректный запрос'));
+		$result = array('has_error'=>1, 'errors'=> 'Invalid request');
+		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$response->sendContent();
 		die();
 	 
 	 }
@@ -247,15 +309,12 @@ class ProductController extends Controller
 	 { 
 		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
 		 $products_array = array();
-		 //sleep(5);
 		 if ($products)
 			foreach ($products AS $p)
 				$products_array[] = array( 	'id' => $p->getId(),
 											'name'=> $p->getName(), 
 											'unit' => $p->getUnit(),
 											);
-
-		 //$result = array('success' => $success, 'result' =>$products_array);
 			
 		 $response = new Response(json_encode($products_array), 200);
 		 $response->headers->set('Content-Type', 'application/json');

@@ -1,0 +1,102 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+			<div class="navbar">
+			  <div class="navbar-inner">
+				<ul class="nav">
+				  <li><a href="">Supplier</a></li>
+				  <li><a href="{{ path('company') }}">Companies</a></li>
+				</ul>
+			  </div>
+			</div>
+		</div>
+		<div class="span12">
+			<h2>Restaurants in the Company "{{ company.name }}"</h2>
+			{% if restaurants is defined and restaurants|length > 0 %}
+				<table class="table table-striped">
+					<tr>
+						<th>#</th>
+						<th>Name</th>
+						<th>Address</th>
+						<th>Director</th>
+						<th>Company</th>
+						<th>Delete</th>
+					</tr>
+					 {% for restaurant in restaurants %}
+						<tr>
+							<td>{{ restaurant.id }}</td>
+							<td>
+								<p>
+									<a href="{{ path('restaurant_edit', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">
+									<i class="icon-edit"></i>
+									</a>&nbsp;&nbsp;
+									<a href="{{ path('restaurant_show', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">
+										{{ restaurant.name }}
+									</a>
+								</p>
+							</td>
+							<td>{{ restaurant.address }}</td>
+							<td>{{ restaurant.director }}</td>
+							<td>{{ company.name }}</td>
+							<td>
+								<a href="{{ path('restaurant_del', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link del" title="Delete Item">
+									<i class="icon-remove"></i>
+								</a>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="3"><div class="alert alert-error">Empty Result</div></td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% else %}
+				<div class="alert alert-error">Empty Result</div>
+			{% endif %}
+		</div>
+		<div class="span12">
+			<legend>Add Restaurant for the Company "{{ company.name }}" <a href="#" class="btn btn-small" id="form_add_company">Hide Form</a></legend>
+			<div class="form_add_company">
+				<form action="{{ path('restaurant', { 'cid': company.id }) }}" method="post" {{ form_enctype(form) }} class="form-horizontal">
+					
+					{{ form_errors(form) }}
+					
+					<div class="control-group">
+						{{ form_label(form.name, null, { 'attr': {'class': 'control-label'}}) }}
+						
+						<div class="controls">
+							{{ form_errors(form.name) }}
+							{{ form_widget(form.name) }}
+						</div>
+					</div>
+					<div class="control-group">
+						{{ form_label(form.address, null, { 'attr': {'class': 'control-label'}}) }}
+						
+						<div class="controls">
+							{{ form_errors(form.address) }}
+							{{ form_widget(form.address) }}
+						</div>
+					</div>
+					<div class="control-group">
+						{{ form_label(form.director, null, { 'attr': {'class': 'control-label'}}) }}
+						
+						<div class="controls">
+							{{ form_errors(form.director) }}
+							{{ form_widget(form.director) }}
+						</div>
+					</div>
+					{{ form_rest(form) }}
+					<div class="control-group">
+						<div class="controls">
+							<input type="submit" value="Add" />
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+

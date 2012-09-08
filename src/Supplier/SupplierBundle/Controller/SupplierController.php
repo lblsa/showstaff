@@ -32,14 +32,34 @@ class SupplierController extends Controller
 						->find($id);
 						
 		if (!$supplier) {
-			throw $this->createNotFoundException('No Supplier found for id '.$id);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'errors' => 'No Supplier found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No Supplier found for id '.$id);
+			}
 		}
 		
 		$em = $this->getDoctrine()->getEntityManager();		
 		$em->remove($supplier);
 		$em->flush();
-			
-        return $this->redirect($this->generateUrl('supplier_list'));
+
+		if ($request->isXmlHttpRequest()) 
+		{
+			$result = array('has_error' => 0, 'result' => 'Supplier #'.$id.' is deleted');
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		else
+		{
+			return $this->redirect($this->generateUrl('supplier_list'));
+		}
     }
 	
 	
@@ -66,7 +86,18 @@ class SupplierController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($supplier);
 				$em->flush();
-				return $this->redirect($this->generateUrl('supplier_list'));
+				
+				if ($request->isXmlHttpRequest()) 
+				{
+					$result = array('has_error' => 0, 'result' => 'Supplier #'.$supplier->getId().' is created');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('supplier_list'));
+				}
 			}
 		}
 
@@ -85,6 +116,20 @@ class SupplierController extends Controller
 						->getRepository('SupplierBundle:Supplier')
 						->find($id);
 		
+		if (!$supplier) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$result = array('has_error' => 1, 'errors' => 'No Supplier found for id '.$id);
+				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No Supplier found for id '.$id);
+			}
+		}
+		
 		$form = $this->createFormBuilder($supplier)
 					->add('name', 'text')
 					->getForm();
@@ -100,7 +145,18 @@ class SupplierController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($supplier);
 				$em->flush();
-				return $this->redirect($this->generateUrl('supplier_list'));
+				
+				if ($request->isXmlHttpRequest())
+				{
+					$result = array('has_error' => 0, 'result' => 'Supplier #'.$id.' is updated');
+					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				else
+				{
+					return $this->redirect($this->generateUrl('supplier_list'));
+				}
 			}
 		}
 
@@ -131,17 +187,25 @@ class SupplierController extends Controller
 	 {
 		 $suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findAll();
 		 $suppliers_array = array();
-		 //sleep(5);
+
 		 if ($suppliers)
+		 {
 			foreach ($suppliers AS $p)
 				$suppliers_array[] = array( 	'id' => $p->getId(),
 												'name'=> $p->getName(), 
 											);
-			
-		 $response = new Response(json_encode($suppliers_array), 200);
-		 $response->headers->set('Content-Type', 'application/json');
-		 $response->sendContent();
-		 die(); 
+			 $response = new Response(json_encode($suppliers_array), 200);
+			 $response->headers->set('Content-Type', 'application/json');
+			 $response->sendContent();
+			 die(); 
+		 }
+		 else
+		 {
+			$result = array('has_error' => 1, 'errors' => 'Suppliers are not found');
+			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die(); 
+		 }
 	 }
 
 }

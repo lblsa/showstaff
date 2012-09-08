@@ -27,7 +27,7 @@ class SupplierProducts
      *
      * @ORM\Column(name="price", type="float")
 	 * @Assert\NotBlank(message="<br>Price should not be blank")
-	 * @Assert\Type(type="integer", message="<br>Price '{{ value }}' is not a valid {{ type }}")
+	 * @Assert\Type(type="numeric", message="<br>Price '{{ value }}' is not a valid {{ type }}")
      * @Assert\Min(limit=0, message="<br>Price should have {{ limit }} characters or more")
      * @Assert\Max(limit=100000, message="<br>Price should have {{ limit }} characters or less")
      */
@@ -41,7 +41,7 @@ class SupplierProducts
     private $prime;
 
     /**
-     * @var string $supplier_name
+     * @var string $supplierName
      *
      * @ORM\Column(name="supplier_name", type="string", length=255)
 	 * @Assert\NotBlank(message="<br>Name should not be blank")
@@ -58,7 +58,6 @@ class SupplierProducts
      */
     protected $product;
 
-	//, inversedBy="products"
     /**
      * @ORM\ManyToOne(targetEntity="Supplier")
      * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", onDelete="CASCADE")
@@ -123,7 +122,7 @@ class SupplierProducts
     }
 
     /**
-     * Set supplier_name
+     * Set supplierName
      *
      * @param string $supplierName
      */
@@ -133,7 +132,7 @@ class SupplierProducts
     }
 
     /**
-     * Get supplier_name
+     * Get supplierName
      *
      * @return string 
      */

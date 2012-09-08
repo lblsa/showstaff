@@ -28,14 +28,24 @@ var ViewProducts = Backbone.View.extend({
 	},
 	
 	renderAll: function() {
-		this.collection.each(function(model){
-			var view = new ViewProduct({model:model});
-			var content = view.render().el;
-			if (sort == 'desc')
-				this.$('.products').prepend(content);
-			else
-				this.$('.products').append(content);
-		});
+		
+		if (this.collection.length > 0) {
+			this.$('.products').html('');
+			this.collection.each(function(model){
+				var view = new ViewProduct({model:model});
+				var content = view.render().el;
+				if (sort == 'desc')
+					this.$('.products').prepend(content);
+				else
+					this.$('.products').append(content);
+			});
+			
+		} else {
+			$('.products').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
+								'<button type="button" class="close" data-dismiss="alert">×</button>'+
+								'У вас еще нет продуктов</div></td></tr>');
+			$('#preloader').fadeOut('fast');
+		}
 	},
 });
 
@@ -134,7 +144,7 @@ var ProductsModel = Backbone.Model.extend({
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
 				$('#preloader').fadeOut('fast');
-				if (resp == model.id) {
+				if (resp != null && typeof(resp.result) != 'undefined' && resp.result == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
 				   
@@ -143,6 +153,7 @@ var ProductsModel = Backbone.Model.extend({
 				   
 					return;
 				} else {
+					
 				   $('.p_unit', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
@@ -150,19 +161,23 @@ var ProductsModel = Backbone.Model.extend({
 				}
 				return options.success(resp, status, xhr);
 			};
+			productOptions.error = function(resp, status, xhr) {
+				return options.success(resp, status, xhr);
+			}
 		}
         
         if (method == 'update') {
 			productOptions.success = function(resp, status, xhr) {
 				if (resp.has_error) {
 				   $('#preloader').fadeOut('fast'); 
+				   $('.p_unit .alert', model.view.el).remove();
 				   $('.p_unit', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка (' + resp.errors + '). '+
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
 				} else {
-				   if (resp != 0) {
+				   if (resp != 0 && typeof(resp.name) != 'undefined') {
 					   model.set(resp,{silent: true});
 					   model.view.render();
 					   
@@ -179,52 +194,71 @@ var ProductsModel = Backbone.Model.extend({
 					   
 					   return;
 				   } else {
+					   $('.p_unit .alert', model.view.el).remove();
 					   $('#preloader').fadeOut('fast'); 
 					   $('.p_unit', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-					   model.set(model.previousAttributes(),{silent: true});
-					   model.view.render();
 					   return;
 				   }
 				}
 				return options.success(resp, status, xhr);
 			};
+			productOptions.error = function(resp, status, xhr) {
+				return options.success(resp, status, xhr);
+			}
 		}
 		
 		if (method == 'create') {
 			productOptions.success = function(resp, status, xhr) {
-				if (resp.has_error) {
+				if (resp != null && typeof(resp.has_error) != 'undefined' && resp.has_error == 1) {
 				   //if isset has_error we can show errors
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.errors + '). ');
 				   $(".alert-error").clone().appendTo('#form_add');
 				   $('#form_add .alert-error').fadeIn();
+				   products.remove(model, {silent:true});
 				   return;
+				   
 				} else {
-				   model.set(resp, {silent:true});
-				   var view = new ViewProduct({model:model});
-				   var content = view.render().el;
-				   $('.products').prepend(content);
-				   $('.product').tooltip();  
-				   $('.name_add').val('');
-				   $(".alert-success").clone().appendTo('#form_add');
-				   $("#form_add .alert-success").fadeIn();
+					
+				   if (resp != null && typeof(resp.name) != 'undefined') {
 				   
-				   var SP = {};
-				   $('#close_all').click();
+					   model.set(resp, {silent:true});
+					   var view = new ViewProduct({model:model});
+					   var content = view.render().el;
+					   $('.products').prepend(content);
+					   $('.product').tooltip();  
+					   $('.name_add').val('');
+					   $(".alert-success").clone().appendTo('#form_add');
+					   $("#form_add .alert-success").fadeIn();
+					   
+					   var SP = {};
+					   $('#close_all').click();
+					   
+					   
+					   //  for sort reload
+					   view_products.remove()
+					   view_products = new ViewProducts({collection: products});
+					   $('#product_list').append(view_products.render().el);
+					   view_products.renderAll()
+					   return;
+				   } else {
+					   
+					   $('#preloader').fadeOut('fast'); 
+					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
+					   $(".alert-error").clone().appendTo('#form_add');
+					   $('#form_add .alert-error').fadeIn();
+					   products.remove(model, {silent:true});   
+					   return;
+				   }
 				   
-				   
-				   //  for sort reload
-				   view_products.remove()
-				   view_products = new ViewProducts({collection: products});
-				   $('#product_list').append(view_products.render().el);
-				   view_products.renderAll()
-				   
-				   return;
 				}
 				return options.success(resp, status, xhr);
 			};
+			productOptions.error = function(resp, status, xhr) {
+				return options.success(resp, status, xhr);
+			}
 		}
 		
         if (model.methodUrl && model.methodUrl(method.toLowerCase())) {
