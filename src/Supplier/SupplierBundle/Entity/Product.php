@@ -29,7 +29,7 @@ class Product
      * @var string $name
      *
      * @ORM\Column(name="name", type="string", length=255, unique=true)
-	 * @Assert\NotBlank()
+	 * @Assert\NotBlank(message="Name should not be blank")
 	 * @Assert\Type(type="string", message="Name '{{ value }}' is not a valid {{ type }}.")
      * @Assert\MinLength(3)
      * @Assert\MaxLength(255)
@@ -48,9 +48,8 @@ class Product
     private $unit;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Company")
+     * @ORM\ManyToOne(targetEntity="Company", inversedBy="products")
      * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
-     * @Assert\Type(type="integer", message="Company '{{ value }}' is not a valid {{ type }}.")
      */
     protected $company;
 

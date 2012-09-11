@@ -4,41 +4,65 @@
 
 	<div  class="row">
 		<div class="span12">
-		<h2>Products</h2>
-			{% if products is defined and products|length > 0 %}
-				<table class="table table-striped">
-					<tr>
-						<th>#</th>
-						<th>Name</th>
-						<th>Unit</th>
-						<th>Delete</th>
-					</tr>
-					 {% for product in products %}
-						<tr>
-							<td>{{ product.id }}</td>
-							<td>
-								<p>
-									<a href="{{ path('product_edit', { 'id': product.id }) }}" class="btn btn-link">
-									<i class="icon-edit"></i>
-									</a>&nbsp;{{ product.name }}
-								</p>
-							</td>
-							<td>{% if unit[product.unit] is defined  %}{{ unit[product.unit] }}{% endif %}</td>
-							<td>
-								<a href="{{ path('product_del', { 'id': product.id }) }}" class="btn btn-link del" title="Delete Item">
-									<i class="icon-remove"></i>
-								</a>
-							</td>
-						</tr>
-					{% else %}
-						<tr>
-							<td colspan="3"><div class="alert alert-error">Empty Result</div></td>
-						</tr>
-					{% endfor %}
-				</table>
-			{% else %}
-				<div class="alert alert-error">Empty Result</div>
-			{% endif %}
+		<h2>Company <a href="{{ path('company_show', { 'id': company.id }) }}">"{{company.name}}"</a>, Products</h2>
+		<table class="table table-bordered table-striped" id="product_list">
+		 <thead>
+		  <tr>
+			<th>Название
+				<a href="#" class="sort"><i class="icon-arrow-up"></i></a>
+			</th>
+			<th>Еденица</th>
+		  </tr>
+		  <tr id="add_row">
+			<th colspan="2" class="add">
+				<a href="#" id="add_product" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
+				<p class="form-inline hide" id="form_add">
+					<input name="name_add" type="text" class="input-small name_add">
+					<select class="span1 unit_add" name="unit"></select>
+					<a class="add_product btn btn-mini btn-success">add</a>
+				</p>
+			</th>
+		  </tr>
+		 </thead>
+		</table>
+		<script src="/js/products.js"></script>
+		<script type="text/javascript">
+			// Collection products
+			var Products = Backbone.Collection.extend({
+			  
+			  model: ProductsModel,
+			  
+			  url: '/company/{{ company.id }}/product',
+			  
+			  initialize: function(){
+				  this.bind('add', this.addProduct);
+			  },
+			  
+			  addProduct: function(product){
+				product.save({wait: true});
+			  },
+			  
+			});
+			
+			var products = new Products; // init collection
+
+			var view_products = new ViewProducts({collection: products}); // initialize view
+
+			products.comparator = function(product) {
+			  return product.get("name");
+			};
+
+			$('#product_list').append(view_products.render().el); // add template
+
+			$('#preloader').width($('#add_row').width());
+			$('#preloader').height($('#add_row').height());
+			var p = $('#add_row').position();
+			$('#preloader').css({'left':p.left, 'top': p.top});
+			$('#preloader').fadeIn('fast');
+
+			products.reset({{ products_json|raw }});
+
+		</script>
 		</div>
 	</div>
 {% endblock %}

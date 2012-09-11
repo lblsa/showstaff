@@ -12,4 +12,19 @@ use Doctrine\ORM\EntityRepository;
  */
 class ProductRepository extends EntityRepository
 {
+	public function findOneByIdJoinedToCompany($pid, $cid)
+	{
+		$query = $this->getEntityManager()
+			->createQuery('
+				SELECT p, c FROM SupplierBundle:Product p
+				JOIN p.company c
+				WHERE p.id = :pid AND c.id = :cid'
+			)->setParameters(array( 'pid'=> $pid, 'cid'=> $cid)	);
+
+		try {
+			return $query->getSingleResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			return null;
+		}
+	}
 }

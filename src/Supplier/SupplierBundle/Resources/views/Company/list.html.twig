@@ -21,6 +21,7 @@
 						<th>#</th>
 						<th>Name</th>
 						<th>Restaurants</th>
+						<th>Products</th>
 						<th>Extended name</th>
 						<th>INN</th>
 						<th>Delete</th>
@@ -39,9 +40,10 @@
 								</p>
 							</td>
 							<td>
-								<a href="{{ path('restaurant', { 'cid': company.id }) }}" class="btn btn-link">
-									Рестораны компании
-								</a>
+								<a href="{{ path('restaurant', { 'cid': company.id }) }}" class="btn btn-link">Рестораны компании</a>
+							</td>
+							<td>
+								<a href="{{ path('product', { 'cid': company.id }) }}" class="btn btn-link">Продукты компании</a>
 							</td>
 							<td>{{ company.extendedName }}</td>
 							<td>{{ company.inn }}</td>

@@ -34,9 +34,10 @@
 							</p>
 						</td>
 						<td>
-							<a href="{{ path('restaurant', { 'cid': company.id }) }}" class="btn btn-link">
-								Рестораны компании
-							</a>
+							<a href="{{ path('restaurant', { 'cid': company.id }) }}" class="btn btn-link">Рестораны компании</a>
+						</td>
+						<td>
+							<a href="{{ path('product', { 'cid': company.id }) }}" class="btn btn-link">Продукты компании</a>
 						</td>
 						<td>{% if company.extendedName is defined  %}{{ company.extendedName }}{% endif %}</td>
 						<td>{{ company.inn }}</td>

@@ -19,10 +19,17 @@ class Company
      * @ORM\OneToMany(targetEntity="Restaurant", mappedBy="company")
      */
     protected $restaurants;
+	
+    /**
+     * @ORM\OneToMany(targetEntity="Product", mappedBy="company")
+     */
+    protected $products;
+    
 
     public function __construct()
     {
         $this->restaurants = new ArrayCollection();
+        $this->products = new ArrayCollection();
     }	
 	
 	
@@ -151,5 +158,26 @@ class Company
     public function getRestaurants()
     {
         return $this->restaurants;
+    }
+    
+
+    /**
+     * Add products
+     *
+     * @param Supplier\SupplierBundle\Entity\Product $products
+     */
+    public function addProduct(\Supplier\SupplierBundle\Entity\Product $products)
+    {
+        $this->products[] = $products;
+    }
+
+    /**
+     * Get products
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function getProducts()
+    {
+        return $this->products;
     }
 }

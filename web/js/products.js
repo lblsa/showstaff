@@ -9,8 +9,10 @@ var units = {1:'кг',
 
 var sort = 'asc';
 
+/*
 Backbone.emulateHTTP = true;
 Backbone.emulateJSON = true;
+*/
 
 // view list products
 var ViewProducts = Backbone.View.extend({
@@ -144,7 +146,7 @@ var ProductsModel = Backbone.Model.extend({
         if (method == 'delete') {
 			productOptions.success = function(resp, status, xhr) {
 				$('#preloader').fadeOut('fast');
-				if (resp != null && typeof(resp.result) != 'undefined' && resp.result == model.id) {
+				if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
 				   
@@ -161,24 +163,27 @@ var ProductsModel = Backbone.Model.extend({
 				}
 				return options.success(resp, status, xhr);
 			};
+			
 			productOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
+			
+			productOptions.url = 'product/'+this.attributes.id;
 		}
         
         if (method == 'update') {
 			productOptions.success = function(resp, status, xhr) {
-				if (resp.has_error) {
+				if (resp != null && typeof(resp.message) != 'undefined') {
 				   $('#preloader').fadeOut('fast'); 
 				   $('.p_unit .alert', model.view.el).remove();
 				   $('.p_unit', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'Ошибка (' + resp.errors + '). '+
+													'Ошибка (' + resp.message + '). '+
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
 				} else {
-				   if (resp != 0 && typeof(resp.name) != 'undefined') {
-					   model.set(resp,{silent: true});
+				   if (resp != null && typeof(resp.data) != 'undefined') {
+					   model.set(resp.data,{silent: true});
 					   model.view.render();
 					   
 					   var SP = {};
@@ -204,17 +209,21 @@ var ProductsModel = Backbone.Model.extend({
 				}
 				return options.success(resp, status, xhr);
 			};
+			
 			productOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
+			
+			productOptions.url = 'product/'+this.attributes.id;
+			
 		}
 		
 		if (method == 'create') {
 			productOptions.success = function(resp, status, xhr) {
-				if (resp != null && typeof(resp.has_error) != 'undefined' && resp.has_error == 1) {
-				   //if isset has_error we can show errors
+				if (resp != null && typeof(resp.message) != 'undefined' ) {
+
 				   $('#preloader').fadeOut('fast'); 
-				   $('.alert-error strong').html(' (' + resp.errors + '). ');
+				   $('.alert-error strong').html(' (' + resp.message + '). ');
 				   $(".alert-error").clone().appendTo('#form_add');
 				   $('#form_add .alert-error').fadeIn();
 				   products.remove(model, {silent:true});
@@ -222,9 +231,9 @@ var ProductsModel = Backbone.Model.extend({
 				   
 				} else {
 					
-				   if (resp != null && typeof(resp.name) != 'undefined') {
+				   if (resp != null && typeof(resp.data) != 'undefined') {
 				   
-					   model.set(resp, {silent:true});
+					   model.set(resp.data, {silent:true});
 					   var view = new ViewProduct({model:model});
 					   var content = view.render().el;
 					   $('.products').prepend(content);
@@ -261,60 +270,18 @@ var ProductsModel = Backbone.Model.extend({
 			}
 		}
 		
-        if (model.methodUrl && model.methodUrl(method.toLowerCase())) {
-      	   options = options || {};
-      	   options.url = model.methodUrl(method.toLowerCase());
-        }
-		
 		Backbone.sync.call(this, method, model, productOptions);
    }
 });
 
-// Collection products
-var Products = Backbone.Collection.extend({
-  
-  model: ProductsModel,
-  
-  url: '/product/json',
-  
-  initialize: function(){
-	  this.bind('add', this.addProduct);
-	  this.on('sync', this.clearSP);
-	  //console.log(this);
-  },
-  
-  addProduct: function(product){
-	product.save({wait: true});
-  },
-  
-  clearSP: function(){
-	  alert(1);
-  }
-  
-});
+
 
 
 /****************************************
  * 
  ***************************************/
 	
-var products = new Products; // init collection
 
-var view_products = new ViewProducts({collection: products}); // initialize view
-
-products.comparator = function(product) {
-  return product.get("name");
-};
-
-$('#product_list').append(view_products.render().el); // add template
-
-$('#preloader').width($('#add_row').width());
-$('#preloader').height($('#add_row').height());
-var p = $('#add_row').position();
-$('#preloader').css({'left':p.left, 'top': p.top});
-$('#preloader').fadeIn('fast');
-
-products.fetch();
 
 //view_products.on('sync', function() { alert('eee'); })
  

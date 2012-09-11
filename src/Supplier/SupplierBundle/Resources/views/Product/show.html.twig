@@ -1,0 +1,34 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+		<h2>Company <a href="{{ path('company_show', { 'id': company.id }) }}">"{{company.name}}"</a>, Product "{{ product.name }}"</h2>
+			<table class="table table-striped">
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Unit</th>
+					<th>Delete</th>
+				</tr>
+					<tr>
+						<td>{{ product.id }}</td>
+						<td>
+							<p>
+								<a href="{{ path('product_edit', { 'pid': product.id, 'cid': company.id }) }}" class="btn btn-link">
+								<i class="icon-edit"></i>
+								</a>&nbsp;{{ product.name }}
+							</p>
+						</td>
+						<td>{% if unit[product.unit] is defined  %}{{ unit[product.unit] }}{% endif %}</td>
+						<td>
+							<a href="{{ path('product_del', { 'pid': product.id, 'cid': company.id }) }}" class="btn btn-link del" title="Delete Item">
+								<i class="icon-remove"></i>
+							</a>
+						</td>
+					</tr>
+			</table>
+		</div>
+	</div>
+{% endblock %}
