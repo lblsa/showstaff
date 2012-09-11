@@ -24,6 +24,11 @@ class Company
      * @ORM\OneToMany(targetEntity="Product", mappedBy="company")
      */
     protected $products;
+	
+    /**
+     * @ORM\OneToMany(targetEntity="Supplier", mappedBy="company")
+     */
+    protected $suppliers;
     
 
     public function __construct()
@@ -179,5 +184,25 @@ class Company
     public function getProducts()
     {
         return $this->products;
+    }
+
+    /**
+     * Add suppliers
+     *
+     * @param Supplier\SupplierBundle\Entity\Supplier $suppliers
+     */
+    public function addSupplier(\Supplier\SupplierBundle\Entity\Supplier $suppliers)
+    {
+        $this->suppliers[] = $suppliers;
+    }
+
+    /**
+     * Get suppliers
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function getSuppliers()
+    {
+        return $this->suppliers;
     }
 }

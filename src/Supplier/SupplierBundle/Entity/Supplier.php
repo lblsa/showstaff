@@ -26,7 +26,7 @@ class Supplier
      * @var string $name
      *
      * @ORM\Column(name="name", type="string", length=255, unique=true)
-     * @Assert\NotBlank()
+     * @Assert\NotBlank(message="Name should not be blank")
      * @Assert\MinLength(3)
      * @Assert\MaxLength(100)
      */
@@ -34,7 +34,7 @@ class Supplier
 
 
     /**
-     * @ORM\ManyToOne(targetEntity="Company")
+     * @ORM\ManyToOne(targetEntity="Company", inversedBy="suppliers")
      * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
      */
     protected $company;

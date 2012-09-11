@@ -22,6 +22,7 @@
 						<th>Name</th>
 						<th>Restaurants</th>
 						<th>Products</th>
+						<th>Suppliers</th>
 						<th>Extended name</th>
 						<th>INN</th>
 						<th>Delete</th>
@@ -44,6 +45,9 @@
 							</td>
 							<td>
 								<a href="{{ path('product', { 'cid': company.id }) }}" class="btn btn-link">Продукты компании</a>
+							</td>
+							<td>
+								<a href="{{ path('supplier', { 'cid': company.id }) }}" class="btn btn-link">Поставщики компании</a>
 							</td>
 							<td>{{ company.extendedName }}</td>
 							<td>{{ company.inn }}</td>
