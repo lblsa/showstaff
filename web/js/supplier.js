@@ -1,24 +1,14 @@
 /****************************************
- * Products
+ * Suppliers
  ****************************************/
-var units = {1:'кг', 
-			 2:'литр',
-			 3:'шт',
-			 4:'пучок',
-			 5:'бутылка'};
 
 var sort = 'asc';
 
-/*
-Backbone.emulateHTTP = true;
-Backbone.emulateJSON = true;
-*/
-
-// view list products
-var ViewProducts = Backbone.View.extend({
+// view list supplier
+var ViewSuppliers = Backbone.View.extend({
 	
 	tagName: "tbody",
-	className: "products",
+	className: "suppliers",
 	
 	initialize: function() {
 		_.bindAll(this);
@@ -32,33 +22,33 @@ var ViewProducts = Backbone.View.extend({
 	renderAll: function() {
 		
 		if (this.collection.length > 0) {
-			this.$('.products').html('');
+			this.$('.suppliers').html('');
 			this.collection.each(function(model){
-				var view = new ViewProduct({model:model});
+				var view = new ViewSupplier({model:model});
 				var content = view.render().el;
 				if (sort == 'desc')
-					this.$('.products').prepend(content);
+					this.$('.suppliers').prepend(content);
 				else
-					this.$('.products').append(content);
+					this.$('.suppliers').append(content);
 			});
 			
 		} else {
-			$('.products').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
+			$('.suppliers').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
 								'<button type="button" class="close" data-dismiss="alert">×</button>'+
-								'У вас еще нет продуктов</div></td></tr>');
+								'У вас еще нет поставщиков</div></td></tr>');
 			$('#preloader').fadeOut('fast');
 		}
 	},
 });
 
-// view one product
-var ViewProduct = Backbone.View.extend({
+// view one supplier
+var ViewSupplier = Backbone.View.extend({
 	
 	tagName: "tr",
-	className: "product",
+	className: "supplier",
 	
 	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= name %></td>'+
-							'<td class="p_unit"><% print(units[unit]); %>'+
+							'<td class="p_unit">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
@@ -85,7 +75,7 @@ var ViewProduct = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.product').tooltip();
+		$('.supplier').tooltip();
 		$('#preloader').fadeOut('fast'); 
 		return this;
 	},
@@ -93,22 +83,13 @@ var ViewProduct = Backbone.View.extend({
 	edit: function() {
 		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
 		$('.p_name input', this.el).val(this.model.get('name'));
-		var option = '';
-		for(var key in units) {
-			option += '<option value="'+key+'"'+ ((this.model.get('unit') == key)?' selected="selected"':'') +'>'+units[key]+'</option>';
-		}
-		$('.p_unit', this.el).html('<p class="form-inline">'+
-									'<select class="span1 unit" name="unit">'+ option+'</select>'+
-									' <a class="save btn btn-mini btn-success">save</a>'+
+		$('.p_unit', this.el).html('<p class="form-inline"> <a class="save btn btn-mini btn-success">save</a>'+
 									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
 	},
 	
 	save: function() {
 		this.preloader();
-		this.model.save({
-						name: $('.name', this.el).val(), 
-						unit: $('.unit', this.el).val()
-						},{wait: true});
+		this.model.save({	name: $('.name', this.el).val() 	},{wait: true});
 	},
 	
 	cancel: function() {
@@ -126,32 +107,18 @@ var ViewProduct = Backbone.View.extend({
 })
 
 
-// Model products
-var ProductsModel = Backbone.Model.extend({  
-  
-  methodUrl:  function(method){
-	if(method == "delete"){
-			return "/product/" + this.attributes.id+"/delete";
-		}else if(method == "update"){
-			return "/product/" + this.attributes.id+"/update";
-		}else if(method == "create"){
-			return "/product/create/ajax";
-		} 
-		return false;
-  },
+// Model supplier
+var SupplierModel = Backbone.Model.extend({
 
   sync: function(method, model, options) {
-        var productOptions = options;
+        var supplierOptions = options;
         
         if (method == 'delete') {
-			productOptions.success = function(resp, status, xhr) {
+			supplierOptions.success = function(resp, status, xhr) {
 				$('#preloader').fadeOut('fast');
 				if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
-				   
-				   var SP = {};
-				   $('#close_all').click();
 				   
 					return;
 				} else {
@@ -164,15 +131,15 @@ var ProductsModel = Backbone.Model.extend({
 				return options.success(resp, status, xhr);
 			};
 			
-			productOptions.error = function(resp, status, xhr) {
+			supplierOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
 			
-			productOptions.url = 'product/'+this.attributes.id;
+			supplierOptions.url = 'supplier/'+this.attributes.id;
 		}
         
         if (method == 'update') {
-			productOptions.success = function(resp, status, xhr) {
+			supplierOptions.success = function(resp, status, xhr) {
 				if (resp != null && typeof(resp.message) != 'undefined') {
 				   $('#preloader').fadeOut('fast'); 
 				   $('.p_unit .alert', model.view.el).remove();
@@ -184,18 +151,14 @@ var ProductsModel = Backbone.Model.extend({
 				} else {
 				   if (resp != null && typeof(resp.data) != 'undefined') {
 					   model.set(resp.data,{silent: true});
-					   model.view.render();
-					   
-					   var SP = {};
-				       $('#close_all').click();
-					   
+					   model.view.render();			   
 					   //  for sort reload
-					   products.sort({silent: true});
+					   suppliers.sort({silent: true});
 					   
-					   view_products.remove()
-					   view_products = new ViewProducts({collection: products});
-					   $('#product_list').append(view_products.render().el);
-					   view_products.renderAll()
+					   view_suppliers.remove()
+					   view_suppliers = new ViewSuppliers({collection: suppliers});
+					   $('#supplier_list').append(view_suppliers.render().el);
+					   view_suppliers.renderAll()
 					   
 					   return;
 				   } else {
@@ -210,23 +173,23 @@ var ProductsModel = Backbone.Model.extend({
 				return options.success(resp, status, xhr);
 			};
 			
-			productOptions.error = function(resp, status, xhr) {
+			supplierOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
 			
-			productOptions.url = 'product/'+this.attributes.id;
+			supplierOptions.url = 'supplier/'+this.attributes.id;
 			
 		}
 		
 		if (method == 'create') {
-			productOptions.success = function(resp, status, xhr) {
+			supplierOptions.success = function(resp, status, xhr) {
 				if (resp != null && typeof(resp.message) != 'undefined' ) {
 
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.message + '). ');
 				   $(".alert-error").clone().appendTo('#form_add');
 				   $('#form_add .alert-error').fadeIn();
-				   products.remove(model, {silent:true});
+				   suppliers.remove(model, {silent:true});
 				   return;
 				   
 				} else {
@@ -234,23 +197,19 @@ var ProductsModel = Backbone.Model.extend({
 				   if (resp != null && typeof(resp.data) != 'undefined') {
 				   
 					   model.set(resp.data, {silent:true});
-					   var view = new ViewProduct({model:model});
+					   var view = new ViewSupplier({model:model});
 					   var content = view.render().el;
-					   $('.products').prepend(content);
-					   $('.product').tooltip();  
+					   $('.suppliers').prepend(content);
+					   $('.supplier').tooltip();  
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
-					   $("#form_add .alert-success").fadeIn();
-					   
-					   var SP = {};
-					   $('#close_all').click();
-					   
-					   
+					   $("#form_add .alert-success").fadeIn()
+
 					   //  for sort reload
-					   view_products.remove()
-					   view_products = new ViewProducts({collection: products});
-					   $('#product_list').append(view_products.render().el);
-					   view_products.renderAll()
+					   view_suppliers.remove()
+					   view_suppliers = new ViewSuppliers({collection: suppliers});
+					   $('#supplier_list').append(view_suppliers.render().el);
+					   view_suppliers.renderAll()
 					   return;
 				   } else {
 					   
@@ -258,19 +217,19 @@ var ProductsModel = Backbone.Model.extend({
 					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
 					   $(".alert-error").clone().appendTo('#form_add');
 					   $('#form_add .alert-error').fadeIn();
-					   products.remove(model, {silent:true});   
+					   suppliers.remove(model, {silent:true});   
 					   return;
 				   }
 				   
 				}
 				return options.success(resp, status, xhr);
 			};
-			productOptions.error = function(resp, status, xhr) {
+			supplierOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
 		}
 		
-		Backbone.sync.call(this, method, model, productOptions);
+		Backbone.sync.call(this, method, model, supplierOptions);
    }
 });
 
@@ -280,23 +239,14 @@ var ProductsModel = Backbone.Model.extend({
 /****************************************
  * 
  ***************************************/
-	
-
-
-//view_products.on('sync', function() { alert('eee'); })
  
 $(document).ready(function(){
 	
 	$('.create').toggle(function() {
 		$('i', this).attr('class', 'icon-minus-sign');
-		var option = '';
-		for(var key in units) {
-			option += '<option value="'+key+'" >'+units[key]+'</option>';
-		}
 		$("#form_add .alert").remove();
 		$('.name_add').val('');
 		$('#form_add').slideDown();
-		$('.unit_add').html(option);
 		$('.name_add').focus();
 		return false;
 	}, function() {
@@ -305,14 +255,14 @@ $(document).ready(function(){
 		return false;
 	});
 	
-	$('.add_product').click(function() {
+	$('.add_supplier').click(function() {
 		$("#form_add .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();
 		$('#preloader').css({'left':p.left, 'top': p.top});
 		$('#preloader').fadeIn('fast');
-		products.add([{name: $('.name_add').val(), unit: $('.unit_add').val()}]);
+		suppliers.add([{name: $('.name_add').val()}]);
 		
 		return false;
 	})
@@ -321,26 +271,22 @@ $(document).ready(function(){
 		return confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?");
 	});
 	
-    $('.del_supplier_product').click(function(){
-		return confirm ("Вы действительно хотите удалить элемент?");
-	});
-	
 	$('.sort').toggle(function() {
 		sort = 'desc';		
-	    view_products.remove()
-	    view_products = new ViewProducts({collection: products});
-	    $('#product_list').append(view_products.render().el);
-	    view_products.renderAll()
+	    view_suppliers.remove()
+	    view_suppliers = new ViewSuppliers({collection: suppliers});
+	    $('#supplier_list').append(view_suppliers.render().el);
+	    view_suppliers.renderAll()
 		
 		$('i', this).attr('class','icon-arrow-down');
 		return false;
 	}, function() {
 		
 		sort = 'asc';		
-	    view_products.remove()
-	    view_products = new ViewProducts({collection: products});
-	    $('#product_list').append(view_products.render().el);
-	    view_products.renderAll()
+	    view_suppliers.remove()
+	    view_suppliers = new ViewSuppliers({collection: suppliers});
+	    $('#supplier_list').append(view_suppliers.render().el);
+	    view_suppliers.renderAll()
 
 		$('i', this).attr('class','icon-arrow-up');
 		return false;

@@ -20,25 +20,26 @@ class ProductController extends Controller
 							'5' => 'бутылка',);
 	
     /**
-     * @Route("/product/del/{id}", name="product_del")
+     * @Route("company/{cid}/product/{pid}/delete", name="product_del")
      */
-    public function delAction($id)
+    public function delAction($cid, $pid, Request $request)
     {
 		$product = $this->getDoctrine()
 						->getRepository('SupplierBundle:Product')
-						->find($id);
+						->find($pid);
 						
 		if (!$product) {
 			if ($request->isXmlHttpRequest()) 
 			{
-				$result = array('has_error' => 1, 'errors' => 'No product found for id '.$id);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$code = 200;
+				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}
 			else
 			{
-				throw $this->createNotFoundException('No product found for id '.$id);
+				throw $this->createNotFoundException('No product found for id '.$pid);
 			}
 		}
 		
@@ -48,23 +49,24 @@ class ProductController extends Controller
 		
 		if ($request->isXmlHttpRequest()) 
 		{
-			$result = array('has_error' => 0, 'result' => 'Product #'.$id.' is deleted');
-			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$code = 200;
+			$result = array('code' => $code, 'message' => 'Product #'.$pid.' is deleted');
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			$response->sendContent();
 			die();
 		}
 		else
 		{
-			return $this->redirect($this->generateUrl('product_list'));
+			return $this->redirect($this->generateUrl('product'));
 		}
     }
     
 
     /**
-     * @Route("/product/create", name="product_create")
+     * @Route("company/{cid}/product/create", name="product_create")
      * @Template()
      */    
-    public function createAction(Request $request)
+    public function createAction($cid, Request $request)
     {
 		$product = new Product();
 		
@@ -84,14 +86,15 @@ class ProductController extends Controller
 				
 				if ($request->isXmlHttpRequest()) 
 				{
-					$result = array('has_error' => 0, 'result' => 'Product #'.$product->getId().' is created');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$code = 200;
+					$result = array('code' => $code, 'message' => 'Product #'.$product->getId().' is created');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					$response->sendContent();
 					die();
 				}
 				else
 				{
-					return $this->redirect($this->generateUrl('product_list'));
+					return $this->redirect($this->generateUrl('product'));
 				}
 			}
 		}
@@ -102,18 +105,31 @@ class ProductController extends Controller
 	
 	
     /**
-     * @Route("/product/edit/{id}", name="product_edit")
+     * @Route("company/{cid}/product/{pid}/edit", name="product_edit")
      * @Template()
      */    
-	public function editAction($id, Request $request)
+	public function editAction($cid, $pid, Request $request)
 	{
 		$product = $this->getDoctrine()
 						->getRepository('SupplierBundle:Product')
-						->find($id);
+						->findOneByIdJoinedToCompany($pid, $cid);
 		
 		if (!$product) {
-			throw $this->createNotFoundException('No product found for id '.$id);
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 400;
+				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No product found for id '.$pid);
+			}
 		}
+		
+		$company = $product->getCompany();
 		
 		$form = $this->createForm(new ProductType($this->unit), $product);
 					
@@ -124,97 +140,177 @@ class ProductController extends Controller
 
 			if ($form->isValid())
 			{
-				$product = $form->getData();				
+				$product = $form->getData();
+				$product->setCompany($company);		
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($product);
 				$em->flush();
 				
 				if ($request->isXmlHttpRequest()) 
 				{
-					$result = array('has_error' => 0, 'result' => 'Product #'.$id.' is updated');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$code = 200;
+					$result = array('code' => $code, 'message' => 'Product #'.$pid.' is updated');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					$response->sendContent();
 					die();
 				}
 				else
 				{
-					return $this->redirect($this->generateUrl('product_list'));
+					return $this->redirect($this->generateUrl('product', array('cid' => $cid)));
 				}
 			}
 		}
 
 
-		return array('form' => $form->createView(), 'product' => $product);
+		return array('form' => $form->createView(), 'product' => $product, 'company' => $company);
 	}
 	
 	
 	/**
-	 * @Route("/product/list", name="product_list")
+	 * @Route("/company/{cid}/product/{pid}", name="product_show", requirements={"_method" = "GET"})
 	 * @Template()
 	 */
-	public function listAction()
+	public function showAction($cid, $pid, Request $request)
 	{		
-		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
-		return array( 'products' => $products, 'unit' => $this->unit);
+		$product = $this->getDoctrine()
+						->getRepository('SupplierBundle:Product')
+						->findOneByIdJoinedToCompany($pid, $cid);
+		
+		if (!$product) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 200;
+				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No product found for id '.$pid);
+			}
+		}
+		
+		$company = $product->getCompany();
+		
+		return array('product' => $product, 'company' => $company, 'unit' => $this->unit);
+	}
+	
+	
+	/**
+	 * @Route(	"company/{cid}/product", 
+	 * 			name="product", 
+	 * 			requirements={"_method" = "GET"})
+	 * @Template()
+	 */
+	public function listAction($cid, Request $request)
+	{
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findAllProductsByCompany($cid);
+		
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No company found for id '.$cid);
+			}
+		}
+
+		$products = $company->getProducts();
+			
+		$products_array = array();
+		
+		if ($products)
+		{
+			foreach ($products AS $p)
+				$products_array[] = array( 	'id' => $p->getId(),
+											'name'=> $p->getName(), 
+											'unit' => $p->getUnit(),
+											);
+		}
+			
+		if ($request->isXmlHttpRequest()) 
+		{
+			$code = 200;
+			
+			$result = array('code' => $code, 'data' => $products_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die(); 
+		}
+		
+		return array('company' => $company, 'products_json' => json_encode($products_array));
 	}
 	
 	/**
-	 * @Route("/product/{id}/update", name="product_ajax_update")
+	 * @Route(	"company/{cid}/product/{pid}", 
+	 * 			name="product_ajax_update", 
+	 * 			requirements={"_method" = "PUT"})
 	 */
-	 public function ajaxupdateAction($id)
-	 {
-		 if (isset($_POST['model'])) 
-		 {
-			 $model = (array)json_decode($_POST['model']);
-			 
-			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
-			 {
-				$product = $this->getDoctrine()
-								->getRepository('SupplierBundle:Product')
-								->find($model['id']);
+	 public function ajaxupdateAction($cid, $pid, Request $request)
+	 {		 
+		$model = (array)json_decode($request->getContent());
+		
+		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $pid == $model['id'])
+		{
+			$product = $this->getDoctrine()
+							->getRepository('SupplierBundle:Product')
+							->find($model['id']);
+			
+			if (!$product)
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			
+			$validator = $this->get('validator');
+
+			$product->setName($model['name']);
+			$product->setUnit((int)$model['unit']);
+			
+			$errors = $validator->validate($product);
+			
+			if (count($errors) > 0) {
 				
-				if (!$product)
-				{
-					$result = array('has_error' => 1, 'errors' => 'No product found for id '.$id);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
 				
-				$validator = $this->get('validator');
-    
-				$product->setName($model['name']);
-				$product->setUnit((int)$model['unit']);
+				$code = 400;
+				$result = array('code'=>$code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
 				
-				$errors = $validator->validate($product);
+			} else {
 				
-				if (count($errors) > 0) {
-					
-					foreach($errors AS $error)
-						$errorMessage[] = $error->getMessage();
-						
-					$result = array('has_error'=>1, 'errors'=>$errorMessage);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-					
-				} else {
-					
-					$em = $this->getDoctrine()->getEntityManager();
-					$em->persist($product);
-					$em->flush();
-					
-					$result = array('has_error'=> 0, 'name' => $product->getName(), 'unit' => $product->getUnit());
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($product);
+				$em->flush();
 				
-				}
-			} 
+				$code = 200;
+				
+				$result = array('code'=> $code, 'data' => array('name' => $product->getName(), 'unit' => $product->getUnit()));
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			
+			}
 		}
-		 
-		$result = array('has_error'=> 1, 'errors' => 'Invalid request');
-		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			
+		$code = 400;
+		$result = array('code'=> $code, 'message' => 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
 		 
@@ -222,17 +318,21 @@ class ProductController extends Controller
 	 
 	
 	/**
-	 * @Route("/product/{id}/delete", name="product_ajax_delete")
+	 * @Route(	"company/{cid}/product/{pid}", 
+	 * 			name="product_ajax_delete", 
+	 * 			requirements={"_method" = "DELETE"})
 	 */
-	public function ajaxdeleteAction($id)
+	public function ajaxdeleteAction($cid, $pid, Request $request)
 	{
 		$product = $this->getDoctrine()
 					->getRepository('SupplierBundle:Product')
-					->find($id);
+					->find($pid);
+					
 		if (!$product)
 		{
-			$result = array('has_error' => 1, 'errors' => 'No product found for id '.$id);
-			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			$response->sendContent();
 			die();
 		}
@@ -242,83 +342,82 @@ class ProductController extends Controller
 		$em->remove($product);
 		$em->flush();
 		
-		$result = array('has_error' => 0, 'result' => $id);
-		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$code = 200;
+		$result = array('code' => $code, 'data' => $pid);
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
 	}
 	
 
 	/**
-	 * @Route("/product/create/ajax", name="product_ajax_create")
+	 * @Route(	"company/{cid}/product", 
+	 * 			name="product_ajax_create", 
+	 * 			requirements={"_method" = "POST"})
 	 */
-	 public function ajaxcreateAction()
-	 {
-		 if (isset($_POST['model']))
-		 {
-			 $model = (array)json_decode($_POST['model']);
-			 
-			 if (isset($model['name']))
-			 {
-				$validator = $this->get('validator');
-				$product = new Product();
-				$product->setName($model['name']);
-				$product->setUnit((int)$model['unit']);
-				
-				$errors = $validator->validate($product);
-				
-				if (count($errors) > 0) {
-					
-					foreach($errors AS $error)
-						$errorMessage[] = $error->getMessage();
+	public function ajaxcreateAction($cid, Request $request)
+	{
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->find($cid);
 						
-					$result = array('has_error'=>1, 'errors'=>$errorMessage);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-					
-				} else {
-					
-					$em = $this->getDoctrine()->getEntityManager();
-					$em->persist($product);
-					$em->flush();
-					
-					$result = array('has_error'=> 0, 'id' => $product->getId(), 'name' => $product->getName(), 'unit' => $product->getUnit());
-					
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+		if (!$company) {
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		
+		$model = (array)json_decode($request->getContent());
+		
+		//print_r($model); die();
+		
+		if (count($model) > 0 && isset($model['unit']) && isset($model['name']))
+		{
+			$validator = $this->get('validator');
+			$product = new Product();
+			$product->setName($model['name']);
+			$product->setUnit((int)$model['unit']);
+			
+			$errors = $validator->validate($product);
+			
+			if (count($errors) > 0) {
 				
-				}
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
+					
+				$code = 400;
+				$result = array('code' => $code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				
+				$product->setCompany($company);
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($product);
+				$em->flush();
+				
+				$code = 200;
+				$result = array(	'code' => $code, 'data' => array(	'id' => $product->getId(),
+																		'name' => $product->getName(), 
+																		'unit' => $product->getUnit()
+																	));
+				
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			
 			}
 		}
 		
-		$result = array('has_error'=>1, 'errors'=> 'Invalid request');
-		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$code = 400;
+		$result = array('code' => $code, 'message'=> 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
 	 
-	 }
-
-	
-	
-	/**
-	 * @Route("/product/json", name="product_json")
-	 */
-	 public function jsonAction()
-	 { 
-		 $products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findAll();
-		 $products_array = array();
-		 if ($products)
-			foreach ($products AS $p)
-				$products_array[] = array( 	'id' => $p->getId(),
-											'name'=> $p->getName(), 
-											'unit' => $p->getUnit(),
-											);
-			
-		 $response = new Response(json_encode($products_array), 200);
-		 $response->headers->set('Content-Type', 'application/json');
-		 $response->sendContent();
-		 die(); 
-	 }
+	}
 }

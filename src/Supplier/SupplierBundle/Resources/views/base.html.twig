@@ -20,7 +20,12 @@
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-
+    
+	<script src="/js/jquery.js"></script>
+	<script src="/js/underscore-min.js"></script>
+	<script src="/js/backbone-min.js"></script>
+    <script src="/js/bootstrap-tooltip.js"></script>
+    
     <!-- Le fav and touch icons -->
     <link rel="shortcut icon" href="../assets/ico/favicon.ico">
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
@@ -46,12 +51,7 @@
             </p>
             <ul class="nav">
               <li class="active"><a href="/">Home</a></li>
-              <li><a href="{{ path('product_list') }}">Products</a></li>
-              <li><a href="{{ path('product_create') }}">Add Product</a></li>
-              <li><a href="{{ path('supplier_list') }}">Suppliers</a></li>
-              <li><a href="{{ path('supplier_create') }}">Add Supplier</a></li>
-              <li><a href="{{ path('supplier_products_list') }}">SupplierProducts</a></li>
-              <li><a href="{{ path('supplier_products_create') }}">Add SupplierProducts</a></li>
+              <li><a href="{{ path('company') }}">Company</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -62,6 +62,18 @@
       <div class="row">
         <div class="span12">
 		 {% block body %}{% endblock %}
+					 
+		 <div id="up">
+		  <div class="alert hide alert-error"><button type="button" class="close" data-dismiss="alert">×</button>
+			Ошибка.<strong></strong><br>Попробуйте еще раз или обратитесь к администратору.
+		  </div>
+		  <div class="alert alert-success hide"><button type="button" class="close" data-dismiss="alert">×</button>
+			<strong>Продукт добавлен</strong>
+		  </div>
+		  <div class="progress progress-striped active hide" id="preloader"><div class="bar" style="width: 100%;"></div></div>
+			<div class="progress progress-striped green active hide" id="preloader_s"><div class="bar" style="width: 100%;"></div></div>
+		  </div>
+		 
         </div><!--/span-->
       </div><!--/row-->
 
@@ -76,24 +88,21 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/js/jquery.js"></script>
     <script src="/js/bootstrap-transition.js"></script>
     <script src="/js/bootstrap-alert.js"></script>
     <script src="/js/bootstrap-modal.js"></script>
     <script src="/js/bootstrap-dropdown.js"></script>
     <script src="/js/bootstrap-scrollspy.js"></script>
     <script src="/js/bootstrap-tab.js"></script>
-    <script src="/js/bootstrap-tooltip.js"></script>
     <script src="/js/bootstrap-popover.js"></script>
     <script src="/js/bootstrap-button.js"></script>
     <script src="/js/bootstrap-collapse.js"></script>
     <script src="/js/bootstrap-carousel.js"></script>
     <script src="/js/bootstrap-typeahead.js"></script>
-    <script src="/js/underscore-min.js"></script>
-    <script src="/js/backbone-min.js"></script>
-    <script src="/js/products.js"></script>
-    <script src="/js/supplier_products.js"></script>
+    <!-- <script src="/js/supplier_products.js"></script> -->
     <script src="/js/main.js"></script>
+
+
 
   </body>
 </html>

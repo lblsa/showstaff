@@ -19,10 +19,22 @@ class Company
      * @ORM\OneToMany(targetEntity="Restaurant", mappedBy="company")
      */
     protected $restaurants;
+	
+    /**
+     * @ORM\OneToMany(targetEntity="Product", mappedBy="company")
+     */
+    protected $products;
+	
+    /**
+     * @ORM\OneToMany(targetEntity="Supplier", mappedBy="company")
+     */
+    protected $suppliers;
+    
 
     public function __construct()
     {
         $this->restaurants = new ArrayCollection();
+        $this->products = new ArrayCollection();
     }	
 	
 	
@@ -151,5 +163,46 @@ class Company
     public function getRestaurants()
     {
         return $this->restaurants;
+    }
+    
+
+    /**
+     * Add products
+     *
+     * @param Supplier\SupplierBundle\Entity\Product $products
+     */
+    public function addProduct(\Supplier\SupplierBundle\Entity\Product $products)
+    {
+        $this->products[] = $products;
+    }
+
+    /**
+     * Get products
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function getProducts()
+    {
+        return $this->products;
+    }
+
+    /**
+     * Add suppliers
+     *
+     * @param Supplier\SupplierBundle\Entity\Supplier $suppliers
+     */
+    public function addSupplier(\Supplier\SupplierBundle\Entity\Supplier $suppliers)
+    {
+        $this->suppliers[] = $suppliers;
+    }
+
+    /**
+     * Get suppliers
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function getSuppliers()
+    {
+        return $this->suppliers;
     }
 }

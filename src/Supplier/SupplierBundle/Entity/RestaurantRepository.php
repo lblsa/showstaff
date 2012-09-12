@@ -12,4 +12,19 @@ use Doctrine\ORM\EntityRepository;
  */
 class RestaurantRepository extends EntityRepository
 {
+	public function findOneByIdJoinedToCompany($rid, $cid)
+	{
+		$query = $this->getEntityManager()
+			->createQuery('
+				SELECT r, c FROM SupplierBundle:Restaurant r
+				JOIN r.company c
+				WHERE r.id = :rid AND c.id = :cid'
+			)->setParameters(array('rid'=> $rid, 'cid'=> $cid));
+
+		try {
+			return $query->getSingleResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			return null;
+		}
+	}
 }

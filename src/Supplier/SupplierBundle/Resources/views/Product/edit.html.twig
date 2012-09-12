@@ -3,9 +3,34 @@
 {% block body %}
 	<div class="hero-unit">
 		<h2>Supplier {{ product.name }}</h2>
-		<form action="{{ path('product_edit', {'id': product.id}) }}" method="post" {{ form_enctype(form) }}>
-			{{ form_widget(form) }}
-			<input type="submit" value="Save" />
+		<form action="{{ path('product_edit', {'pid': product.id, 'cid': company.id}) }}" method="post" {{ form_enctype(form) }}>
+			
+			{{ form_errors(form) }}
+			
+			<div class="control-group">
+				{{ form_label(form.name, null, { 'attr': {'class': 'control-label'}}) }}
+				
+				<div class="controls">
+					{{ form_errors(form.name) }}
+					{{ form_widget(form.name) }}
+				</div>
+			</div>
+			
+			<div class="control-group">
+				{{ form_label(form.unit, null, { 'attr': {'class': 'control-label'}}) }}
+				
+				<div class="controls">
+					{{ form_errors(form.unit) }}
+					{{ form_widget(form.unit) }}
+				</div>
+			</div>
+			{{ form_rest(form) }}
+			<div class="control-group">
+				<div class="controls">
+					<input type="submit" value="Save" />
+					<a href="{{ path('product_list', {'cid':company.id}) }}" class="btn btn-link">Cancel</a>
+				</div>
+			</div>
 		</form>
 	</div>
 
