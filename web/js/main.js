@@ -11,3 +11,9 @@ $(document).ready(function(){
 		$(this).html('Hide Form');
 	})
 })
+
+var units = {1:'кг', 
+			 2:'литр',
+			 3:'шт',
+			 4:'пучок',
+			 5:'бутылка'};

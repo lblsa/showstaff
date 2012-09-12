@@ -4,7 +4,73 @@
 
 	<div  class="row">
 		<div class="span12">
-		<h2>Supplier Products</h2>
+			<h3>Продукты Поставщика "{{ supplier.name }}"</h3>
+			<div class="sp_list">
+				<table class="sproducts table table-bordered white">
+				  <thead class="supplier_products_header">
+					  <tr>
+						<th>Название
+							<a href="#" class="sort_by_name"><i class="icon-arrow-up"></i></a>
+						</th>
+						<th>Цена
+							<a href="#" class="sort_by_price"><i class="icon-arrow-down"></i></a>
+						</th>
+						<th>Продукт - Еденица</th>
+						<th>Первичный
+							<a href="#" class="sort_by_prime"><i class="icon-arrow-down"></i></a>
+						</th>
+					  </tr>
+					  <tr>
+						<th colspan="4" class="add_supplier_product">
+							<a href="#" class="add_supplier_product_show btn btn-small">Добавить продукт поставщика <i class="icon-plus-sign"></i></a>
+							<p class="form-inline hide form_add_supplier_product">
+								<input name="name" type="text" class="input span5 name_add_sp" required="required" placeholder="Название">
+								<input name="price" type="text" class="input-small price_add_sp" required="required" placeholder="Цена">
+								
+								<label>
+									<select class="span1 product_add_sp" name="product"></select> Продукт
+								</label>
+								
+								<label class="checkbox">
+									<input name="primary_supplier" type="checkbox" value="1" class="input-small primary_supplier_add_sp"> Первичный
+								</label>
+								<a class="pull-right add_supplier_product_btn btn btn-mini btn-success">add</a>
+							</p>
+						</th>
+					  </tr>
+				  </thead>
+				</table>
+			</div>
+		</div>
+		<script src="/js/supplier_products.js"></script>
+		<script type="text/javascript">
+
+			var SupplierProductsCurent = SupplierProducts.extend({
+			  url: '/company/{{ company.id }}/supplier/{{ supplier.id }}/product',
+			});
+
+			var supplier_products = new SupplierProductsCurent;
+
+			var supplier_products_sort = 'asc';
+
+			supplier_products.comparator = function(product) {
+			  return product.get("supplier_product_name");
+			};
+
+
+			var products = new Backbone.Collection;
+			products.reset({{ products_json|raw }});
+			
+			var VSP = new ViewSupplierProducts({collection: supplier_products});
+
+			$('.sproducts').append(VSP.render().el);
+				
+			supplier_products.reset({{ supplier_products_json|raw }});
+			
+		</script>
+		
+		<div class="span12 hide">
+			<h2>Supplier Products</h2>
 			{% if supplier_products is defined and supplier_products|length > 0 %}
 				<table class="table table-striped">
 					<tr>
