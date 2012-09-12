@@ -128,8 +128,9 @@ class SupplierProductsController extends Controller
 				
 				if ($request->isXmlHttpRequest()) 
 				{
-					$result = array('has_error' => 1, 'errors' => 'Supplier Products #'.$id.' is updated');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$code = 200;
+					$result = array('code' => $code, 'message' => 'Supplier Products #'.$id.' is updated');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					$response->sendContent();
 					die();
 				}
@@ -145,16 +146,71 @@ class SupplierProductsController extends Controller
 	}
 	
 	/**
-	 * @Route("/supplier/products/list", name="supplier_products_list")
+	 * @Route(	"/company/{cid}/supplier/{sid}/product", 
+	 * 			name="supplier_products_list", 
+	 * 			requirements={"_method" = "GET"})
 	 * @Template()
 	 */
-	public function listAction()
-    {	
-		$supplier_products = $this->getDoctrine()
-					->getRepository('SupplierBundle:SupplierProducts')
-					->get();
+	public function listAction($cid, $sid, Request $request)
+    {
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findOneSupplierByCompany($cid, $sid);
+	
 		
-		return array('supplier_products' => $supplier_products, 'unit' => $this->unit);
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
+			}
+		}
+		
+		$suppliers = $company->getSuppliers();
+		$products = $company->getProducts();
+			
+		$products_array = array();
+		
+		if ($products)
+		{
+			foreach ($products AS $p)
+				$products_array[] = array( 	'id' => $p->getId(),
+											'name'=> $p->getName(), 
+											'unit' => $p->getUnit(),
+											);
+		}
+		
+		foreach ($suppliers AS $s)
+			$supplier = $s;
+		
+		$supplier_products = $this->getDoctrine()
+						->getRepository('SupplierBundle:SupplierProducts')
+						->findBySupplier($sid);
+		
+		$supplier_products_array = array();
+		
+		foreach ($supplier_products AS $p)
+		{	
+			$supplier_products_array[] = array(	'id'					=>	$p->getId(),
+												'price'					=>	$p->getPrice(),
+												'product'				=>	$p->getProduct()->getId(),
+												'primary_supplier'		=>	$p->getPrime(),
+												'supplier_product_name'	=>	$p->getSupplierName(),
+												);
+		}
+
+		return array(	'supplier_products' => $supplier_products, 
+						'company' => $company, 
+						'supplier' => $supplier, 
+						'supplier_products_json' => json_encode($supplier_products_array),
+						'products_json' => json_encode($products_array), );
 
 	}
 	
@@ -217,92 +273,115 @@ class SupplierProductsController extends Controller
 	 }
 	 
 	/**
-	 * @Route("/supplier_products/supplier/{supplier_id}/update/{id}", name="supplier_products_ajax_update")
+	 * @Route(	"/company/{cid}/supplier/{sid}/product/{pid}",
+	 * 			name="supplier_products_ajax_update", 
+	 * 			requirements={"_method" = "PUT"})
 	 */
-	 public function ajaxupdateAction($supplier_id, $id)
+	 public function ajaxupdateAction($cid, $sid, $pid, Request $request)
 	 {
-		 if (isset($_POST['model']))
-		 {
-			 $model = (array)json_decode($_POST['model']);
-			 
-			 if (isset($model['id']) && is_numeric($model['id']) && $id == $model['id'])
-			 {
-				$supplier_product = $this->getDoctrine()
-						->getRepository('SupplierBundle:SupplierProducts')
-						->find($id);
-				
-				$errors = array();
-				
-				if (!$supplier_product)
-					$errors[] = 'Продукт поставщика не существует<!--'.$id.'-->';
-					
-				$supplier = $this->getDoctrine()
-								 ->getRepository('SupplierBundle:Supplier')
-								 ->find((int)$model['supplier']);
-				if (!$supplier)
-					$errors[] = 'Поставщик не существует<!-- '.(int)$model['supplier'].' -->';
-					
-				$product = $this->getDoctrine()
-								->getRepository('SupplierBundle:Product')
-								->find((int)$model['product']);
-				if (!$product)
-					$errors[] = 'Продукт не существует<!--'.(int)$model['product'].'-->';
-				
-				if (count($errors) > 0) {
-					$result = array('has_error'=>1, 'errors'=>$errors);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				
-				$validator = $this->get('validator');
-				
-				$price = 0+$model['price'];
-				
-				$supplier_product->setSupplierName($model['supplier_product_name']);
-				$supplier_product->setPrime($model['primary_supplier']);
-				$supplier_product->setPrice($price);
-				$supplier_product->setSupplier($supplier);
-				$supplier_product->setProduct($product);
-				
-				
-				
-				$errors = $validator->validate($supplier_product);
-				
-				if (count($errors) > 0) {
-					
-					foreach($errors['validate'] AS $error)
-						$errorMessage[] = $error->getMessage();
-						
-					$result = array('has_error'=>1, 'errors'=>$errors);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-					
-				} else {
-					
-					$em = $this->getDoctrine()->getEntityManager();
-					$em->persist($supplier_product);
-					$em->flush();
-					
-					$attr = array(	'id' => $supplier_product->getId(), 
-									'supplier_product_name' => $supplier_product->getSupplierName(), 
-									'price' => $supplier_product->getPrice(), 
-									'supplier' => (int)$supplier_id, 
-									'primary_supplier' => $supplier_product->getPrime(), 
-									'product' => $supplier_product->getProduct()->getId());
-					
-					$response = new Response(json_encode($attr), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				
-				}
-			 }
-			 
-		 }
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findOneSupplierByCompany($cid, $sid);
+	
+		
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
+			}
+		}
+		
+		$products = $company->getProducts();
+		foreach ($products AS $p)	$products_array[$p->getId()] = $p;
+		
+		$suppliers = $company->getSuppliers();
+		foreach ($suppliers AS $s)	$supplier = $s;
+		 
+		$model = (array)json_decode($request->getContent());
+		 
+		if (isset($model) && isset($model['supplier_product_name']) && isset($model['price']))
+		{
+			$supplier_product = $this->getDoctrine()
+					->getRepository('SupplierBundle:SupplierProducts')
+					->find($pid);
 			
-		$result = array('has_error'=>1, 'errors'=> 'Invalid request');
-		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+			if (!$supplier_product)
+			{
+				$code = 404;
+				$result = array('code'=>$code, 'message'=>'No supplier product found for id '.$pid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			
+			if (!array_key_exists($model['product'], $products_array))
+			{
+				$code = 400;
+				$result = array('code'=>$code, 'message'=>'No product #'.(int)$model['product'].' found for supplier product');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			
+			
+			$validator = $this->get('validator');
+			
+			$price = 0+$model['price'];
+			
+			$supplier_product->setSupplierName($model['supplier_product_name']);
+			$supplier_product->setPrime($model['primary_supplier']);
+			$supplier_product->setPrice($price);
+			$supplier_product->setSupplier($supplier);
+			$supplier_product->setProduct($products_array[(int)$model['product']]);
+			$supplier_product->setCompany($company);
+			
+			
+			
+			$errors = $validator->validate($supplier_product);
+			
+			if (count($errors) > 0) {
+				
+				foreach($errors['validate'] AS $error)
+					$errorMessage[] = $error->getMessage();
+				
+				$code = 400;
+				$result = array('code'=>$code, 'message'=>$errors);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($supplier_product);
+				$em->flush();
+				
+				$attr = array(	'id' => $supplier_product->getId(), 
+								'supplier_product_name' => $supplier_product->getSupplierName(), 
+								'price' => $supplier_product->getPrice(), 
+								'supplier' => $supplier->getId(), 
+								'primary_supplier' => $supplier_product->getPrime(), 
+								'product' => $supplier_product->getProduct()->getId());
+				$code = 200;
+				$result = array('code'=>$code, 'data'=> $attr);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			
+			}
+		}
+			
+		$code = 400;
+		$result = array('code'=>$code, 'message'=> 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
 
@@ -310,115 +389,151 @@ class SupplierProductsController extends Controller
 	 
 	 
 	/**
-	 * @Route("/supplier_products/supplier/{supplier_id}/create", name="supplier_products_ajax_create")
+	 * @Route(	"/company/{cid}/supplier/{sid}/product", 
+	 * 			name="supplier_products_ajax_create",
+	 * 			requirements={"_method" = "POST"})
 	 */
-	 public function ajaxcreateAction($supplier_id)
+	 public function ajaxcreateAction($cid, $sid, Request $request)
 	 {
-		 if (isset($_POST['model']))
-		 {
-			 $model = (array)json_decode($_POST['model']);
-			 if (isset($model['supplier_product_name']) && isset($model['product']) && $supplier_id != 0)
-			 {
-				 
-				$errors = array();
-				$supplier = $this->getDoctrine()
-								 ->getRepository('SupplierBundle:Supplier')
-								 ->find((int)$model['supplier']);
-				if (!$supplier)
-					$errors[] = 'Поставщик не существует<!-- '.(int)$model['supplier'].' -->';
-					
-				$product = $this->getDoctrine()
-								->getRepository('SupplierBundle:Product')
-								->find((int)$model['product']);
-				if (!$product)
-					$errors[] = 'Продукт не существует<!--'.(int)$model['product'].'-->';
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findOneSupplierByCompany($cid, $sid);
+	
 		
-				if (count($errors) > 0) {
-					$result = array('has_error'=>1, 'errors'=>$errors);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-		
-				$price = 0+$model['price'];
-		
-				$validator = $this->get('validator');
-				$supplier_product = new SupplierProducts();
-				$supplier_product->setSupplierName($model['supplier_product_name']);
-				$supplier_product->setPrime($model['primary_supplier']);
-				$supplier_product->setPrice($price);
-				$supplier_product->setSupplier($supplier);
-				$supplier_product->setProduct($product);
-				
-				$errors = $validator->validate($supplier_product);
-				
-				if (count($errors) > 0) {
-					
-					foreach($errors AS $error)
-						$errorMessage[] = $error->getMessage();
-						
-					$result = array('has_error'=>1, 'errors'=>$errorMessage);
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-					
-				} else {
-					
-					$em = $this->getDoctrine()->getEntityManager();
-					$em->persist($supplier_product);
-					$em->flush();
-					
-					$attr = array(	'id' => $supplier_product->getId(), 
-									'supplier_product_name' => $supplier_product->getSupplierName(), 
-									'price' => $supplier_product->getPrice(), 
-									'supplier' => (int)$supplier_id, 
-									'primary_supplier' => $supplier_product->getPrime(), 
-									'product' => $supplier_product->getProduct()->getId());
-					
-					$response = new Response(json_encode($attr), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				
-				}
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			else
+			{
+				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
 			}
 		}
 		
-		$result = array('has_error'=>1, 'errors'=> 'Invalid request');
-		$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+		$products = $company->getProducts();
+		foreach ($products AS $p)	$products_array[$p->getId()] = $p;
+		 
+		$suppliers = $company->getSuppliers();
+		foreach ($suppliers AS $s)	$supplier = $s;
+		 
+		$model = (array)json_decode($request->getContent());
+		
+		if (isset($model['supplier_product_name']) && isset($model['product']))
+		{
+			if (!array_key_exists($model['product'], $products_array))
+			{
+				$code = 400;
+				$result = array('code'=>$code, 'message'=>'No product #'.(int)$model['product'].' found for supplier product');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+	
+			$price = 0+$model['price'];
+	
+			$validator = $this->get('validator');
+			$supplier_product = new SupplierProducts();
+			$supplier_product->setSupplierName($model['supplier_product_name']);
+			$supplier_product->setPrime($model['primary_supplier']);
+			$supplier_product->setPrice($price);
+			$supplier_product->setSupplier($supplier);
+			$supplier_product->setProduct($products_array[(int)$model['product']]);
+			
+			$errors = $validator->validate($supplier_product);
+			
+			if (count($errors) > 0) {
+				
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
+					
+				$code = 400;
+				$result = array('code'=>$code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($supplier_product);
+				$em->flush();
+				
+				$attr = array(	'id' => $supplier_product->getId(), 
+								'supplier_product_name' => $supplier_product->getSupplierName(), 
+								'price' => $supplier_product->getPrice(),
+								'primary_supplier' => $supplier_product->getPrime(), 
+								'product' => $supplier_product->getProduct()->getId());
+				
+				$code = 200;
+				$result = array('code' => $code, 'data' => $attr);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			
+			}
+		}
+		
+		$code = 400;
+		$result = array('code'=>$code, 'message'=> 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
 	}	
 	 
 	 
 	/**
-	 * @Route("/supplier_products/supplier/{supplier_id}/delete/{id}", name="supplier_products_ajax_delete")
+	 * @Route(	"/company/{cid}/supplier/{sid}/product/{pid}", 
+	 * 			name="supplier_products_ajax_delete", 
+ 	 * 			requirements={"_method" = "DELETE"})
 	 */
-	 public function ajaxdeleteAction($supplier_id, $id)
+	 public function ajaxdeleteAction($cid, $sid, $pid)
 	 {
-		$supplier_product = $this->getDoctrine()
-						->getRepository('SupplierBundle:SupplierProducts')
-						->find($id);
-						
-		if (!$supplier_product)
-		{
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findOneSupplierByCompany($cid, $sid);
+		
+		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
-				$result = array('has_error' => 1, 'errors' => 'No Supplier Products found for id '.$id);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}
 			else
 			{
-				throw $this->createNotFoundException('No Supplier Products found for id '.$id);
+				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
 			}
+		}
+		 
+		 
+		$supplier_product = $this->getDoctrine()
+				->getRepository('SupplierBundle:SupplierProducts')
+				->find($pid);
+		
+		if (!$supplier_product)
+		{
+			$code = 404;
+			$result = array('code'=>$code, 'message'=>'No supplier product found for id '.$pid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
 		}
 
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($supplier_product);
 		$em->flush();
 	
-		echo $id;
+		$code = 200;
+		$result = array('code' => $code, 'data' => $pid);
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
 		die();
 	 }
 }

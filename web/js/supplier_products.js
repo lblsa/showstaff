@@ -1,150 +1,12 @@
 /****************************************
- * Supplier
+ * Supplier Products
  ****************************************/
+
 var SP = {}; // коллекции продуктров поставщика
 var VSP = {}; // коллекция видов
 var SORT = {}; // Сортировка в коллекциях
-var ViewSupplier = Backbone.View.extend({
-	
-	tagName: "tr",
-	className: "supplier",
-	
-	template: _.template(	'<td class="s_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><p>'+
-							'<%= name %>'+
-							' <a href="#" class="pull-right btn btn-small show visibl">Развернуть <i class="icon-plus-sign"></i></a></p>'+
-							'<div class="hide sp_list" id="sp_<%= id %>"></div></td>'),
-	
-	events: {
-		'click .show': 'show',
-		'click .hd': 'hiden',
-	},
-	
-	initialize: function() {
-		this.model.view = this;
-	},
-		
-	render: function(){
-		var content = this.template(this.model.toJSON());
-		this.$el.html(content);
-		return this;
-	},
-	
-	preloader: function() {
-		$('#preloader_s').width($('#suppliers').width());
-		$('#preloader_s').height($('#suppliers').height());
-		var p = $('#suppliers').position();
-		$('#preloader_s').css({'left':p.left, 'top': p.top});
-		$('#preloader_s').show();
-		return;
-	},
-	
-	show: function() {
-		
-		var model_id = this.model.id;
-		var exist = 0;
-		if(typeof(SP[model_id]) == "undefined") {
-
-			var SupplierProductsCurent = SupplierProducts.extend({
-			  url: '/supplier_products/supplier/'+this.model.id,
-			});
-			
-			SP[model_id] = new SupplierProductsCurent;
-			
-			SORT[model_id] = 'asc';
-			
-			SP[model_id].comparator = function(product) {
-			  return product.get("supplier_product_name");
-			};
-			
-			SP[model_id].fetch();
-		} else {
-			exist = 1;			
-		}
-		
-		VSP[model_id] = new ViewSupplierProducts({collection: SP[model_id]});
-		
-		$('#sp_'+model_id).html(VSP[model_id].render({id:model_id}).el);		
-		
-		this.preloader();
-		
-		if (exist == 1)
-			SP[model_id].trigger('reset');
-	
-		$('.visibl', this.$el).removeClass('show');
-		$('.visibl', this.$el).addClass('hd');
-		$('.visibl', this.$el).html('Свернуть <i class="icon-minus-sign"></i>');
-		
-		return false;
-	},
-	
-	hiden: function() {
-		$('#sp_'+this.model.id, this.$el).slideUp();
-		
-		$('.visibl', this.$el).removeClass('hd');
-		$('.visibl', this.$el).addClass('show');
-		$('.visibl', this.$el).html('Развернуть <i class="icon-plus-sign"></i>');		
-		$('#sp_'+this.model.id, this.$el).html('');
-		return false;
-	}
-});
-
-var ViewSuppliers = Backbone.View.extend({
-	
-	tagName: "tbody",
-	
-	className: "suppliers",
-	
-	initialize: function() {
-		_.bindAll(this);
-		this.collection.on('reset', this.renderAll);
-	},
-	
-	render: function() {
-		return this;
-	},
-	
-	renderAll: function() {
-		this.collection.each(function(model){
-			var view = new ViewSupplier({model:model});
-			var content = view.render().el;
-			this.$('.suppliers').append(content);
-		});
-		$('#preloader_s').hide();
-	},
-})
 
 
-// Model Supplier
-var SupplierModel = Backbone.Model.extend({ 
-
-});
-
-// get suppliers
-var Suppliers = Backbone.Collection.extend({
-  model: SupplierModel,
-  url: '/supplier/json'
-});
-
-var suppliers = new Suppliers; // init collection
-var view_suppliers = new ViewSuppliers({collection: suppliers}); // init view
-$('#suppliers').append(view_suppliers.render().el); // add main template
-
-$('#preloader_s').width($('#suppliers').width());
-$('#preloader_s').height($('#suppliers').height());
-var p = $('#suppliers').position();
-$('#preloader_s').css({'left':p.left, 'top': p.top});
-$('#preloader_s').fadeIn('fast');
-
-suppliers.comparator = function(supplier) {
-  return supplier.get("name");
-};
-
-suppliers.fetch();
-
-
-/****************************************
- * Supplier Products
- ****************************************/
 var SupplierProductView = Backbone.View.extend({
 	
 	tagName: "tr",
@@ -152,16 +14,16 @@ var SupplierProductView = Backbone.View.extend({
 	
 	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= supplier_product_name %></td>'+
 							'<td class="ps_price"><%= price %></td>'+
-							'<td class="ps_product"><% print(units[products._byId[product].attributes.unit]); %></td>'+
+							'<td class="ps_product"><% print(products._byId[product].attributes.name); %> - <% print(units[products._byId[product].attributes.unit]); %></td>'+
 							'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
 	events: {
 		'dblclick .ps_name': 'edit',
-		'click .remove': 'remove',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+		'click .remove'	: 'remove',
+		'click .cancel'	: 'cancel',
+		'click .save'	: 'save',
 	},
 	
 	initialize: function() {
@@ -220,7 +82,6 @@ var SupplierProductView = Backbone.View.extend({
 							price: $('.price', this.el).val(),
 							product: $('.product', this.el).val(),
 							primary_supplier: $('.primary_supplier', this.el).is(':checked')?1:0,
-							supplier: this.model.attributes.supplier
 						},{wait: true});
 	},
 	
@@ -233,11 +94,10 @@ var SupplierProductView = Backbone.View.extend({
 // view list supplier products
 var ViewSupplierProducts = Backbone.View.extend({
 	
-	tagName: "table",
-	className: "sproducts table table-bordered white",
+	tagName: "tbody",
+	className: "supplier_products",
 	
 	events: {
-		'click .add_supplier_product_show': 'show_form',
 		'click .close_form': 'close_form',
 		'click .add_supplier_product_btn': 'add',
 		'click .sort_by_name': 'sort_by_name',
@@ -250,42 +110,29 @@ var ViewSupplierProducts = Backbone.View.extend({
 		this.collection.on('reset', this.renderAll);
 	},
 	
-	render: function(args) {
-		this.args = args;
+	render: function() {
 		return this;
 	},
 	
 	renderAll: function() {
-		if (typeof(this.args.id) != 'undefined') {
-			$('#sp_'+this.args.id+' .sproducts').html('');
-			$("#supplier_product_list .supplier_products_header").clone().appendTo('#sp_'+this.args.id+' .sproducts'); // Добавляем шапку с заголовками/сортировками/формой
-			$('#sp_'+this.args.id+' .sproducts').append('<tbody class="supplier_products"></tbody>');
-			$('#preloader_s').hide();
-			$('#sp_'+this.args.id).slideDown();
-			
-			this.renderProducts();
-		}
+		$('#preloader_s').hide();
+		this.renderProducts();
 		return this;
 	},
 	
 	renderProducts: function() {
-		
-		var id = this.args.id;
-		
 		if (this.collection.length > 0) {
 			
-			$('#sp_'+this.args.id+' .supplier_products').html('');
+			$('.supplier_products').html('');
 			this.collection.each(function(model){
 				var view = new SupplierProductView({model:model});
 				var content = view.render().el;
 				
-				if (SORT[id] == 'desc')
-					$('#sp_'+id+' .supplier_products').prepend(content);
+				if (supplier_products_sort == 'desc')
+					$('.sp_list .supplier_products').prepend(content);
 				else
-					$('#sp_'+id+' .supplier_products').append(content);
+					$('.sp_list .supplier_products').append(content);
 			});
-			
-			$('.supplier_products .supplier_product:first-child td').attr('style','border-top:1px solid #ddd;');
 		
 		} else {
 		
@@ -298,37 +145,15 @@ var ViewSupplierProducts = Backbone.View.extend({
 		
 	},
 	
-	show_form: function() {
-		var sid = this.args.id;
-		
-		//console.log(sid);
-		
-		$('#sp_'+sid+' .product_add_sp').html('');
-		
-		products.each(function(p){
-			var view = new OptionProducts({model:p});
-			$('#sp_'+sid+' .product_add_sp').append(view.render().el);
-		});
-		
-		$('#sp_'+sid+' .form_add_supplier_product').slideDown(function(){
-			$('#sp_'+sid+' .add_supplier_product_show').addClass('close_form');
-			$('#sp_'+sid+' .add_supplier_product_show i').attr('class', 'icon-minus-sign');
-		});
-		
-		$('#sp_'+sid+' .name_add_sp').focus();
-		return false;
-	},
-	
 	close_form: function() {
-		var sid = this.args.id;
-		$('#sp_'+sid+' .form_add_supplier_product').slideUp(function(){
-			$('#sp_'+sid+' .add_supplier_product_show').removeClass('close_form');
-			$('#sp_'+sid+' .add_supplier_product_show i').attr('class', 'icon-plus-sign');
+		$('.sp_list .form_add_supplier_product').slideUp(function(){
+			$('.sp_list .add_supplier_product_show').removeClass('close_form');
+			$('.sp_list .add_supplier_product_show i').attr('class', 'icon-plus-sign');
 		});
 	},
 	
 	add: function() {
-		this.collection = SP[this.args.id];
+		this.collection = supplier_products;
 		
 		$('#preloader_s').width($('#suppliers').width());
 		$('#preloader_s').height($('#suppliers').height());
@@ -336,11 +161,10 @@ var ViewSupplierProducts = Backbone.View.extend({
 		$('#preloader_s').css({'left':p.left, 'top': p.top});
 		$('#preloader_s').show();
 		
-		this.collection.add([{	supplier_product_name:	$('#sp_'+this.args.id+' .name_add_sp').val(), 
-								price:					$('#sp_'+this.args.id+' .price_add_sp').val(), 
-								product:				$('#sp_'+this.args.id+' .product_add_sp').val(), 
-								supplier:				this.args.id, 
-								primary_supplier:		$('#sp_'+this.args.id+' .primary_supplier_add_sp').is(':checked')?1:0,
+		this.collection.add([{	supplier_product_name:	$('.sp_list .name_add_sp').val(), 
+								price:					$('.sp_list .price_add_sp').val(), 
+								product:				$('.sp_list .product_add_sp').val(),
+								primary_supplier:		$('.sp_list .primary_supplier_add_sp').is(':checked')?1:0,
 							}]);
 	},
 
@@ -350,19 +174,18 @@ var ViewSupplierProducts = Backbone.View.extend({
 		  return chapter.get("supplier_product_name");
 		};
 		
-		list.reset(SP[this.args.id].models, {silent:true})
-		this.collection = list;	
-		
-		if (SORT[this.args.id] == 'asc') {
-			SORT[this.args.id] = 'desc';
-			$('#sp_'+this.args.id+' .sort_by_name i').attr('class','icon-arrow-down');
+		if (supplier_products_sort == 'asc') {
+			supplier_products_sort = 'desc';
+			$('.sp_list .sort_by_name i').attr('class','icon-arrow-down');
 		} else {
-			SORT[this.args.id] = 'asc';
-			$('#sp_'+this.args.id+' .sort_by_name i').attr('class','icon-arrow-up');
+			supplier_products_sort = 'asc';
+			$('.sp_list .sort_by_name i').attr('class','icon-arrow-up');
 		}
 		
-		this.renderProducts();
+		list.reset(supplier_products.models, {silent:true})
+		this.collection = list;
 		
+		this.renderProducts();
 		return false;
 	},
 	
@@ -371,16 +194,17 @@ var ViewSupplierProducts = Backbone.View.extend({
 		list.comparator = function(chapter) {
 		  return chapter.get("price");
 		};
-		
-		list.reset(SP[this.args.id].models, {silent:true})
-		this.collection = list;		
-		if (SORT[this.args.id] == 'asc') {
-			SORT[this.args.id] = 'desc';
-			$('#sp_'+this.args.id+' .sort_by_price i').attr('class','icon-arrow-down');
+
+		if (supplier_products_sort == 'asc') {
+			supplier_products_sort = 'desc';
+			$('.sp_list .sort_by_price i').attr('class','icon-arrow-down');
 		} else {
-			SORT[this.args.id] = 'asc';
-			$('#sp_'+this.args.id+' .sort_by_price i').attr('class','icon-arrow-up');
+			supplier_products_sort = 'asc';
+			$('.sp_list .sort_by_price i').attr('class','icon-arrow-up');
 		}
+		
+		list.reset(supplier_products.models, {silent:true})
+		this.collection = list;	
 		
 		this.renderProducts();
 		return false;
@@ -392,16 +216,16 @@ var ViewSupplierProducts = Backbone.View.extend({
 		  return chapter.get("primary_supplier");
 		};
 		
-		list.reset(SP[this.args.id].models, {silent:true})
-		this.collection = list;	
-		
-		if (SORT[this.args.id] == 'asc') {
-			SORT[this.args.id] = 'desc';
-			$('#sp_'+this.args.id+' .sort_by_prime i').attr('class','icon-arrow-down');
+		if (supplier_products_sort == 'asc') {
+			supplier_products_sort = 'desc';
+			$('.sp_list .sort_by_prime i').attr('class','icon-arrow-down');
 		} else {
-			SORT[this.args.id] = 'asc';
-			$('#sp_'+this.args.id+' .sort_by_prime i').attr('class','icon-arrow-up');
+			supplier_products_sort = 'asc';
+			$('.sp_list .sort_by_prime i').attr('class','icon-arrow-up');
 		}
+		
+		list.reset(supplier_products.models, {silent:true})
+		this.collection = list;	
 		
 		this.renderProducts();
 		return false;
@@ -411,28 +235,14 @@ var ViewSupplierProducts = Backbone.View.extend({
 
 // Model supplier products
 var SupplierProductsModel = Backbone.Model.extend({
-  methodUrl:  function(method){
-	 
-	 //console.log(this.attributes); 
-	 
-	if(method == "delete"){
-			return "/supplier_products/supplier/" + this.attributes.supplier + "/delete/" + this.attributes.id;
-		} else if(method == "update"){
-			return "/supplier_products/supplier/" + this.attributes.supplier + "/update/" + this.attributes.id;
-		} else if(method == "create"){
-			return "/supplier_products/supplier/" + this.attributes.supplier + "/create";
-		} 
-		return false;
-  },
   
   sync: function(method, model, options) {
        var SProductOptions = options;
        
         if (method == 'delete') {
 			SProductOptions.success = function(resp, status, xhr) {
-				//console.log(status);
 				$('#preloader_s').fadeOut('fast');
-				if (resp == model.id) {
+				if (resp.data == model.id) {
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
 					return;
@@ -452,7 +262,7 @@ var SupplierProductsModel = Backbone.Model.extend({
         if (method == 'update') {
 			SProductOptions.success = function(resp, status, xhr) {
 				
-				if (resp != null && resp.has_error) {
+				if (resp != null && typeof(resp.message) != 'undefined') {
 					
 				   $('#preloader_s').fadeOut('fast'); 
 				   $('.ps_prime', model.view.el).append('<div class="alert">'+
@@ -461,18 +271,16 @@ var SupplierProductsModel = Backbone.Model.extend({
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
 				} else {
-				   if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
-					   model.set(resp,{silent: true});
+				   if (resp != null && typeof(resp.data) != 'undefined') {
+					   model.set(resp.data,{silent: true});
 					   model.view.render();
+					   supplier_products.sort({silent: true});
+					   VSP.remove()
+					   VSP = new ViewSupplierProducts({collection: supplier_products});
 					   
-					   //  for sort reload
-					   SP[resp.supplier].sort({silent: true});
-					   VSP[resp.supplier].remove()
-					   VSP[resp.supplier] = new ViewSupplierProducts({collection: SP[resp.supplier]});
-					   $('#sp_'+resp.supplier).append(VSP[resp.supplier].render({id:resp.supplier}).el);
-					   VSP[resp.supplier].renderAll();
-					   
-					   return;
+						$('.sproducts').append(VSP.render().el);
+						VSP.renderAll().el
+						return;
 				   } else {
 					   $('#preloader_s').fadeOut('fast'); 
 					   $('.ps_prime', model.view.el).append('<div class="alert">'+
@@ -492,25 +300,24 @@ var SupplierProductsModel = Backbone.Model.extend({
 		if (method == 'create') {
 			SProductOptions.success = function(resp, status, xhr) {
 				
-				$('#sp_'+model.attributes.supplier+' .alert').remove();
+				$('.sp_list .alert').remove();
 				
-				if (resp != null && typeof(resp.id) != 'undefined' && resp.id > 0) {
-				   model.set(resp, {silent:true});
+				if (resp != null && typeof(resp.data) != 'undefined') {
+				   model.set(resp.data, {silent:true});
 				   var view = new SupplierProductView({model:model});
 				   var content = view.render().el;
-				   $('#sp_'+model.attributes.supplier+' .supplier_products').prepend(content);
-				   $("#up .alert-success").clone().appendTo('#sp_'+model.attributes.supplier+' .form_add_supplier_product');
-				   $('#sp_'+model.attributes.supplier+' .form_add_supplier_product .alert-success').fadeIn();
+				   $('.sp_list .supplier_products').prepend(content);
+				   $("#up .alert-success").clone().appendTo('.sp_list .form_add_supplier_product');
+				   $('.sp_list .form_add_supplier_product .alert-success').fadeIn();
 				    
-				   $('#sp_'+model.attributes.supplier+' .name_add_sp').val('');
-				   $('#sp_'+model.attributes.supplier+' .price_add_sp').val('');
-				  
-				   //  for sort reload
-				   SP[model.attributes.supplier].sort({silent: true});
-				   VSP[model.attributes.supplier].remove()
-				   VSP[model.attributes.supplier] = new ViewSupplierProducts({collection: SP[model.attributes.supplier]});
-				   $('#sp_'+model.attributes.supplier).append(VSP[model.attributes.supplier].render({id:model.attributes.supplier}).el);
-				   VSP[model.attributes.supplier].renderAll();
+				   $('.sp_list .name_add_sp').val('');
+				   $('.sp_list .price_add_sp').val('');
+
+					supplier_products.sort({silent: true});
+					VSP.remove()
+					VSP = new ViewSupplierProducts({collection: supplier_products});
+					$('.sproducts').append(VSP.render().el);
+					VSP.renderAll().el
 				   
 				   return;
 				   
@@ -518,11 +325,11 @@ var SupplierProductsModel = Backbone.Model.extend({
 					
 				   $('#preloader_s').fadeOut('fast'); 
 				   
-				   if (resp != null && resp.has_error)
-						$('#up .alert-error strong').html(''+resp.errors);
+				   if (resp != null && typeof(resp.message) != 'undefined')
+						$('#up .alert-error strong').html(''+resp.message);
 						
 				   $("#up .alert-error").clone().appendTo('.form_add_supplier_product');
-				   $('#sp_'+model.attributes.supplier+' .alert-error').fadeIn();
+				   $('.sp_list .alert-error').fadeIn();
 				   return;
 				}
 				return options.success(resp, status, xhr);
@@ -555,20 +362,6 @@ var SupplierProducts = Backbone.Collection.extend({
   
 });
 
-$(document).ready(function(){
-	
-	$('#close_all').click(function(){
-		$('.sp_list').html('');
-		$('.sp_list').slideUp('fast');
-		$('.visibl').removeClass('hd');
-		$('.visibl').addClass('show');
-		$('.visibl').html('Развернуть <i class="icon-plus-sign"></i>');	
-		
-		return false;
-	});
-	
-})
-
 /**********************************************
  * Option Product for add/edit Supplier Product
  **********************************************/
@@ -587,5 +380,49 @@ var OptionProducts = Backbone.View.extend({
 	
 })
 
-
-
+ 
+$(document).ready(function(){
+	$('.sort_by_price').click(function(){
+		VSP.sort_by_price();
+		return false;
+	});
+	$('.sort_by_prime').click(function(){
+		VSP.sort_by_prime();
+		return false;
+	});
+	$('.sort_by_name').click(function(){
+		VSP.sort_by_name();
+		return false;
+	});
+	
+	$('.add_supplier_product_show').toggle(function(){
+		$('.sp_list .product_add_sp').html('');
+		
+		products.each(function(p){
+			var view = new OptionProducts({model:p});
+			$('.product_add_sp').append(view.render().el);
+		});
+		
+		$('.form_add_supplier_product').slideDown(function(){
+			$('.add_supplier_product_show i').attr('class', 'icon-minus-sign');
+		});
+		
+		$('.sp_list .name_add_sp').focus();
+		return false;
+	}, function(){
+		$('.form_add_supplier_product').slideUp(function(){
+			$('.add_supplier_product_show i').attr('class', 'icon-plus-sign');
+		});
+		return false;
+	});
+	
+	$('.add_supplier_product_btn').click(function(){
+		supplier_products.add([{
+						supplier_product_name: $('.name_add_sp').val(), 
+						price: $('.price_add_sp').val(),
+						product: $('.product_add_sp').val(),
+						primary_supplier: $('.primary_supplier_add_sp').is(':checked')?1:0,
+					}],{wait: true});
+		return false;
+	});
+})

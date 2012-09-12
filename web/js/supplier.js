@@ -47,7 +47,10 @@ var ViewSupplier = Backbone.View.extend({
 	tagName: "tr",
 	className: "supplier",
 	
-	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= name %></td>'+
+	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
+								'<%= name %> '+
+								'<a href="supplier/<%= id %>/product" class="link pull-right ">Продукты поставщика</a>'+
+							'</td>'+
 							'<td class="p_unit">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),

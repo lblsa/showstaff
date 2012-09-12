@@ -1884,6 +1884,9 @@ table .span1 {
   margin-left: 0;
 }
 
+table .span1.product_add_sp {
+	width:100px;
+}
 table .span2 {
   float: none;
   width: 124px;
