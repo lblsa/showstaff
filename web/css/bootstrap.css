@@ -5675,3 +5675,13 @@ select.product {
 .row-fluid .supplier_product_name {
   width: 294px;
 }
+
+.table .company td.p_name {
+  width:150px;
+}
+.table .company td.p_inn {
+  width:150px;
+}
+.table .company td.p_link {
+  width:490px;
+}

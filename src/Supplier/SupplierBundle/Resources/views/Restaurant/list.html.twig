@@ -4,98 +4,71 @@
 
 	<div  class="row">
 		<div class="span12">
-			<div class="navbar">
-			  <div class="navbar-inner">
-				<ul class="nav">
-				  <li><a href="">Supplier</a></li>
-				  <li><a href="{{ path('company') }}">Companies</a></li>
-				</ul>
-			  </div>
-			</div>
-		</div>
-		<div class="span12">
 			<h2>Restaurants in the Company "{{ company.name }}"</h2>
-			{% if restaurants is defined and restaurants|length > 0 %}
-				<table class="table table-striped">
-					<tr>
-						<th>#</th>
-						<th>Name</th>
-						<th>Address</th>
-						<th>Director</th>
-						<th>Company</th>
-						<th>Delete</th>
-					</tr>
-					 {% for restaurant in restaurants %}
-						<tr>
-							<td>{{ restaurant.id }}</td>
-							<td>
-								<p>
-									<a href="{{ path('restaurant_edit', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">
-									<i class="icon-edit"></i>
-									</a>&nbsp;&nbsp;
-									<a href="{{ path('restaurant_show', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">
-										{{ restaurant.name }}
-									</a>
-								</p>
-							</td>
-							<td>{{ restaurant.address }}</td>
-							<td>{{ restaurant.director }}</td>
-							<td>{{ company.name }}</td>
-							<td>
-								<a href="{{ path('restaurant_del', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link del" title="Delete Item">
-									<i class="icon-remove"></i>
-								</a>
-							</td>
-						</tr>
-					{% else %}
-						<tr>
-							<td colspan="3"><div class="alert alert-error">Empty Result</div></td>
-						</tr>
-					{% endfor %}
-				</table>
-			{% else %}
-				<div class="alert alert-error">Empty Result</div>
-			{% endif %}
-		</div>
-		<div class="span12">
-			<legend>Add Restaurant for the Company "{{ company.name }}" <a href="#" class="btn btn-small" id="form_add_company">Hide Form</a></legend>
-			<div class="form_add_company">
-				<form action="{{ path('restaurant', { 'cid': company.id }) }}" method="post" {{ form_enctype(form) }} class="form-horizontal">
-					
-					{{ form_errors(form) }}
-					
-					<div class="control-group">
-						{{ form_label(form.name, null, { 'attr': {'class': 'control-label'}}) }}
-						
-						<div class="controls">
-							{{ form_errors(form.name) }}
-							{{ form_widget(form.name) }}
-						</div>
-					</div>
-					<div class="control-group">
-						{{ form_label(form.address, null, { 'attr': {'class': 'control-label'}}) }}
-						
-						<div class="controls">
-							{{ form_errors(form.address) }}
-							{{ form_widget(form.address) }}
-						</div>
-					</div>
-					<div class="control-group">
-						{{ form_label(form.director, null, { 'attr': {'class': 'control-label'}}) }}
-						
-						<div class="controls">
-							{{ form_errors(form.director) }}
-							{{ form_widget(form.director) }}
-						</div>
-					</div>
-					{{ form_rest(form) }}
-					<div class="control-group">
-						<div class="controls">
-							<input type="submit" value="Add" />
-						</div>
-					</div>
-				</form>
-			</div>
+			<table class="table table-bordered table-striped" id="restaurants_list">
+			 <thead>
+			  <tr>
+				<th>Название
+					<a href="#" class="sort sort_by_name"><i class="icon-arrow-up"></i></a>
+				</th>
+				<th>Адрес
+					<a href="#" class="sort sort_by_address"><i class="icon-arrow-up"></i></a>
+				</th>
+				<th>Директор
+					<a href="#" class="sort sort_by_director"><i class="icon-arrow-up"></i></a>
+				</th>
+			  </tr>
+			  <tr id="add_row">
+				<th colspan="3" class="add">
+					<a href="#" class="create btn btn-small">Add new Restaurant <i class="icon-plus-sign"></i></a>
+					<p class="form-inline hide" id="form_add">
+						<input name="name_add" type="text" placeholder="Name" class="input-large name_add">
+						<input name="address_add" type="text" placeholder="Address" class="input-large address_add">
+						<input name="director_add" type="text" placeholder="Director" class="input-large director_add">
+						<a class="add_restaurant btn btn-mini btn-success">add</a>
+					</p>
+				</th>
+			  </tr>
+			 </thead>
+			</table>
+			<script src="/js/restaurant.js"></script>
+			<script type="text/javascript">
+				// Collection restaurants
+				var Restaurants = Backbone.Collection.extend({
+				  
+				  model: RestaurantModel,
+				  
+				  url: '/company/{{ company.id }}/restaurant',
+				  
+				  initialize: function(){
+					  this.bind('add', this.addRestaurant);
+				  },
+				  
+				  addRestaurant: function(restaurant){
+					restaurant.save({wait: true});
+				  },
+				  
+				});
+				
+				var restaurants = new Restaurants; // init collection
+
+				var view_restaurants = new ViewRestaurants({collection: restaurants}); // initialize view
+
+				restaurants.comparator = function(restaurant) {
+				  return restaurant.get("name");
+				};
+
+				$('#restaurants_list').append(view_restaurants.render().el); // add template
+
+				$('#preloader').width($('#add_row').width());
+				$('#preloader').height($('#add_row').height());
+				var p = $('#add_row').position();
+				$('#preloader').css({'left':p.left, 'top': p.top});
+				$('#preloader').fadeIn('fast');
+
+				restaurants.reset({{ restaurants_json|raw }});
+
+			</script>
 		</div>
 	</div>
 {% endblock %}

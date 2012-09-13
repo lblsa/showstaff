@@ -1,14 +1,14 @@
 /****************************************
- * Suppliers
+ * Restaurants
  ****************************************/
 
 var sort = 'asc';
 
-// view list supplier
-var ViewSuppliers = Backbone.View.extend({
+// view list Restaurants
+var ViewRestaurants = Backbone.View.extend({
 	
 	tagName: "tbody",
-	className: "suppliers",
+	className: "restaurants",
 	
 	initialize: function() {
 		_.bindAll(this);
@@ -20,38 +20,106 @@ var ViewSuppliers = Backbone.View.extend({
 	},
 	
 	renderAll: function() {
-		
+
 		if (this.collection.length > 0) {
-			this.$('.suppliers').html('');
+			$('.restaurants').html('');
 			this.collection.each(function(model){
-				var view = new ViewSupplier({model:model});
+				var view = new ViewRestaurant({model:model});
 				var content = view.render().el;
 				if (sort == 'desc')
-					this.$('.suppliers').prepend(content);
+					this.$('.restaurants').prepend(content);
 				else
-					this.$('.suppliers').append(content);
+					this.$('.restaurants').append(content);
 			});
 			
 		} else {
-			$('.suppliers').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
+			$('.restaurants').html('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 								'<button type="button" class="close" data-dismiss="alert">×</button>'+
-								'У вас еще нет поставщиков</div></td></tr>');
+								'У вас еще нет рестаранов</div></td></tr>');
 			$('#preloader').fadeOut('fast');
 		}
 	},
+	
+	
+
+	sort_by_name: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("name");
+		};
+		
+		if (sort == 'asc') {
+			sort = 'desc';
+			$('.sort_by_name i').attr('class','icon-arrow-down');
+		} else {
+			sort = 'asc';
+			$('.sort_by_name i').attr('class','icon-arrow-up');
+		}
+		
+		list.reset(restaurants.models, {silent:true})
+		this.collection = list;
+		
+		this.renderAll();
+		return false;
+	},
+	
+	sort_by_address: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("address");
+		};
+
+		if (sort == 'asc') {
+			sort = 'desc';
+			$('.sort_by_address i').attr('class','icon-arrow-down');
+		} else {
+			sort = 'asc';
+			$('.sort_by_address i').attr('class','icon-arrow-up');
+		}
+		
+		list.reset(restaurants.models, {silent:true})
+		this.collection = list;	
+		
+		this.renderAll();
+		return false;
+	},
+	
+	sort_by_director: function() {
+		var list = new Backbone.Collection;
+		list.comparator = function(chapter) {
+		  return chapter.get("director");
+		};
+		
+		if (sort == 'asc') {
+			sort = 'desc';
+			$('.sort_by_director i').attr('class','icon-arrow-down');
+		} else {
+			sort = 'asc';
+			$('.sort_by_director i').attr('class','icon-arrow-up');
+		}
+		
+		list.reset(restaurants.models, {silent:true})
+		this.collection = list;	
+		
+		this.renderAll();
+		return false;
+	}
 });
 
-// view one supplier
-var ViewSupplier = Backbone.View.extend({
+// view one restaurant
+var ViewRestaurant = Backbone.View.extend({
 	
 	tagName: "tr",
-	className: "supplier",
+	className: "restaurant",
 	
 	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
 								'<%= name %> '+
-								'<a href="supplier/<%= id %>/product" class="link pull-right ">Продукты поставщика</a>'+
 							'</td>'+
-							'<td class="p_unit">'+
+							'<td class="p_address" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
+								'<%= address %> '+
+							'</td>'+
+							'<td class="p_director" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
+								'<%= director %> '+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
@@ -78,7 +146,7 @@ var ViewSupplier = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.supplier').tooltip();
+		$('.restaurant').tooltip();
 		$('#preloader').fadeOut('fast'); 
 		return this;
 	},
@@ -86,13 +154,25 @@ var ViewSupplier = Backbone.View.extend({
 	edit: function() {
 		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
 		$('.p_name input', this.el).val(this.model.get('name'));
-		$('.p_unit', this.el).html('<p class="form-inline"> <a class="save btn btn-mini btn-success">save</a>'+
+		
+		$('.p_address', this.el).html('<input type="text" class="input-small address" name="name" value="">');
+		$('.p_address input', this.el).val(this.model.get('address'));
+		
+		$('.p_director', this.el).html('<input type="text" class="input-small director" name="name" value="">');
+		$('.p_director input', this.el).val(this.model.get('director'));
+		
+		
+		$('.p_director', this.el).append('<p class="form-inline"> <a class="save btn btn-mini btn-success">save</a>'+
 									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
 	},
 	
 	save: function() {
 		this.preloader();
-		this.model.save({	name: $('.name', this.el).val() 	},{wait: true});
+		this.model.save({	
+							name: $('.name', this.el).val(),
+							address: $('.address', this.el).val(),
+							director: $('.director', this.el).val() 	
+						},{wait: true});
 	},
 	
 	cancel: function() {
@@ -110,14 +190,14 @@ var ViewSupplier = Backbone.View.extend({
 })
 
 
-// Model supplier
-var SupplierModel = Backbone.Model.extend({
+// Model restaurant
+var RestaurantModel = Backbone.Model.extend({
 
   sync: function(method, model, options) {
-        var supplierOptions = options;
+        var restaurantOptions = options;
         
         if (method == 'delete') {
-			supplierOptions.success = function(resp, status, xhr) {
+			restaurantOptions.success = function(resp, status, xhr) {
 				$('#preloader').fadeOut('fast');
 				if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
 					$(model.view.el).remove();
@@ -126,7 +206,7 @@ var SupplierModel = Backbone.Model.extend({
 					return;
 				} else {
 					
-				   $('.p_unit', model.view.el).append('<div class="alert">'+
+				   $('.p_director', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
 				   return;
@@ -134,19 +214,19 @@ var SupplierModel = Backbone.Model.extend({
 				return options.success(resp, status, xhr);
 			};
 			
-			supplierOptions.error = function(resp, status, xhr) {
+			restaurantOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
 			
-			supplierOptions.url = 'supplier/'+this.attributes.id;
+			restaurantOptions.url = 'restaurant/'+this.attributes.id;
 		}
         
         if (method == 'update') {
-			supplierOptions.success = function(resp, status, xhr) {
+			restaurantOptions.success = function(resp, status, xhr) {
 				if (resp != null && typeof(resp.message) != 'undefined') {
 				   $('#preloader').fadeOut('fast'); 
-				   $('.p_unit .alert', model.view.el).remove();
-				   $('.p_unit', model.view.el).append('<div class="alert">'+
+				   $('.p_director .alert', model.view.el).remove();
+				   $('.p_director', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка (' + resp.message + '). '+
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
@@ -154,20 +234,20 @@ var SupplierModel = Backbone.Model.extend({
 				} else {
 				   if (resp != null && typeof(resp.data) != 'undefined') {
 					   model.set(resp.data,{silent: true});
-					   model.view.render();			   
-					   //  for sort reload
-					   suppliers.sort({silent: true});
+					   model.view.render();
 					   
-					   view_suppliers.remove()
-					   view_suppliers = new ViewSuppliers({collection: suppliers});
-					   $('#supplier_list').append(view_suppliers.render().el);
-					   view_suppliers.renderAll()
+					   restaurants.sort({silent: true});
+					   
+					   view_restaurants.remove()
+					   view_restaurants = new ViewRestaurants({collection: restaurants});
+					   $('#restaurants_list').append(view_restaurants.render().el);
+					   view_restaurants.renderAll()
 					   
 					   return;
 				   } else {
-					   $('.p_unit .alert', model.view.el).remove();
+					   $('.p_director .alert', model.view.el).remove();
 					   $('#preloader').fadeOut('fast'); 
-					   $('.p_unit', model.view.el).append('<div class="alert">'+
+					   $('.p_director', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
 					   return;
@@ -176,23 +256,23 @@ var SupplierModel = Backbone.Model.extend({
 				return options.success(resp, status, xhr);
 			};
 			
-			supplierOptions.error = function(resp, status, xhr) {
+			restaurantOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
 			
-			supplierOptions.url = 'supplier/'+this.attributes.id;
+			restaurantOptions.url = 'restaurant/'+this.attributes.id;
 			
 		}
 		
 		if (method == 'create') {
-			supplierOptions.success = function(resp, status, xhr) {
+			restaurantOptions.success = function(resp, status, xhr) {
 				if (resp != null && typeof(resp.message) != 'undefined' ) {
 
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.message + '). ');
 				   $(".alert-error").clone().appendTo('#form_add');
 				   $('#form_add .alert-error').fadeIn();
-				   suppliers.remove(model, {silent:true});
+				   restaurants.remove(model, {silent:true});
 				   return;
 				   
 				} else {
@@ -200,19 +280,21 @@ var SupplierModel = Backbone.Model.extend({
 				   if (resp != null && typeof(resp.data) != 'undefined') {
 				   
 					   model.set(resp.data, {silent:true});
-					   var view = new ViewSupplier({model:model});
+					   
+					   var view = new ViewRestaurant({model:model});
 					   var content = view.render().el;
-					   $('.suppliers').prepend(content);
-					   $('.supplier').tooltip();  
+					   
+					   $('.restaurants').prepend(content);
+					   $('.restaurant').tooltip();  
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
 					   $("#form_add .alert-success").fadeIn()
 
 					   //  for sort reload
-					   view_suppliers.remove()
-					   view_suppliers = new ViewSuppliers({collection: suppliers});
-					   $('#supplier_list').append(view_suppliers.render().el);
-					   view_suppliers.renderAll()
+					   view_restaurants.remove()
+					   view_restaurants = new ViewRestaurants({collection: restaurants});
+					   $('#restaurants_list').append(view_restaurants.render().el);
+					   view_restaurants.renderAll()
 					   return;
 				   } else {
 					   
@@ -220,19 +302,19 @@ var SupplierModel = Backbone.Model.extend({
 					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
 					   $(".alert-error").clone().appendTo('#form_add');
 					   $('#form_add .alert-error').fadeIn();
-					   suppliers.remove(model, {silent:true});   
+					   restaurants.remove(model, {silent:true});   
 					   return;
 				   }
 				   
 				}
 				return options.success(resp, status, xhr);
 			};
-			supplierOptions.error = function(resp, status, xhr) {
+			restaurantOptions.error = function(resp, status, xhr) {
 				return options.success(resp, status, xhr);
 			}
 		}
 		
-		Backbone.sync.call(this, method, model, supplierOptions);
+		Backbone.sync.call(this, method, model, restaurantOptions);
    }
 });
 
@@ -245,36 +327,33 @@ var SupplierModel = Backbone.Model.extend({
  
 $(document).ready(function(){
 	
-	$('.add_supplier').click(function() {
+	$('.add_restaurant').click(function() {
 		$("#form_add .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();
 		$('#preloader').css({'left':p.left, 'top': p.top});
 		$('#preloader').fadeIn('fast');
-		suppliers.add([{name: $('.name_add').val()}]);
+		
+		restaurants.add([{
+							name: $('.name_add').val(),
+							address: $('.address_add').val(),
+							director: $('.director_add').val(),
+						}]);
 		
 		return false;
 	})
-	
-	$('.sort').toggle(function() {
-		sort = 'desc';		
-	    view_suppliers.remove()
-	    view_suppliers = new ViewSuppliers({collection: suppliers});
-	    $('#supplier_list').append(view_suppliers.render().el);
-	    view_suppliers.renderAll()
-		
-		$('i', this).attr('class','icon-arrow-down');
-		return false;
-	}, function() {		
-		sort = 'asc';		
-	    view_suppliers.remove()
-	    view_suppliers = new ViewSuppliers({collection: suppliers});
-	    $('#supplier_list').append(view_suppliers.render().el);
-	    view_suppliers.renderAll()
 
-		$('i', this).attr('class','icon-arrow-up');
+	$('.sort_by_name').click(function(){
+		view_restaurants.sort_by_name();
 		return false;
 	});
-
+	$('.sort_by_address').click(function(){
+		view_restaurants.sort_by_address();
+		return false;
+	});
+	$('.sort_by_director').click(function(){
+		view_restaurants.sort_by_director();
+		return false;
+	});
 })
