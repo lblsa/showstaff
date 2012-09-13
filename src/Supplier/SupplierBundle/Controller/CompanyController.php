@@ -15,48 +15,32 @@ class CompanyController extends Controller
 {
 	
 	/**
-	 * @Route("/company", name="company")
+	 * @Route(	"company", 
+	 * 			name="company",
+	 * 			requirements={"_method" = "GET"})
 	 * @Template()
 	 */
 	public function listAction(Request $request)
 	{		
-		
-		$company = new Company();
-		
-		$form = $this->createForm(new CompanyType(), $company);
-		if ($request->getMethod() == 'POST')
-		{
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$company = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($company);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$result = array('has_error' => 0, 'result' => 'Company  #'.$company->getId().' is created');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('company'));
-				}
-			}
-		}
-		
 		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+		
+		$companies_array = array();
+		
+		if ($companies)
+		{
+			foreach ($companies AS $p)
+				$companies_array[] = array( 	'id' => $p->getId(),
+												'name'=> $p->getName(), 
+												'extended_name' => $p->getExtendedName(),
+												'inn' => $p->getInn(),
+											);
+		}
 
-		return array( 'companies' => $companies, 'form' => $form->createView());
+		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array));
 	}
 	
     /**
-     * @Route("/company/{id}/del", name="company_del")
+     * @Route("company/{id}/del", name="company_del")
      */
     public function delAction($id, Request $request)
     {
@@ -97,7 +81,7 @@ class CompanyController extends Controller
     }
 	
     /**
-     * @Route("/company/{id}/edit", name="company_edit")
+     * @Route("company/{id}/edit", name="company_edit")
 	 * @Template()
      */
     public function editAction($id, Request $request)
@@ -153,7 +137,9 @@ class CompanyController extends Controller
     }
 	
     /**
-     * @Route("/company/{id}", name="company_show")
+     * @Route(	"company/{id}", 
+     * 			name="company_show",
+     * 			requirements={"_method" = "GET"})
      * @Template()
      */
     public function showAction($id, Request $request)
@@ -177,5 +163,168 @@ class CompanyController extends Controller
 		}
 	
 		return array('company' => $company);
+	}
+	
+	
+	/**
+	 * @Route(	"company/{cid}", 
+	 * 			name="company_ajax_update", 
+	 * 			requirements={"_method" = "PUT"})
+	 */
+	 public function ajaxupdateAction($cid, Request $request)
+	 {		 
+		$model = (array)json_decode($request->getContent());
+		
+		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $cid == $model['id'])
+		{
+			$company = $this->getDoctrine()
+							->getRepository('SupplierBundle:Company')
+							->find($model['id']);
+			
+			if (!$company)
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No company found for id '.$pid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			
+			$validator = $this->get('validator');
+
+			$company->setName($model['name']);
+			$company->setExtendedName($model['extended_name']);
+			$company->setInn((int)$model['inn']);
+			
+			$errors = $validator->validate($company);
+			
+			if (count($errors) > 0) {
+				
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
+				
+				$code = 400;
+				$result = array('code'=>$code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($company);
+				$em->flush();
+				
+				$code = 200;
+				
+				$result = array('code'=> $code, 'data' => array(	'name' => $company->getName(),
+																	'extended_name' => $company->getExtendedName(), 
+																	'inn' => $company->getInn()
+																));
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			
+			}
+		}
+			
+		$code = 400;
+		$result = array('code'=> $code, 'message' => 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+		 
+	 }
+	 
+
+	/**
+	 * @Route(	"company", 
+	 * 			name="company_ajax_create", 
+	 * 			requirements={"_method" = "POST"})
+	 */
+	public function ajaxcreateAction(Request $request)
+	{
+		$model = (array)json_decode($request->getContent());
+		
+		if (count($model) > 0 && isset($model['inn']) && isset($model['name']))
+		{
+			$validator = $this->get('validator');
+			$company = new Company();
+			$company->setName($model['name']);
+			$company->setExtendedName($model['extended_name']);
+			$company->setInn((int)$model['inn']);
+			
+			$errors = $validator->validate($company);
+			
+			if (count($errors) > 0) {
+				
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
+					
+				$code = 400;
+				$result = array('code' => $code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($company);
+				$em->flush();
+				
+				$code = 200;
+				$result = array(	'code' => $code, 'data' => array(	'id' => $company->getId(),
+																		'name' => $company->getName(), 
+																		'extended_name' => $company->getExtendedName(), 
+																		'inn' => $company->getINN()
+																	));
+				
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			
+			}
+		}
+		
+		$code = 400;
+		$result = array('code' => $code, 'message'=> 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+	 
+	}
+	
+	
+	/**
+	 * @Route(	"company/{cid}", 
+	 * 			name="company_ajax_delete", 
+	 * 			requirements={"_method" = "DELETE"})
+	 */
+	public function ajaxdeleteAction($cid, Request $request)
+	{
+		$company = $this->getDoctrine()
+					->getRepository('SupplierBundle:Company')
+					->find($cid);
+					
+		if (!$company)
+		{
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		
+
+		$em = $this->getDoctrine()->getEntityManager();				
+		$em->remove($company);
+		$em->flush();
+		
+		$code = 200;
+		$result = array('code' => $code, 'data' => $cid);
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
 	}
 }

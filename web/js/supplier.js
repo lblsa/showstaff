@@ -245,19 +245,6 @@ var SupplierModel = Backbone.Model.extend({
  
 $(document).ready(function(){
 	
-	$('.create').toggle(function() {
-		$('i', this).attr('class', 'icon-minus-sign');
-		$("#form_add .alert").remove();
-		$('.name_add').val('');
-		$('#form_add').slideDown();
-		$('.name_add').focus();
-		return false;
-	}, function() {
-		$('i', this).attr('class', 'icon-plus-sign');
-		$('#form_add').slideUp();
-		return false;
-	});
-	
 	$('.add_supplier').click(function() {
 		$("#form_add .alert").remove();
 		$('#preloader').width($('#add_row').width());
@@ -270,10 +257,6 @@ $(document).ready(function(){
 		return false;
 	})
 	
-    $('.del').click(function(){
-		return confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?");
-	});
-	
 	$('.sort').toggle(function() {
 		sort = 'desc';		
 	    view_suppliers.remove()
@@ -283,8 +266,7 @@ $(document).ready(function(){
 		
 		$('i', this).attr('class','icon-arrow-down');
 		return false;
-	}, function() {
-		
+	}, function() {		
 		sort = 'asc';		
 	    view_suppliers.remove()
 	    view_suppliers = new ViewSuppliers({collection: suppliers});
