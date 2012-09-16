@@ -1,3 +1,7 @@
+_welcome:
+    pattern:   /
+    defaults:  { _controller: SupplierBundle:Company:list }
+
 SupplierBundle:
     resource: "@SupplierBundle/Controller/"
     type:     annotation
