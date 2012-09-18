@@ -1,0 +1,93 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+			<div class="row-fluid">
+				<div class="span9">
+					<h1>Компания "<a href="{{ path('company_show', {id: company.id}) }}">{{ company.name }}</a>"</h1>
+					<h2>Продукты для ресторана "<a href="{{ path('restaurant_show', {cid: company.id, rid: restaurant.id}) }}">{{ restaurant.name }}</a>" на {{ booking_date }}</h2>
+				</div>
+				<div class="span3">
+					<form class=" pull-right form-inline">
+						<input type="text" value="{{ booking_date }}" class="datepicker input-small">
+						<a href="" class="btn" id="link_to_date">Открыть</a>
+					</form>
+				</div>
+			</div>
+			<table class="table table-bordered table-striped" id="bookin_list">
+			 <thead>
+			  <tr>
+				<th>Название
+					<a href="#" class="sort sort_by_name"><i class="icon-arrow-up"></i></a>
+				</th>
+				<th>Количество
+					<a href="#" class="sort sort_by_amount"><i class="icon-arrow-up"></i></a>
+				</th>
+				<th>Еденицы</th>
+			  </tr>
+			{% if edit_mode %}
+			  <tr id="add_row">
+				<th colspan="3" class="add">
+					<a href="#" class="create btn btn-small">Заказать продукт <i class="icon-plus-sign"></i></a>
+					<p class="form-inline hide" id="form_add">
+                        <select class="product_add"></select>
+						<input name="amount_add" type="text" placeholder="Amount" class="input-large amount_add">
+						<a class="add_booking btn btn-mini btn-success">add</a>
+					</p>
+				</th>
+			  </tr>
+			{% endif %}
+			 </thead>
+			</table>
+			<script src="/js/booking.js"></script>
+			<script type="text/javascript">
+				var products = new Backbone.Collection;
+				products.reset({{ products_json|raw }});
+				
+				// Collection bookings
+				var ContentBooking = Backbone.Collection.extend({
+				  
+				  model: BookingModel,
+				  
+				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/booking',
+				  
+				  initialize: function(){
+					  this.bind('add', this.addBooking);
+				  },
+				  
+				  addBooking: function(product){
+					product.save({wait: true});
+				  },
+				  
+				});
+				
+				var bookings = new ContentBooking; // init collection
+
+				var view_content = new ViewBookings({collection: bookings}); // initialize view
+
+
+				bookings.comparator = function(booking) {
+				  return booking.get("name");
+				};
+
+				$('#bookin_list').append(view_content.render().el); // add template
+				{% if edit_mode %}
+				$('#preloader').width($('#add_row').width());
+				$('#preloader').height($('#add_row').height());
+				var p = $('#add_row').position();
+				$('#preloader').css({'left':p.left, 'top': p.top});
+				$('#preloader').fadeIn('fast');
+				{% endif %}
+				bookings.reset({{ bookings_json|raw }});
+				
+				{% if edit_mode == false %}
+					$('#bookin_list .remove').remove();
+				{% endif %}
+				
+			</script>
+		</div>
+	</div>
+{% endblock %}
+

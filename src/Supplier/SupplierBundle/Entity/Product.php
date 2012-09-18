@@ -3,15 +3,14 @@
 namespace Supplier\SupplierBundle\Entity;
 
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * Supplier\SupplierBundle\Entity\Product
  *
  * @ORM\Table()
  * @ORM\Entity(repositoryClass="Supplier\SupplierBundle\Entity\ProductRepository")
- * @UniqueEntity("name")
  */
 class Product
 {
@@ -28,7 +27,7 @@ class Product
     /**
      * @var string $name
      *
-     * @ORM\Column(name="name", type="string", length=255, unique=true)
+     * @ORM\Column(name="name", type="string", length=255)
 	 * @Assert\NotBlank(message="Name should not be blank")
 	 * @Assert\Type(type="string", message="Name '{{ value }}' is not a valid {{ type }}.")
      * @Assert\MinLength(3)
