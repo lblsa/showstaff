@@ -28,8 +28,9 @@ class RestaurantController extends Controller
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
-				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}
@@ -44,7 +45,7 @@ class RestaurantController extends Controller
 		$form = $this->createForm(new RestaurantType(), $restaurant);
 		
 		if ($request->getMethod() == 'POST')
-		{			
+		{
 			$validator = $this->get('validator');
 			$form->bindRequest($request);
 
@@ -58,8 +59,9 @@ class RestaurantController extends Controller
 				
 				if ($request->isXmlHttpRequest()) 
 				{
-					$result = array('has_error' => 0, 'result' => 'Restaurant #'.$restaurant->getId().' is created');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+					$code = 200;
+					$result = array('code' => $code, 'message' => 'Restaurant #'.$restaurant->getId().' is created');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					$response->sendContent();
 					die();
 				}

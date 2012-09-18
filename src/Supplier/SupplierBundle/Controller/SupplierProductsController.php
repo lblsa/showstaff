@@ -155,7 +155,7 @@ class SupplierProductsController extends Controller
     {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->findOneSupplierByCompany($cid, $sid);
+						->findOneCompanyOneSupplier($cid, $sid);
 	
 		
 		if (!$company) {
@@ -281,7 +281,7 @@ class SupplierProductsController extends Controller
 	 {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->findOneSupplierByCompany($cid, $sid);
+						->findOneCompanyOneSupplier($cid, $sid);
 	
 		
 		if (!$company) {
@@ -397,7 +397,7 @@ class SupplierProductsController extends Controller
 	 {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->findOneSupplierByCompany($cid, $sid);
+						->findOneCompanyOneSupplier($cid, $sid);
 	
 		
 		if (!$company) {
@@ -495,7 +495,7 @@ class SupplierProductsController extends Controller
 	 {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->findOneSupplierByCompany($cid, $sid);
+						->findOneCompanyOneSupplier($cid, $sid);
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
