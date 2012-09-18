@@ -79,12 +79,13 @@ class CompanyRepository extends EntityRepository
 		}
 	}
 	
-	public function findOneRestaurantByCompany($cid, $rid)
+	public function findOneCompanyOneRestaurant($cid, $rid)
+
 	{
 		$query = $this->getEntityManager()
 			->createQuery('
 				SELECT p, c FROM SupplierBundle:Company c
-				LEFT JOIN c.restaurants p
+				JOIN c.restaurants p
 				WHERE c.id = :cid AND p.id = :rid'
 			)->setParameters(array('cid' => $cid, 'rid' => $rid));
 

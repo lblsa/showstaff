@@ -27,7 +27,7 @@ class BookingController extends Controller
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 			
-		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneRestaurantByCompany($cid, $rid);
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
