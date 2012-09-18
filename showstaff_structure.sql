@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: localhost
--- Время создания: Сен 12 2012 г., 16:27
+-- Время создания: Сен 18 2012 г., 17:08
 -- Версия сервера: 5.5.24
--- Версия PHP: 5.3.10-1ubuntu3.2
+-- Версия PHP: 5.3.10-1ubuntu3.4
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -19,6 +19,28 @@ SET time_zone = "+00:00";
 --
 -- База данных: `showstaff`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `Booking`
+--
+
+CREATE TABLE IF NOT EXISTS `Booking` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `restaurant_id` int(11) NOT NULL,
+  `supplier_id` int(11) DEFAULT NULL,
+  `product_id` int(11) NOT NULL,
+  `booking_date` varchar(10) COLLATE utf8_unicode_ci NOT NULL,
+  `amount` double NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq` (`booking_date`,`company_id`,`restaurant_id`,`product_id`),
+  KEY `IDX_73D03BB5979B1AD6` (`company_id`),
+  KEY `IDX_73D03BB5B1E7706E` (`restaurant_id`),
+  KEY `IDX_73D03BB52ADD6D8C` (`supplier_id`),
+  KEY `IDX_73D03BB54584665A` (`product_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=44 ;
 
 -- --------------------------------------------------------
 
@@ -46,9 +68,8 @@ CREATE TABLE IF NOT EXISTS `Product` (
   `unit` int(11) NOT NULL,
   `company_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_1CF73D315E237E06` (`name`),
   KEY `IDX_1CF73D31979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=106 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=109 ;
 
 -- --------------------------------------------------------
 
@@ -64,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `Restaurant` (
   `director` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX_A4C811EF979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=12 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=24 ;
 
 -- --------------------------------------------------------
 
@@ -79,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `Supplier` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `IDX_625C0E28979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=19 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=20 ;
 
 -- --------------------------------------------------------
 
@@ -99,11 +120,20 @@ CREATE TABLE IF NOT EXISTS `SupplierProducts` (
   KEY `IDX_A8DED6134584665A` (`product_id`),
   KEY `IDX_A8DED6132ADD6D8C` (`supplier_id`),
   KEY `IDX_A8DED613979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=71 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=70 ;
 
 --
 -- Ограничения внешнего ключа сохраненных таблиц
 --
+
+--
+-- Ограничения внешнего ключа таблицы `Booking`
+--
+ALTER TABLE `Booking`
+  ADD CONSTRAINT `FK_2FB1D4424584665A` FOREIGN KEY (`product_id`) REFERENCES `Product` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_73D03BB52ADD6D8C` FOREIGN KEY (`supplier_id`) REFERENCES `Supplier` (`id`),
+  ADD CONSTRAINT `FK_73D03BB5979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`),
+  ADD CONSTRAINT `FK_73D03BB5B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`);
 
 --
 -- Ограничения внешнего ключа таблицы `Product`

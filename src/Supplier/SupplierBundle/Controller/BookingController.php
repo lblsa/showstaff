@@ -60,8 +60,6 @@ class BookingController extends Controller
 																		);
 		}
 		
-		$restaurants_array = array();
-		
 		$bookings = $this->getDoctrine()
 							->getRepository('SupplierBundle:Booking')
 							->findBy( array(	'company'=>$cid, 'date' => $booking_date) );

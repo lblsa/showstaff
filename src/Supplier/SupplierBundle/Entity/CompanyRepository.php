@@ -29,12 +29,12 @@ class CompanyRepository extends EntityRepository
 	}
 	
 	
-	public function findOneSupplierByCompany($cid, $sid)
+	public function findOneCompanyOneSupplier($cid, $sid)
 	{
 		$query = $this->getEntityManager()
 			->createQuery('
 				SELECT p, c FROM SupplierBundle:Company c
-				LEFT JOIN c.suppliers p
+				JOIN c.suppliers p
 				WHERE c.id = :cid AND p.id = :sid'
 			)->setParameters(array('cid' => $cid, 'sid' => $sid));
 
