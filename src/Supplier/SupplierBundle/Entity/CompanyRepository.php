@@ -78,4 +78,20 @@ class CompanyRepository extends EntityRepository
 			return null;
 		}
 	}
+	
+	public function findOneCompanyOneRestaurant($cid, $rid)
+	{
+		$query = $this->getEntityManager()
+			->createQuery('
+				SELECT p, c FROM SupplierBundle:Company c
+				JOIN c.restaurants p
+				WHERE c.id = :cid AND p.id = :rid'
+			)->setParameters(array('cid' => $cid, 'rid' => $rid));
+
+		try {
+			return $query->getSingleResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			return null;
+		}
+	}
 }
