@@ -43,6 +43,13 @@
 			</table>
 			<script src="/js/booking.js"></script>
 			<script type="text/javascript">
+			
+				{% if edit_mode %}
+					var edit_mode = true;
+				{% else %}
+					var edit_mode = false;
+				{% endif %}
+			
 				var products = new Backbone.Collection;
 				products.reset({{ products_json|raw }});
 				
@@ -51,7 +58,7 @@
 				  
 				  model: BookingModel,
 				  
-				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/booking',
+				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/order',
 				  
 				  initialize: function(){
 					  this.bind('add', this.addBooking);
@@ -73,18 +80,20 @@
 				};
 
 				$('#bookin_list').append(view_content.render().el); // add template
-				{% if edit_mode %}
-				$('#preloader').width($('#add_row').width());
-				$('#preloader').height($('#add_row').height());
-				var p = $('#add_row').position();
-				$('#preloader').css({'left':p.left, 'top': p.top});
-				$('#preloader').fadeIn('fast');
-				{% endif %}
-				bookings.reset({{ bookings_json|raw }});
 				
-				{% if edit_mode == false %}
+				if (edit_mode) {
+					$('#preloader').width($('#add_row').width());
+					$('#preloader').height($('#add_row').height());
+					var p = $('#add_row').position();
+					$('#preloader').css({'left':p.left, 'top': p.top});
+					$('#preloader').fadeIn('fast');
+				}
+				
+				bookings.reset({{ bookings_json|raw }});
+			
+				if (!edit_mode) {
 					$('#bookin_list .remove').remove();
-				{% endif %}
+				}
 				
 			</script>
 		</div>

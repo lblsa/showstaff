@@ -11,7 +11,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 //use Supplier\SupplierBundle\Form\Type\BookingType;
 
-class BookingController extends Controller
+class OrderController extends Controller
 {
 	
     /**
