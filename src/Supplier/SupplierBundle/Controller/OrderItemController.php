@@ -6,20 +6,20 @@ use Supplier\SupplierBundle\Entity\Supplier;
 use Supplier\SupplierBundle\Entity\Product;
 use Supplier\SupplierBundle\Entity\Company;
 use Supplier\SupplierBundle\Entity\Restaurant;
-use Supplier\SupplierBundle\Entity\Booking;
+use Supplier\SupplierBundle\Entity\OrderItem;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
-class BookingController extends Controller
+class OrderItemController extends Controller
 {
     /**
-     * @Route(	"company/{cid}/restaurant/{rid}/booking/{booking_date}", 
-     * 				name="content_booking_list", 
-     * 				requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
-     *					defaults={"booking_date" = 0})
+     * @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}", 
+     * 			name="OrderItem_list", 
+     * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0})
      * @Template()
      */
     public function listAction($cid, $rid, $booking_date, Request $request)
@@ -47,55 +47,76 @@ class BookingController extends Controller
 		$restaurants = $company->getRestaurants();
 		foreach ($restaurants AS $r) $restaurant = $r;
 		
-		$products = $company->getProducts();
+		
 
+		$suppler_products = $this->getDoctrine()
+								->getRepository('SupplierBundle:SupplierProducts')
+								->findByCompany($cid);
+		
+		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findByCompany($cid);
+
+		$available = array();
+		foreach ($suppler_products as $sp)
+			$available[] = $sp->getProduct()->getId();
+		
+		$available = array_unique($available);
+		
+		
+		
 		$products_array = array();
 		if ($products)
 		{
 			foreach ($products AS $p)
-				$products_array[$p->getId()] = array( 'id' => $p->getId(),
-																			'name'=> $p->getName(), 
-																			'unit' => $p->getUnit(),
-																			'use' => 0
-																		);
+			{
+				
+				if (array_search($p->getId(), $available))
+					$products_array[$p->getId()] = array(	'id' => $p->getId(),
+															'name'=> $p->getName(), 
+															'unit' => $p->getUnit(),
+															'use' => 0 );
+			}
 		}
+
+		//var_dump($products_array); var_dump($available);
 		
 		$bookings = $this->getDoctrine()
-							->getRepository('SupplierBundle:Booking')
-							->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+						->getRepository('SupplierBundle:OrderItem')
+						->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
 
 		$bookings_array = array();
+		
 		if ($bookings)
 		{
 			foreach ($bookings AS $p)
 			{
 				$bookings_array[] = array(	'id' => $p->getId(),
-															'amount' => $p->getAmount(),
-															'product' => $p->getProduct()->getId(),
-															'name' => $p->getProduct()->getName(),
+											'amount' => $p->getAmount(),
+											'product' => $p->getProduct()->getId(),
+											'name' => $p->getProduct()->getName(),
 										);
 				if (isset($products_array[$p->getProduct()->getId()]))
 					$products_array[$p->getProduct()->getId()]['use'] = 1;
 			}
 		}
+		
 		$products_array = array_values($products_array); 
 
 		return array(	'restaurant' => $restaurant, 
-								'company' => $company,
-								'products' => $products,
-								'bookings' => $bookings,
-								'bookings_json' => json_encode($bookings_array),
-								'products_json' => json_encode($products_array),
-								'booking_date' => $booking_date,
-								'edit_mode' => $booking_date<date('Y-m-d')?false:true );
+						'company' => $company,
+						'products' => $products,
+						'bookings' => $bookings,
+						'bookings_json' => json_encode($bookings_array),
+						'products_json' => json_encode($products_array),
+						'booking_date' => $booking_date,
+						'edit_mode' => $booking_date<date('Y-m-d')?false:true );
 		
 	}
 
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}/booking", 
-	 * 				name="booking_ajax_create",  
-	 * 				requirements={"_method" = "POST"})
-	 */
+	* @Route(	"company/{cid}/restaurant/{rid}/order",
+	* 			name="OrderItem_ajax_create",
+	* 			requirements={"_method" = "POST"})
+	*/
 	public function ajaxcreateAction($cid, $rid, Request $request)
 	{
 		$restaurant = $this->getDoctrine()
@@ -144,12 +165,32 @@ class BookingController extends Controller
 			$amount = 0 + $model['amount'];
 		
 			$validator = $this->get('validator');
-			$booking = new Booking();
+			$booking = new OrderItem();
 			$booking->setProduct($product);
 			$booking->setDate(date('Y-m-d'));
 			$booking->setAmount($amount);
 			$booking->setCompany($company);
 			$booking->setRestaurant($restaurant);
+			
+			$supplier_products = $this->getDoctrine()
+									->getRepository('SupplierBundle:SupplierProducts')
+									->findBy(
+										array('company'=>$company->getId(), 'product'=>$product->getId()), 
+										array('prime'=>'DESC','price' => 'ASC'),
+										1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+			
+			if ($supplier_products)
+			{
+				$booking->setSupplier($supplier_products[0]->getSupplier());
+			}
+			else
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No supplier found for product #'.$product->getId());
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
 			
 			$errors = $validator->validate($booking);
 			
@@ -198,8 +239,8 @@ class BookingController extends Controller
 	}
 	
 	/**
-	 * @Route(	"/company/{cid}/restaurant/{rid}/booking/{bid}", 
-	 * 				name="booking_ajax_delete", 
+	 * @Route(	"/company/{cid}/restaurant/{rid}/order/{bid}", 
+	 * 				name="OrderItem_ajax_delete", 
  	 * 				requirements={"_method" = "DELETE"})
 	 */
 	 public function ajaxdeleteAction($cid, $rid, $bid)
@@ -231,13 +272,13 @@ class BookingController extends Controller
 		}
 	
 		$booking = $this->getDoctrine()
-					->getRepository('SupplierBundle:Booking')
+					->getRepository('SupplierBundle:OrderItem')
 					->find($bid);
 		
 		if (!$booking)
 		{
 			$code = 200;
-			$result = array('code' => $code, 'data' => $bid, 'message' => 'No booking found for id '.$rid);
+			$result = array('code' => $code, 'data' => $bid, 'message' => 'No oreder item found for id '.$rid);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			$response->sendContent();
 			die();
@@ -267,8 +308,8 @@ class BookingController extends Controller
 
 
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}/booking/{bid}", 
-	 * 			name="booking_ajax_update", 
+	 * @Route(	"company/{cid}/restaurant/{rid}/order/{bid}", 
+	 * 			name="OrderItem_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
 	 */
 	public function ajaxupdateAction($cid, $rid, $bid, Request $request)
@@ -314,22 +355,12 @@ class BookingController extends Controller
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
-		}
-		
-			$product = $this->getDoctrine()
-									->getRepository('SupplierBundle:Product')
-									->find((int)$model['product']);
-			if (!$product)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
 			}
+		
+
 			
 			$booking = $this->getDoctrine()
-									->getRepository('SupplierBundle:Booking')
+									->getRepository('SupplierBundle:OrderItem')
 									->find($bid);
 			if (!$booking)
 			{
@@ -354,9 +385,43 @@ class BookingController extends Controller
 				$amount = 0 + $model['amount'];
 				
 				$validator = $this->get('validator');
-				$booking->setProduct($product);
-				$booking->setAmount($amount);
 				
+				$product = $this->getDoctrine()
+						->getRepository('SupplierBundle:Product')
+						->find((int)$model['product']);
+						
+				if (!$product)
+				{
+					$code = 404;
+					$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+								
+				$booking->setAmount($amount);
+				$booking->setProduct($product);
+				
+				$supplier_products = $this->getDoctrine()
+									->getRepository('SupplierBundle:SupplierProducts')
+									->findBy(
+										array('company'=>$company->getId(), 'product'=>$product->getId()), 
+										array('prime'=>'DESC','price' => 'ASC'),
+										1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+			
+				if ($supplier_products)
+				{
+					$booking->setSupplier($supplier_products[0]->getSupplier());
+				}
+				else
+				{
+					$code = 404;
+					$result = array('code' => $code, 'message' => 'No supplier found for product #'.$product->getId());
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+
 				$errors = $validator->validate($booking);
 				
 				if (count($errors) > 0) {
@@ -380,10 +445,9 @@ class BookingController extends Controller
 					
 					$result = array('code'=> $code, 
 											'data' => array(	'name' => $booking->getProduct()->getName(),
-																		'amount' => $booking->getAmount(),
-																		'product' => $booking->getProduct()->getId(),
-																		'id' => $booking->getId(),
-																	));
+																'amount' => $booking->getAmount(),
+																'product' => $booking->getProduct()->getId(),
+																'id' => $booking->getId()	));
 					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					$response->sendContent();
 					die();

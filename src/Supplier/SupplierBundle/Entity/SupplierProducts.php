@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Supplier\SupplierBundle\Entity\SupplierProducts
  *
- * @ORM\Table()
+ * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="uniq_sp", columns={"company_id", "supplier_id", "product_id"})})
  * @ORM\Entity(repositoryClass="Supplier\SupplierBundle\Entity\SupplierProductsRepository")
  */
 class SupplierProducts
@@ -54,20 +54,20 @@ class SupplierProducts
 
     /**
      * @ORM\ManyToOne(targetEntity="Product")
-     * @ORM\JoinColumn(name="product_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="product_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)
      */
     protected $product;
 
     /**
      * @ORM\ManyToOne(targetEntity="Supplier")
-     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)
      */
     protected $supplier;
 
 
     /**
      * @ORM\ManyToOne(targetEntity="Company")
-     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)
      */
     protected $company;
     
