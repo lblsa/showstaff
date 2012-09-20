@@ -52,10 +52,13 @@ var SupplierProductView = Backbone.View.extend({
 		
 		var product_id = this.model.get('product');
 		products.each(function(p){
-			var view = new OptionProducts({model:p});
-			$('.product', this.el).append(view.render().el);
-			if(p.id == product_id) {
-				$(view.render().el).attr('selected','selected');
+			products._byId[product_id].attributes.use = 0;
+			if (p.attributes.use == 0) {
+				var view = new OptionProducts({model:p});
+				$('.product', this.el).append(view.render().el);
+				if(p.id == product_id) {
+					$(view.render().el).attr('selected','selected');
+				}
 			}
 		});
 		$('.ps_prime', this.el).html(	'<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
@@ -86,6 +89,17 @@ var SupplierProductView = Backbone.View.extend({
 	},
 	
 	cancel: function() {
+		var product_id = this.model.get('product');
+		products.each(function(p){
+			products._byId[product_id].attributes.use = 1;
+			if (p.attributes.use == 0) {
+				var view = new OptionProducts({model:p});
+				$('.product', this.el).append(view.render().el);
+				if(p.id == product_id) {
+					$(view.render().el).attr('selected','selected');
+				}
+			}
+		});
 		return this.render().el;	
 	}
 	
@@ -243,6 +257,19 @@ var SupplierProductsModel = Backbone.Model.extend({
 			SProductOptions.success = function(resp, status, xhr) {
 				$('#preloader_s').fadeOut('fast');
 				if (resp.data == model.id) {
+					
+					products._byId[model.attributes.product].attributes.use = 0;
+					$('.product_add_sp').html('');
+					products.each(function(p){
+						if (p.attributes.use == 0) {
+							var view = new OptionProducts({model:p});
+							$('.product_add_sp').append(view.render().el);
+						}
+					});
+					
+					if ($('.product_add_sp option').length > 0)
+        				$('.create, #form_add').fadeIn();
+					
 					$(model.view.el).remove();
 					model.collection.remove(model, {silent: true});
 					return;
@@ -272,6 +299,20 @@ var SupplierProductsModel = Backbone.Model.extend({
 				   return;
 				} else {
 				   if (resp != null && typeof(resp.data) != 'undefined') {
+				   	
+						if (resp.data.product != model.attributes.product ) {
+							
+							products._byId[model.attributes.product].attributes.use = 0;
+							products._byId[resp.data.product].attributes.use = 1;
+							$('.product_add_sp').html('');
+							products.each(function(p){
+								if (p.attributes.use == 0) {
+									var view = new OptionProducts({model:p});
+									$('.product_add_sp').append(view.render().el);
+								}
+							});
+						}
+				   	
 					   model.set(resp.data,{silent: true});
 					   model.view.render();
 					   supplier_products.sort({silent: true});
@@ -303,7 +344,14 @@ var SupplierProductsModel = Backbone.Model.extend({
 				$('.sp_list .alert').remove();
 				
 				if (resp != null && typeof(resp.data) != 'undefined') {
-				   model.set(resp.data, {silent:true});
+					model.set(resp.data, {silent:true});
+
+					products._byId[resp.data.product].attributes.use = 1;
+					$('.product_add_sp option[value="'+resp.data.product+'"]').remove();
+				   
+					if ($('.product_add_sp option').length == 0)
+        				$('.create, #form_add').fadeOut();
+				   
 				   var view = new SupplierProductView({model:model});
 				   var content = view.render().el;
 				   $('.sp_list .supplier_products').prepend(content);
@@ -330,6 +378,8 @@ var SupplierProductsModel = Backbone.Model.extend({
 						
 				   $("#up .alert-error").clone().appendTo('.form_add_supplier_product');
 				   $('.sp_list .alert-error').fadeIn();
+				   supplier_products.remove(model, {silent:true});
+				   
 				   return;
 				}
 				return options.success(resp, status, xhr);
@@ -399,8 +449,10 @@ $(document).ready(function(){
 		$('.sp_list .product_add_sp').html('');
 		
 		products.each(function(p){
-			var view = new OptionProducts({model:p});
-			$('.product_add_sp').append(view.render().el);
+			if (p.attributes.use == 0) {
+				var view = new OptionProducts({model:p});
+				$('.product_add_sp').append(view.render().el);
+			}
 		});
 		
 		$('.form_add_supplier_product').slideDown(function(){

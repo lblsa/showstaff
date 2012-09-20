@@ -20,8 +20,6 @@ class SupplierProductsController extends Controller
 							'4' => 'пучок',
 							'5' => 'бутылка',);
 	
-	
-	
     /**
      * @Route("/supplier/products/del/{id}", name="supplier_products_del")
      */
@@ -181,10 +179,10 @@ class SupplierProductsController extends Controller
 		if ($products)
 		{
 			foreach ($products AS $p)
-				$products_array[] = array( 	'id' => $p->getId(),
-											'name'=> $p->getName(), 
-											'unit' => $p->getUnit(),
-											);
+				$products_array[$p->getId()] = array( 	'id' => $p->getId(),
+														'name'	=> $p->getName(), 
+														'unit'	=> $p->getUnit(),
+														'use'	=> 0 );
 		}
 		
 		foreach ($suppliers AS $s)
@@ -204,7 +202,11 @@ class SupplierProductsController extends Controller
 												'primary_supplier'		=>	$p->getPrime(),
 												'supplier_product_name'	=>	$p->getSupplierName(),
 												);
+			if (isset($products_array[$p->getProduct()->getId()]))
+				$products_array[$p->getProduct()->getId()]['use'] = 1;
+												
 		}
+		$products_array = array_values($products_array);
 
 		return array(	'supplier_products' => $supplier_products, 
 						'company' => $company, 
@@ -335,6 +337,19 @@ class SupplierProductsController extends Controller
 			$validator = $this->get('validator');
 			
 			$price = 0+$model['price'];
+			if ($model['primary_supplier'] == 1)
+			{
+				$q = $this->getDoctrine()
+						->getRepository('SupplierBundle:SupplierProducts')
+						->createQueryBuilder('p')
+						->update('SupplierBundle:SupplierProducts p')
+				        ->set('p.prime', 0)
+				        ->where('p.company = :company AND p.product = :product')
+				        ->setParameters(array('company' => $company, 'product' => $products_array[(int)$model['product']]))
+				        ->getQuery()
+						->execute();
+			}
+			
 			
 			$supplier_product->setSupplierName($model['supplier_product_name']);
 			$supplier_product->setPrime($model['primary_supplier']);
@@ -435,6 +450,19 @@ class SupplierProductsController extends Controller
 			}
 	
 			$price = 0+$model['price'];
+			if ($model['primary_supplier'] == 1)
+			{
+				$q = $this->getDoctrine()
+						->getRepository('SupplierBundle:SupplierProducts')
+						->createQueryBuilder('p')
+						->update('SupplierBundle:SupplierProducts p')
+				        ->set('p.prime', 0)
+				        ->where('p.company = :company AND p.product = :product')
+				        ->setParameters(array('company' => $company, 'product' => $products_array[(int)$model['product']]))
+				        ->getQuery()
+						->execute();
+			}
+	
 	
 			$validator = $this->get('validator');
 			$supplier_product = new SupplierProducts();
@@ -442,6 +470,7 @@ class SupplierProductsController extends Controller
 			$supplier_product->setPrime($model['primary_supplier']);
 			$supplier_product->setPrice($price);
 			$supplier_product->setSupplier($supplier);
+			$supplier_product->setCompany($company);
 			$supplier_product->setProduct($products_array[(int)$model['product']]);
 			
 			$errors = $validator->validate($supplier_product);

@@ -9,10 +9,9 @@ var ViewBooking = Backbone.View.extend({
 	className: "product",
    
 	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><% print(products._byId[product].attributes.name); %></td>'+
-										'<td class="ps_amount"><%= amount %></td>'+
-										'<td class="ps_unit"><% print(units[products._byId[product].attributes.unit]); %>'+
-											'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
-										'</td>'),
+							'<td class="ps_amount"><%= amount %></td>'+
+							'<td class="ps_unit"><% print(units[products._byId[product].attributes.unit]); %>'+
+								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),
 
 	events: {
 		'dblclick .ps_name': 'edit',
@@ -26,10 +25,12 @@ var ViewBooking = Backbone.View.extend({
 	},
 	
 	render: function(){
-		//console.log(this);
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
 		$('#preloader').fadeOut('fast');
+		if (!edit_mode) {
+			$('.remove', this.$el).remove();
+		}	
 		return this;
 	},
 	
@@ -42,9 +43,40 @@ var ViewBooking = Backbone.View.extend({
 	},
 	
 	edit: function() {
-		$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
-		
-		products._byId[this.model.get('product')].attributes.use = 0;
+		if (edit_mode) {
+			$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
+			
+			products._byId[this.model.get('product')].attributes.use = 0;
+			
+			products.each(function(p){
+				if (p.attributes.use == 0) {
+					var view = new OptionProducts({model:p});
+					$('.product_edit', this.el).append(view.render().el);
+				}
+	        });
+			$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
+			
+			$('.ps_amount', this.el).html('<input type="text" class="input-small amount" name="amount" value="">');
+			$('.ps_amount input', this.el).val(this.model.get('amount'));
+			
+			$('.ps_unit', this.el).html('<p class="form-inline">'+
+										' <a class="save btn btn-mini btn-success">save</a>'+
+										' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+		}
+	},
+	
+	remove: function() {
+		if (edit_mode) {
+			if ( confirm ("Вы действительно хотите удалить продукт из заказа?") ) {
+				this.preloader();
+				this.model.destroy({wait: true });
+			}
+			return false;
+		}
+	},
+	
+	cancel: function() {
+		products._byId[this.model.get('product')].attributes.use = 1;
 		
 		products.each(function(p){
 			if (p.attributes.use == 0) {
@@ -52,27 +84,8 @@ var ViewBooking = Backbone.View.extend({
 				$('.product_edit', this.el).append(view.render().el);
 			}
         });
-		$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected')
-		
-		$('.ps_amount', this.el).html('<input type="text" class="input-small amount" name="amount" value="">');
-		$('.ps_amount input', this.el).val(this.model.get('amount'));
-		
-		$('.ps_unit', this.el).html('<p class="form-inline">'+
-									' <a class="save btn btn-mini btn-success">save</a>'+
-									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
-	},
-	
-	remove: function() {
-		if ( confirm ("Вы действительно хотите удалить продукт из заказа?") ) {
-			this.preloader();
-			this.model.destroy({wait: true });
-		}
-		return false;
-	},
-	
-	cancel: function() {
-		
-		
+        
+		this.render();
 	},
 	
 	save: function() {
@@ -317,9 +330,9 @@ var BookingModel = Backbone.Model.extend({
 					if (resp != null && typeof(resp.message) != 'undefined')
 						$('#up .alert-error strong').html(''+resp.message);
 						
-				   $("#up .alert-error").clone().appendTo('#form_add');
-				   $('#bookin_list .alert-error').fadeIn();
-					bookings.remove(model, {silent:true});   
+					$("#up .alert-error").clone().appendTo('#form_add');
+					$('#bookin_list .alert-error').fadeIn();
+					bookings.remove(model, {silent:true});
 				
 				   return;
 				}
@@ -395,11 +408,6 @@ $(document).ready(function(){
 						name: products._byId[$('.product_add').val()].attributes.name,
 					}],{wait: true});
 		return false;
-	});
-
-	$('.datepicker').datepicker({"format": "yyyy-mm-dd"})
-		.on('changeDate', function(ev){
-			$('#link_to_date').attr( 'href', $('.datepicker').val() );
 	});
 	
 	$('.sort_by_name').click(function(){

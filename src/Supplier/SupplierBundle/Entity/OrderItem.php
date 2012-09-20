@@ -7,12 +7,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
- * Supplier\SupplierBundle\Entity\Booking
+ * Supplier\SupplierBundle\Entity\OrderItem
  *
  * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="uniq", columns={"booking_date", "company_id", "restaurant_id", "product_id"})})
  * @ORM\Entity
  */
-class Booking
+class OrderItem
 {
     /**
      * @var integer $id
@@ -44,7 +44,7 @@ class Booking
 
     /**
      * @ORM\ManyToOne(targetEntity="Supplier")
-     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", nullable=false)
      */
     private $supplier;
 

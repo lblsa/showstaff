@@ -8,6 +8,7 @@
 				<div class="span9">
 					<h1>Компания "<a href="{{ path('company_show', {id: company.id}) }}">{{ company.name }}</a>"</h1>
 					<h2>Продукты для ресторана "<a href="{{ path('restaurant_show', {cid: company.id, rid: restaurant.id}) }}">{{ restaurant.name }}</a>" на {{ booking_date }}</h2>
+					{% if edit_mode == false %}<p class="alert">Заказ закрыт для редактирования</p>{% endif %}
 				</div>
 				<div class="span3">
 					<form class=" pull-right form-inline">
@@ -43,6 +44,13 @@
 			</table>
 			<script src="/js/booking.js"></script>
 			<script type="text/javascript">
+			
+				{% if edit_mode %}
+					var edit_mode = true;
+				{% else %}
+					var edit_mode = false;
+				{% endif %}
+			
 				var products = new Backbone.Collection;
 				products.reset({{ products_json|raw }});
 				
@@ -51,7 +59,7 @@
 				  
 				  model: BookingModel,
 				  
-				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/booking',
+				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/order',
 				  
 				  initialize: function(){
 					  this.bind('add', this.addBooking);
@@ -73,18 +81,20 @@
 				};
 
 				$('#bookin_list').append(view_content.render().el); // add template
-				{% if edit_mode %}
-				$('#preloader').width($('#add_row').width());
-				$('#preloader').height($('#add_row').height());
-				var p = $('#add_row').position();
-				$('#preloader').css({'left':p.left, 'top': p.top});
-				$('#preloader').fadeIn('fast');
-				{% endif %}
-				bookings.reset({{ bookings_json|raw }});
 				
-				{% if edit_mode == false %}
+				if (edit_mode) {
+					$('#preloader').width($('#add_row').width());
+					$('#preloader').height($('#add_row').height());
+					var p = $('#add_row').position();
+					$('#preloader').css({'left':p.left, 'top': p.top});
+					$('#preloader').fadeIn('fast');
+				}
+				
+				bookings.reset({{ bookings_json|raw }});
+			
+				if (!edit_mode) {
 					$('#bookin_list .remove').remove();
-				{% endif %}
+				}
 				
 			</script>
 		</div>
