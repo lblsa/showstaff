@@ -9,10 +9,9 @@ var ViewBooking = Backbone.View.extend({
 	className: "product",
    
 	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><% print(products._byId[product].attributes.name); %></td>'+
-										'<td class="ps_amount"><%= amount %></td>'+
-										'<td class="ps_unit"><% print(units[products._byId[product].attributes.unit]); %>'+
-											'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
-										'</td>'),
+							'<td class="ps_amount"><%= amount %></td>'+
+							'<td class="ps_unit"><% print(units[products._byId[product].attributes.unit]); %>'+
+								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),
 
 	events: {
 		'dblclick .ps_name': 'edit',
@@ -409,15 +408,6 @@ $(document).ready(function(){
 						name: products._byId[$('.product_add').val()].attributes.name,
 					}],{wait: true});
 		return false;
-	});
-
-	$('.datepicker').datepicker({"format": "yyyy-mm-dd"})
-		.on('changeDate', function(ev){
-			var href = window.location.pathname.split('/');
-			if (href[href.length-1] == 'order')
-				$('#link_to_date').attr( 'href', window.location.pathname+'/'+$('.datepicker').val() );
-			else
-				$('#link_to_date').attr( 'href', $('.datepicker').val() );
 	});
 	
 	$('.sort_by_name').click(function(){

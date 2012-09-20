@@ -29,6 +29,14 @@ $(document).ready(function(){
 		return confirm ("Будте осторожны, будут также удалены все связанные продукты.\r\nВы действительно хотите удалить элемент?");
 	});
 	*/ 
+	$('.datepicker').datepicker({"format": "yyyy-mm-dd"})
+		.on('changeDate', function(ev){
+			var href = window.location.pathname.split('/');
+			if (href[href.length-1] == 'order')
+				$('#link_to_date').attr( 'href', window.location.pathname+'/'+$('.datepicker').val() );
+			else
+				$('#link_to_date').attr( 'href', $('.datepicker').val() );
+	});
 	
 })
 

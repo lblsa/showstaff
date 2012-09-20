@@ -1,0 +1,85 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+
+	<div  class="row">
+		<div class="span12">
+			<div class="row-fluid">
+				<div class="span9">
+	<h2>Компания "<a href="{{ path('company_show', {id: company.id}) }}">{{ company.name }}</a>" заказы на {{ booking_date }}</h2>
+				</div>
+				<div class="span3">
+					<form class=" pull-right form-inline">
+						<input type="text" value="{{ booking_date }}" class="datepicker input-small">
+						<a href="" class="btn" id="link_to_date">Открыть</a>
+					</form>
+				</div>
+			</div>
+			<table class="table table-bordered table-striped" id="order_list"><thead>
+			  <tr id="add_row">
+				<th>
+					<p class="pull-left completed">
+						{%if edit_mode == true%}
+							Сформирован: <a href="#" class="btn {% if completed == 1%}disabled {% endif %}completed_yes">Да</a> <a href="#" class="btn  {% if completed == 0%}disabled {% endif %}completed_no">Нет</a>
+							<span class="alert">{% if completed == 1%}Заказ сформирован и закрыт для редактирования
+												{% else %}Заказ открыт для редактирования{% endif %}</span>
+						{% endif %}
+					</p>
+					<p class=" pull-right">
+						<a href="" class="btn" id="group_by_supp">Сгрупировать по Поставщикам</a>&nbsp;
+						<a href="" class="btn disabled" id="group_by_rest">Сгрупировать по Ресторанам</a>
+					</p>
+					<p class="clearfix"></p>
+					<h3>Рестораны</h3>
+				</th>
+			  </tr>
+			</thead></table>
+			<script src="/js/order.js"></script>
+			<script type="text/javascript">
+			
+				var products = new Backbone.Collection;
+				products.reset({{ products_json|raw }});
+				
+				var restaurants = new Backbone.Collection;
+				restaurants.reset({{ restaurants_json|raw }});
+				
+				var suppliers = new Backbone.Collection;
+				suppliers.reset({{ suppliers_json|raw }});
+				
+				// Collection bookings
+				var OrderCollection = Backbone.Collection.extend({
+				  
+				  model: OrderModel,
+				  
+				  url: '/company/{{ company.id }}/order',
+				  
+				  initialize: function(){
+					  this.bind('add', this.addBooking);
+				  },
+				  
+				  addBooking: function(product){
+					product.save({wait: true});
+				  },
+				  
+				});
+				
+				var orders = new OrderCollection; // init collection
+				var view_order_by_rest = new ViewOrdersByRestaurant({collection: orders}); // initialize view
+
+				$('#order_list').append(view_order_by_rest.render().el); // add template
+				
+
+				$('#preloader').width($('#add_row').width());
+				$('#preloader').height($('#add_row').height());
+				var p = $('#add_row').position();
+				$('#preloader').css({'left':p.left, 'top': p.top});
+				$('#preloader').fadeIn('fast');
+
+				
+				orders.reset({{ bookings_json|raw }});
+				
+			</script>
+		</div>
+	</div>
+{% endblock %}
+

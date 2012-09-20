@@ -44,7 +44,7 @@ class OrderItem
 
     /**
      * @ORM\ManyToOne(targetEntity="Supplier")
-     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", nullable=false)
      */
     private $supplier;
 

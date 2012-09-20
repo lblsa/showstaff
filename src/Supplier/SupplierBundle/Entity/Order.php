@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Supplier\SupplierBundle\Entity\Order
  *
- * @ORM\Table()
+ * @ORM\Table(name="Orders")
  * @ORM\Entity(repositoryClass="Supplier\SupplierBundle\Entity\OrderRepository")
  */
 class Order
@@ -38,11 +38,11 @@ class Order
     private $date;
 
     /**
-     * @var boolean $prepared
+     * @var boolean $completed
      *
-     * @ORM\Column(name="prepared", type="boolean")
+     * @ORM\Column(name="completed", type="boolean", nullable=true)
      */
-    private $prepared;
+    private $completed;
 
 
     /**
@@ -76,23 +76,23 @@ class Order
     }
 
     /**
-     * Set prepared
+     * Set completed
      *
-     * @param boolean $prepared
+     * @param boolean $completed
      */
-    public function setPrepared($prepared)
+    public function setCompleted($completed)
     {
-        $this->prepared = $prepared;
+        $this->completed = $completed;
     }
 
     /**
-     * Get prepared
+     * Get completed
      *
      * @return boolean 
      */
-    public function getPrepared()
+    public function getCompleted()
     {
-        return $this->prepared;
+        return $this->completed;
     }
 
     /**
