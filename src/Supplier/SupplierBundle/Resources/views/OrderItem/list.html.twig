@@ -8,6 +8,7 @@
 				<div class="span9">
 					<h1>Компания "<a href="{{ path('company_show', {id: company.id}) }}">{{ company.name }}</a>"</h1>
 					<h2>Продукты для ресторана "<a href="{{ path('restaurant_show', {cid: company.id, rid: restaurant.id}) }}">{{ restaurant.name }}</a>" на {{ booking_date }}</h2>
+					{% if edit_mode == false %}<p class="alert">Заказ закрыт для редактирования</p>{% endif %}
 				</div>
 				<div class="span3">
 					<form class=" pull-right form-inline">

@@ -54,34 +54,20 @@ class OrderItemController extends Controller
 								->findByCompany($cid);
 		
 		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findByCompany($cid);
-
-		$available = array();
-		foreach ($suppler_products as $sp)
-			$available[] = $sp->getProduct()->getId();
-		
-		$available = array_unique($available);
-		
-		
-		
 		$products_array = array();
-		if ($products)
+		foreach ($suppler_products as $sp)
 		{
-			foreach ($products AS $p)
-			{
-				
-				if (array_search($p->getId(), $available))
-					$products_array[$p->getId()] = array(	'id' => $p->getId(),
-															'name'=> $p->getName(), 
-															'unit' => $p->getUnit(),
-															'use' => 0 );
-			}
+			$products_array[$sp->getProduct()->getId()] = array(	'id' => $sp->getProduct()->getId(),
+																	'name'=> $sp->getProduct()->getName(), 
+																	'unit' => $sp->getProduct()->getUnit(),
+																	'use' => 0 );
+		
 		}
 
-		//var_dump($products_array); var_dump($available);
 		
 		$bookings = $this->getDoctrine()
 						->getRepository('SupplierBundle:OrderItem')
-						->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+						->findBy( array(	'company'=>$cid, 'restaurant'=>$rid, 'date' => $booking_date) );
 
 		$bookings_array = array();
 		
@@ -99,7 +85,28 @@ class OrderItemController extends Controller
 			}
 		}
 		
+		//var_dump($bookings); die();
+		
 		$products_array = array_values($products_array); 
+
+		if ($booking_date<date('Y-m-d'))
+		{
+			$edit_mode = false;
+		}
+		else
+		{
+			$order = $this->getDoctrine()
+							->getRepository('SupplierBundle:Order')
+							->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+			
+			if(!$order)
+				$edit_mode = true;
+			else
+			{
+				$edit_mode = !(boolean)$order->getCompleted();
+			}
+			
+		}
 
 		return array(	'restaurant' => $restaurant, 
 						'company' => $company,
@@ -108,7 +115,7 @@ class OrderItemController extends Controller
 						'bookings_json' => json_encode($bookings_array),
 						'products_json' => json_encode($products_array),
 						'booking_date' => $booking_date,
-						'edit_mode' => $booking_date<date('Y-m-d')?false:true );
+						'edit_mode' => $edit_mode );
 		
 	}
 
