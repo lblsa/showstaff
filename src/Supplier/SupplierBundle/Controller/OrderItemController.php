@@ -96,8 +96,8 @@ class OrderItemController extends Controller
 		else
 		{
 			$order = $this->getDoctrine()
-							->getRepository('SupplierBundle:Order')
-							->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+						->getRepository('SupplierBundle:Order')
+						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
 			
 			if(!$order)
 				$edit_mode = true;
@@ -140,6 +140,23 @@ class OrderItemController extends Controller
 		}
 		
 		$company = $restaurant->getCompany();
+		
+		$order = $this->getDoctrine()
+					->getRepository('SupplierBundle:Order')
+					->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+		
+		if($order)
+		{
+			if($order->getCompleted())
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Order is completed. You can not create order.');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+		}
+		
 		
 		$model = (array)json_decode($request->getContent());
 		
@@ -219,15 +236,13 @@ class OrderItemController extends Controller
 				$em->flush();
 				
 				$code = 200;
-				$result = array(	'code' => $code, 
-											'data' => array(	'id' => $booking->getId(),
-																		'company' => $company->getId(), 
-																		'date' => $booking->getDate(), 
-																		'amount' => $booking->getAmount(),
-																		'restaurant' => $restaurant->getId(),
-																		'product' => $product->getId(),
-																	)
-										);
+				$result = array(	'code' => $code,
+									'data' => array(	'id' => $booking->getId(),
+														'company' => $company->getId(), 
+														'date' => $booking->getDate(), 
+														'amount' => $booking->getAmount(),
+														'restaurant' => $restaurant->getId(),
+														'product' => $product->getId(),		));
 				
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
@@ -264,7 +279,23 @@ class OrderItemController extends Controller
 			die();
 		}
 		 
-		 
+		$order = $this->getDoctrine()
+					->getRepository('SupplierBundle:Order')
+					->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+		
+		if($order)
+		{
+			if($order->getCompleted())
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+		}
+		
+		
 		$restaurant = $this->getDoctrine()
 					->getRepository('SupplierBundle:Restaurant')
 					->find($rid);
@@ -351,7 +382,22 @@ class OrderItemController extends Controller
 				die();
 			}
 			 
-			 
+			$order = $this->getDoctrine()
+						->getRepository('SupplierBundle:Order')
+						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+						
+			if($order)
+			{
+				if($order->getCompleted())
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+			}
+			
 			$restaurant = $this->getDoctrine()
 						->getRepository('SupplierBundle:Restaurant')
 						->find($rid);
