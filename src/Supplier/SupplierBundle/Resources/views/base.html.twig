@@ -1,4 +1,4 @@
-{# src/Diary/TrainingBundle/Resources/views/base.html.twig #}
+{# src/Supplier/SupplierBundle/Resources/views/base.html.twig #}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -50,7 +50,13 @@
           <a class="brand" href="#">Show Staff</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
-              Logged in as <a href="#" class="navbar-link">Username</a>
+            	{% if app.user.username is defined %}
+            		Logged in as <a href="#" class="navbar-link">{{ app.user.username }}</a>
+            	{% endif %}
+            	
+				{% if is_granted('IS_AUTHENTICATED_FULLY') %}
+					,  <a href="{{ path('logout') }}">Logout</a>
+				{% endif %}
             </p>
             <ul class="nav">
               <li class="active"><a href="/">Home</a></li>
