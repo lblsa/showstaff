@@ -1,0 +1,35 @@
+{# src/Acme/UserBundle/Resources/views/User/login.html.twig #}
+{% extends 'AcmeUserBundle::base.html.twig' %}
+
+{% block body %}
+
+	<legend style="padding-left: 160px;">Login Form</legend>
+	<form action="{{ path('login_check') }}" method="post"  class="form-horizontal">
+		<div class="control-group">
+		    <label class="control-label" for="username">Номер терлефона:</label>
+		    <div class="controls">
+		    	<input type="text" id="username" name="_username" value="{{ last_username }}" />
+		    </div>
+		</div>
+		
+		<div class="control-group">
+		    <label class="control-label" for="password">ФИО:</label>
+		    <div class="controls">
+		    	<input type="text" id="password" name="_password" />
+		    	{% if error %}
+		    		<p class="alert alert-error">{{ error.message }}</p>
+		    	{% endif %}
+		    </div>
+		</div>	
+		
+	    {#   Если вы хотите контролировать URL, на который перенаправить пользователя: #}
+		<input type="hidden" name="_target_path" value="{{ target_path }}" />
+	   
+		<div class="control-group">
+			<div class="controls">
+			  <button type="submit" class="btn">Login</button>
+			</div>
+		</div>
+	</form>
+
+{% endblock %}

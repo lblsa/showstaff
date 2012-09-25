@@ -20,7 +20,7 @@ class ProductType extends AbstractType
 	{
 		$this->unit = $unit;
 	}
-	
+
 	
     public function buildForm(FormBuilder $builder, array $options)
     {
