@@ -113,6 +113,7 @@ var ViewRestaurant = Backbone.View.extend({
 	className: "restaurant",
 	
 	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
+								'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>" class="link">#<%= id%></a>'+ 
 								'<%= name %> '+
 							'</td>'+
 							'<td class="p_address" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
@@ -121,7 +122,7 @@ var ViewRestaurant = Backbone.View.extend({
 							'<td class="p_director" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
 								'<%= director %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a><br>'+
-								'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>/order" class="link">Заказы компании</a>'+
+								'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>/order" class="link">Заказ продуктов</a>'+
 							'</td>'),
 	
 	events: {
