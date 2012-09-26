@@ -198,7 +198,7 @@ class RestaurantController extends Controller
      *			requirements={"_method" = "GET"}))
      * @Template()
      */
-    public function showAction($cid, $rid)
+    public function showAction($cid, $rid, Request $request)
     {
 		$restaurant = $this->getDoctrine()
 						->getRepository('SupplierBundle:Restaurant')

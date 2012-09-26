@@ -12,6 +12,7 @@
 					<th>Restaurants</th>
 					<th>Products</th>
 					<th>Supplier</th>
+					<th>Order</th>
 					<th>Extended name</th>
 					<th>INN</th>
 					<th>Delete</th>
@@ -33,6 +34,9 @@
 						</td>
 						<td>
 							<a href="{{ path('supplier', { 'cid': company.id }) }}" class="btn btn-link">Поставщики компании</a>
+						</td>
+						<td>
+							<a href="{{ path('Order_list', { 'cid': company.id }) }}" class="btn btn-link">Заказы компании</a>
 						</td>
 						<td>{% if company.extendedName is defined  %}{{ company.extendedName }}{% endif %}</td>
 						<td>{{ company.inn }}</td>

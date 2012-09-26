@@ -84,7 +84,7 @@ var ViewSupplier = Backbone.View.extend({
 	},
 	
 	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
+		$('.p_name', this.el).html('<input type="text" class="input name" name="name" value="">');
 		$('.p_name input', this.el).val(this.model.get('name'));
 		$('.p_unit', this.el).html('<p class="form-inline"> <a class="save btn btn-mini btn-success">save</a>'+
 									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
@@ -206,6 +206,7 @@ var SupplierModel = Backbone.Model.extend({
 					   $('.supplier').tooltip();  
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
+					   $("#form_add .alert-success strong").html('Поставщик успешно создан');
 					   $("#form_add .alert-success").fadeIn()
 
 					   //  for sort reload
