@@ -119,8 +119,9 @@ var ViewRestaurant = Backbone.View.extend({
 								'<%= address %> '+
 							'</td>'+
 							'<td class="p_director" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= director %> '+
-								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
+								'<%= director %>'+
+								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a><br>'+
+								'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>/order" class="link">Заказы компании</a>'+
 							'</td>'),
 	
 	events: {

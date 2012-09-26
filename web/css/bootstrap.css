@@ -5685,4 +5685,5 @@ select.product {
 }
 .table .company td.p_link {
   width:490px;
+  white-space: nowrap;
 }

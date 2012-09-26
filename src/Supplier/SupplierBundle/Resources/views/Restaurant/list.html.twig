@@ -40,6 +40,8 @@
 				  
 				  url: '/company/{{ company.id }}/restaurant',
 				  
+				  company_id: {{ company.id }},
+				  
 				  initialize: function(){
 					  this.bind('add', this.addRestaurant);
 				  },
