@@ -42,7 +42,7 @@ class OrderController extends Controller
 			}
 			else
 			{
-				throw $this->createNotFoundException('No restaurant found for id '.$rid.' in company #'.$cid);
+				throw $this->createNotFoundException('No company found for id '.$cid);
 			}
 		}
 		

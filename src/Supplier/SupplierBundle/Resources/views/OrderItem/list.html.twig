@@ -59,7 +59,7 @@
 				  
 				  model: BookingModel,
 				  
-				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/order',
+				  url: '/company/{{ company.id }}/restaurant/{{ restaurant.id }}/order/{{ booking_date }}',
 				  
 				  initialize: function(){
 					  this.bind('add', this.addBooking);
@@ -91,6 +91,12 @@
 				}
 				
 				bookings.reset({{ bookings_json|raw }});
+			
+				if (products.length == 0) {
+					$('#bookin_list').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
+												'<button type="button" class="close" data-dismiss="alert">×</button>'+
+												'У вас нет доступных продуктов для заказа</div></td></tr>');
+				}
 			
 				if (!edit_mode) {
 					$('#bookin_list .remove').remove();
