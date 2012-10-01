@@ -5096,6 +5096,7 @@ input[type="submit"].btn.btn-mini {
 }
 
 .thumbnail {
+  height: 170px;
   display: block;
   padding: 4px;
   line-height: 20px;
@@ -5149,7 +5150,9 @@ a.thumbnail:hover {
      -moz-border-radius: 3px;
           border-radius: 3px;
 }
-
+.u_role .label {
+  margin:0px 5px;
+}
 .badge {
   padding: 1px 9px 2px;
   -webkit-border-radius: 9px;

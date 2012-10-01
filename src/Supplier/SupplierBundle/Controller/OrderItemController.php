@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class OrderItemController extends Controller
 {
@@ -22,6 +23,7 @@ class OrderItemController extends Controller
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0})
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
     public function listAction($cid, $rid, $booking_date, Request $request)
     {
@@ -123,9 +125,9 @@ class OrderItemController extends Controller
 	/**
 	* @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}",
 	* 			name="OrderItem_ajax_create",
-	* 			requirements={	"_method" = "POST",
-	*							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	* 			requirements={	"_method" = "POST", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	*			defaults={"booking_date" = 0})
+	* @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
 	*/
 	public function ajaxcreateAction($cid, $rid, $booking_date, Request $request)
 	{
@@ -270,9 +272,9 @@ class OrderItemController extends Controller
 	/**
 	 * @Route(	"/company/{cid}/restaurant/{rid}/order/{booking_date}/{bid}", 
 	 * 				name="OrderItem_ajax_delete", 
- 	 * 				requirements={	"_method" = "DELETE", 
-									"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
-	*			defaults={"booking_date" = 0})
+ 	 * 				requirements={	"_method" = "DELETE", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={"booking_date" = 0})
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
 	 */
 	 public function ajaxdeleteAction($cid, $rid, $booking_date, $bid)
 	 {
@@ -357,10 +359,10 @@ class OrderItemController extends Controller
 	/**
 	 * @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}/{bid}", 
 	 * 			name="OrderItem_ajax_update", 
-	 * 			requirements={	"_method" = "PUT",
-								"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
-	*			defaults={"booking_date" = 0})
+	 * 			requirements={	"_method" = "PUT", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={"booking_date" = 0})
 	 * 			)
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
 	 */
 	public function ajaxupdateAction($cid, $rid, $booking_date, $bid, Request $request)
 	{
