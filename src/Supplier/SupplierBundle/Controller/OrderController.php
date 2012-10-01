@@ -80,9 +80,11 @@ class OrderController extends Controller
 								->findByCompany($cid);
 		$suppler_products_array = array();
 		if ($suppler_products)
-			foreach ($suppler_products AS $p)				
+			foreach ($suppler_products AS $p)
+			{		
 				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-		
+				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName();
+			}
 		
 		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')
 										->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
@@ -107,7 +109,9 @@ class OrderController extends Controller
 											'product' => $p->getProduct()->getId(),
 											'restaurant' => $p->getRestaurant()->getId(),
 											'supplier' => $p->getSupplier()->getId(),
-											'name' => $p->getProduct()->getName(),	
+											'name' => $p->getProduct()->getName(),
+											'unit' => $p->getProduct()->getUnit(),
+											'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
 											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
 			}								
 		

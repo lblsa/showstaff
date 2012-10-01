@@ -22,6 +22,7 @@
 					<th>Address</th>
 					<th>Director</th>
 					<th>Company</th>
+					<th>Order</th>
 					<th>Delete</th>
 				</tr>
 					<tr>
@@ -42,6 +43,9 @@
 							<a href="{{ path('company_show', { 'id': company.id}) }}" class="btn btn-link">
 								{{ company.name }}
 							</a>
+						</td>
+						<td>
+							<a href="{{ path('OrderItem_list', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link">Заказ продуктов</a>
 						</td>
 						<td>
 							<a href="{{ path('restaurant_del', { 'cid': company.id, 'rid': restaurant.id }) }}" class="btn btn-link del" title="Delete Item">
