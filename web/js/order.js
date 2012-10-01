@@ -34,6 +34,7 @@ var ViewOrdersByRestaurant = Backbone.View.extend({
 												'<th>Название Продукта</th>'+
 												'<th>Количество</th>'+
 												'<th>Цена</th>'+
+												'<th>Единицы</th>'+
 												'<th>Поставщик</th>'+
 											'</tr><thead><tbody></tbody></table>');
 					ordersByRestaurant.each(function(order_model) {
@@ -90,6 +91,7 @@ var ViewOrdersBySupplier = Backbone.View.extend({
 												'<th>Название Продукта</th>'+
 												'<th>Количество</th>'+
 												'<th>Цена</th>'+
+												'<th>Единицы</th>'+
 												'<th>Ресторан</th>'+
 											'</tr><thead><tbody></tbody></table>');
 					ordersBySupplier.each(function(order_model) {
@@ -114,9 +116,10 @@ var ViewOrders = Backbone.View.extend({
 	tagName: "tr",
 	className: "order",
 	
-	template: _.template(	'<td><%= name %></td>'+
+	template: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
+							'<td><% print(units[unit]); %></td>'+
 							'<td>#<%= supplier %> <% print(suppliers._byId[supplier].attributes.name) %></td>'),
 	
 	initialize: function() {
@@ -137,6 +140,7 @@ var ViewOrdersS = Backbone.View.extend({
 	template: _.template(	'<td><%= name %></td>'+
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
+							'<td><% print(units[unit]); %></td>'+
 							'<td>#<%= restaurant %> <% print(restaurants._byId[restaurant].attributes.name); %></td>'),
 	
 	initialize: function() {
