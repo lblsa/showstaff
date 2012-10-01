@@ -27,7 +27,7 @@ class ProductController extends Controller
 		$product = $this->getDoctrine()
 						->getRepository('SupplierBundle:Product')
 						->find($pid);
-						
+		
 		if (!$product) {
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -73,7 +73,7 @@ class ProductController extends Controller
 		$form = $this->createForm(new ProductType($this->unit), $product);
 					
 		if ($request->getMethod() == 'POST')
-		{			
+		{
 			$validator = $this->get('validator');
 			$form->bindRequest($request);
 
@@ -246,8 +246,10 @@ class ProductController extends Controller
 			$response->sendContent();
 			die(); 
 		}
+
+		$user = $this->get('security.context')->getToken()->getUser();
 		
-		return array('company' => $company, 'products_json' => json_encode($products_array));
+		return array('company' => $company, 'products_json' => json_encode($products_array), 'username' => 	$user->getUsername());
 	}
 	
 	/**

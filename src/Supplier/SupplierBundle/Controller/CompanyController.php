@@ -3,13 +3,14 @@
 namespace Supplier\SupplierBundle\Controller;
 
 use Supplier\SupplierBundle\Entity\Company;
+use Supplier\SupplierBundle\Entity\User;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Supplier\SupplierBundle\Form\Type\CompanyType;
-
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class CompanyController extends Controller
 {
@@ -19,11 +20,12 @@ class CompanyController extends Controller
 	 * 			name="company",
 	 * 			requirements={"_method" = "GET"})
 	 * @Template()
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function listAction(Request $request)
-	{		
+	{
 		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
-		
+
 		$companies_array = array();
 		
 		if ($companies)
@@ -36,7 +38,7 @@ class CompanyController extends Controller
 											);
 		}
 
-		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array));
+		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array) );
 	}
 	
     /**
@@ -184,7 +186,7 @@ class CompanyController extends Controller
 			if (!$company)
 			{
 				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.$pid);
+				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();

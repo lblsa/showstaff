@@ -1,6 +1,7 @@
-_welcome:
-    pattern:   /
-    defaults:  { _controller: SupplierBundle:Company:list }
+AcmeUserBundle:
+    resource: "@AcmeUserBundle/Controller/"
+    type:     annotation
+    prefix:   /
 
 SupplierBundle:
     resource: "@SupplierBundle/Controller/"

@@ -1,16 +1,18 @@
 security:
     encoders:
-        Symfony\Component\Security\Core\User\User: plaintext
+        Acme\UserBundle\Entity\User: plaintext
 
     role_hierarchy:
-        ROLE_ADMIN:       ROLE_USER
-        ROLE_SUPER_ADMIN: [ROLE_USER, ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
+        ROLE_RESTAURANT_ADMIN: ROLE_RESTAURANT_ADMIN
+        ROLE_ORDER_MANAGER:    [ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER]
+        ROLE_ADMIN:             ROLE_ADMIN
+        ROLE_COMPANY_ADMIN:    [ROLE_COMPANY_ADMIN, ROLE_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER]
+        ROLE_SUPER_ADMIN:      [ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_SUPER_ADMIN]
+        
 
     providers:
-        in_memory:
-            users:
-                user:  { password: userpass, roles: [ 'ROLE_USER' ] }
-                admin: { password: adminpass, roles: [ 'ROLE_ADMIN' ] }
+        main:
+            entity: { class: AcmeUserBundle:User, property: username}
 
     firewalls:
         dev:
@@ -18,20 +20,15 @@ security:
             security: false
 
         login:
-            pattern:  ^/demo/secured/login$
+            pattern:  ^/login$
             security: false
 
         secured_area:
-            pattern:    ^/demo/secured/
-            form_login:
-                check_path: /demo/secured/login_check
-                login_path: /demo/secured/login
-            logout:
-                path:   /demo/secured/logout
-                target: /demo/
-            #anonymous: ~
-            #http_basic:
-            #    realm: "Secured Demo Area"
+            form_login: ~
+            logout: ~
+            anonymous: ~
+            http_basic:
+                realm: "Secured Demo Area"
 
     access_control:
         #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
