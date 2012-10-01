@@ -86,14 +86,14 @@ var ViewProduct = Backbone.View.extend({
 	},
 	
 	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
+		$('.p_name', this.el).html('<input type="text" class="input name" name="name" value="">');
 		$('.p_name input', this.el).val(this.model.get('name'));
 		var option = '';
 		for(var key in units) {
 			option += '<option value="'+key+'"'+ ((this.model.get('unit') == key)?' selected="selected"':'') +'>'+units[key]+'</option>';
 		}
 		$('.p_unit', this.el).html('<p class="form-inline">'+
-									'<select class="span1 unit" name="unit">'+ option+'</select>'+
+									'<select class="span2 unit" name="unit">'+ option+'</select>'+
 									' <a class="save btn btn-mini btn-success">save</a>'+
 									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
 	},

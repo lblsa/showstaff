@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Supplier\SupplierBundle\Form\Type\SupplierType;
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class SupplierController extends Controller
 {
@@ -172,6 +173,7 @@ class SupplierController extends Controller
 	 * 			requirements={"_method" = "GET"})
 	 * 			
 	 * @Template()
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function listAction($cid, Request $request)
 	{
@@ -253,6 +255,7 @@ class SupplierController extends Controller
 	 * @Route(	"company/{cid}/supplier/{sid}", 
 	 * 			name="supplier_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	 public function ajaxupdateAction($cid, $sid, Request $request)
 	 {		 
@@ -318,6 +321,7 @@ class SupplierController extends Controller
 	 * @Route(	"company/{cid}/supplier/{sid}", 
 	 * 			name="supplier_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function ajaxdeleteAction($cid, $sid, Request $request)
 	{
@@ -350,6 +354,7 @@ class SupplierController extends Controller
 	 * @Route(	"company/{cid}/supplier", 
 	 * 			name="supplier_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
 	{

@@ -10,7 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Supplier\SupplierBundle\Form\Type\RestaurantType;
-
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class RestaurantController extends Controller
 {
@@ -20,6 +20,7 @@ class RestaurantController extends Controller
 	 * 			name="restaurant",
 	 * 			requirements={"_method" = "GET"})
 	 * @Template()
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
 	 */
 	public function listAction($cid, Request $request)
 	{		
@@ -95,6 +96,7 @@ class RestaurantController extends Controller
 	
     /**
      * @Route("/company/{cid}/restaurant/{rid}/delete", name="restaurant_del")
+     * @Secure(roles="ROLE_RESTAURANT_ADMIN")
      */
     public function delAction($cid, $rid, Request $request)
     {
@@ -136,6 +138,7 @@ class RestaurantController extends Controller
     /**
      * @Route("/company/{cid}/restaurant/{rid}/edit", name="restaurant_edit")
 	 * @Template()
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
      */
     public function editAction($cid, $rid, Request $request)
     {
@@ -197,8 +200,9 @@ class RestaurantController extends Controller
      * 			name="restaurant_show",
      *			requirements={"_method" = "GET"}))
      * @Template()
+     * @Secure(roles="ROLE_RESTAURANT_ADMIN")
      */
-    public function showAction($cid, $rid)
+    public function showAction($cid, $rid, Request $request)
     {
 		$restaurant = $this->getDoctrine()
 						->getRepository('SupplierBundle:Restaurant')
@@ -227,6 +231,7 @@ class RestaurantController extends Controller
 	 * @Route(	"company/{cid}/restaurant/{rid}", 
 	 * 			name="restaurant_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, $rid, Request $request)
 	 {		 
@@ -297,6 +302,7 @@ class RestaurantController extends Controller
 	 * @Route(	"company/{cid}/restaurant/{rid}", 
 	 * 			name="restaurant_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
 	 */
 	public function ajaxdeleteAction($cid, $rid, Request $request)
 	{
@@ -329,6 +335,7 @@ class RestaurantController extends Controller
 	 * @Route(	"company/{cid}/restaurant", 
 	 * 			name="restaurant_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
 	{

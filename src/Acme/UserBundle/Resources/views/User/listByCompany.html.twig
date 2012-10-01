@@ -1,0 +1,89 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+	<div  class="row">
+		<div class="span12">
+			<h2>Users</h2>
+			<table class="table table-bordered table-striped" id="user_list">
+			 <thead>
+			  <tr>
+				<th>ФИО</th>
+				<th>Номер телефона</th>
+				<th>Email</th>
+				<th>Роль</th>
+				<th>Удалить</th>
+			  </tr>
+			  <tr id="add_row">
+				<th colspan="5" class="add">
+					<a href="#" id="add_company_admin" class="create btn btn-small">Add new User (Company Manager) <i class="icon-plus-sign"></i></a>
+					<div class="form-inline hide" id="form_add">
+						<table class="table table-bordered">
+						<tr>
+							<th>ФИО</th>
+							<th>Номер телефона</th>
+							<th>Роль</th>
+							<th>Email</th>
+							<th></th>
+						</tr>
+						<tr>
+							<td>
+								<input name="fullname_add" type="text" placeholder="Fullname" class="input-small fullname_add">
+							</td>
+							<td>
+								<input name="username_add" type="number"  placeholder="Phonenumber" class="username_add">
+							</td>
+							<td>
+								<label class="checkbox"><input type="checkbox" class="role_add" name="roles[]" value="3"> Менеджер по закупкам</label><br>
+								<label class="checkbox"><input type="checkbox" class="role_add" name="roles[]" value="4"> Менеджер ресторана</label><br>
+								<label class="checkbox"><input type="checkbox" class="role_add" name="roles[]" value="5"> Управляющий</label>
+							</td>
+							<td>
+								<input name="email_add" type="email"  placeholder="Email" class="email_add">
+							</td>
+							<td>
+								<a class="add_user btn btn-mini btn-success">add</a>
+							</td>
+						</tr></table>
+					</div>
+				</th>
+			  </tr>
+			 </thead>
+			</table>
+		</div>
+		<script src="/js/user_management.js"></script>
+		<script type="text/javascript">
+			var roles = new Backbone.Collection;
+			roles.reset({{ roles_json|raw }});
+			
+			// Collection users
+			var Users = Backbone.Collection.extend({
+			  
+			  model: UserModel,
+			  
+			  url: '/company/{{ company.id }}/user',
+			  
+			  initialize: function(){
+				  this.bind('add', this.addUser);
+			  },
+			  
+			  addUser: function(user){
+				user.save({wait: true});
+			  },
+			  
+			});
+			
+			var users = new Users; 
+			
+			var view_users = new ViewUsers({collection: users}); // initialize view
+			
+			users.comparator = function(user) {
+			  return user.get("fullname");
+			};
+			
+			$('#user_list').append(view_users.render().el); // add template
+			
+			users.reset({{ users_json|raw }});
+		</script>
+	</div>
+{% endblock %}
+

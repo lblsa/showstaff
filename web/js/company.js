@@ -122,7 +122,8 @@ var ViewCompany = Backbone.View.extend({
 							'<td class="p_link">'+
 								'<a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
 								' <a href="/company/<%= id %>/supplier" class="link">Поставщики компании</a>&nbsp;|&nbsp; '+
-								' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a>'+
+								' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a>&nbsp;|&nbsp; '+
+								' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>'+
 							'</td>'),
 	
 	events: {
@@ -286,7 +287,10 @@ var CompanyModel = Backbone.Model.extend({
 					   $('.companies').prepend(content);
 					   $('.company').tooltip();  
 					   $('.name_add').val('');
+					   $('.extended_name').val('');
+					   $('.inn_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
+					   $("#form_add .alert-success strong").html('Компания успешно создана');
 					   $("#form_add .alert-success").fadeIn()
 
 					   //  for sort reload

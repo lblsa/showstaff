@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class OrderController extends Controller
 {
@@ -23,6 +24,7 @@ class OrderController extends Controller
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */
     public function listAction($cid, $booking_date, Request $request)
     {
@@ -42,7 +44,7 @@ class OrderController extends Controller
 			}
 			else
 			{
-				throw $this->createNotFoundException('No restaurant found for id '.$rid.' in company #'.$cid);
+				throw $this->createNotFoundException('No company found for id '.$cid);
 			}
 		}
 		
@@ -126,6 +128,7 @@ class OrderController extends Controller
      * 			requirements={"_method" = "PUT", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */
 	public function saveAction($cid, $booking_date, Request $request)
 	{

@@ -12,15 +12,18 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class OrderItemController extends Controller
 {
     /**
      * @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}", 
      * 			name="OrderItem_list", 
-     * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     * 			requirements={	"_method" = "GET",
+	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0})
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
     public function listAction($cid, $rid, $booking_date, Request $request)
     {
@@ -120,12 +123,18 @@ class OrderItemController extends Controller
 	}
 
 	/**
-	* @Route(	"company/{cid}/restaurant/{rid}/order",
+	* @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}",
 	* 			name="OrderItem_ajax_create",
-	* 			requirements={"_method" = "POST"})
+	* 			requirements={	"_method" = "POST", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	*			defaults={"booking_date" = 0})
+	* @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
 	*/
-	public function ajaxcreateAction($cid, $rid, Request $request)
+	public function ajaxcreateAction($cid, $rid, $booking_date, Request $request)
 	{
+		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
+			$booking_date = date('Y-m-d');
+
+		
 		$restaurant = $this->getDoctrine()
 						->getRepository('SupplierBundle:Restaurant')
 						->findOneByIdJoinedToCompany($rid, $cid);
@@ -143,7 +152,7 @@ class OrderItemController extends Controller
 		
 		$order = $this->getDoctrine()
 					->getRepository('SupplierBundle:Order')
-					->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+					->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 		
 		if($order)
 		{
@@ -191,7 +200,7 @@ class OrderItemController extends Controller
 			$validator = $this->get('validator');
 			$booking = new OrderItem();
 			$booking->setProduct($product);
-			$booking->setDate(date('Y-m-d'));
+			$booking->setDate($booking_date);
 			$booking->setAmount($amount);
 			$booking->setCompany($company);
 			$booking->setRestaurant($restaurant);
@@ -261,11 +270,13 @@ class OrderItemController extends Controller
 	}
 	
 	/**
-	 * @Route(	"/company/{cid}/restaurant/{rid}/order/{bid}", 
+	 * @Route(	"/company/{cid}/restaurant/{rid}/order/{booking_date}/{bid}", 
 	 * 				name="OrderItem_ajax_delete", 
- 	 * 				requirements={"_method" = "DELETE"})
+ 	 * 				requirements={	"_method" = "DELETE", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={"booking_date" = 0})
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
 	 */
-	 public function ajaxdeleteAction($cid, $rid, $bid)
+	 public function ajaxdeleteAction($cid, $rid, $booking_date, $bid)
 	 {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
@@ -346,11 +357,14 @@ class OrderItemController extends Controller
 
 
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}/order/{bid}", 
+	 * @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}/{bid}", 
 	 * 			name="OrderItem_ajax_update", 
-	 * 			requirements={"_method" = "PUT"})
+	 * 			requirements={	"_method" = "PUT", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={"booking_date" = 0})
+	 * 			)
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
 	 */
-	public function ajaxupdateAction($cid, $rid, $bid, Request $request)
+	public function ajaxupdateAction($cid, $rid, $booking_date, $bid, Request $request)
 	{
 		$model = (array)json_decode($request->getContent());
 		

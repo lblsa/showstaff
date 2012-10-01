@@ -4,6 +4,7 @@ namespace Acme\UserBundle\Entity;
 
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\Common\Collections\ArrayCollection;
+use Supplier\SupplierBundle\Entity\Company;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -13,7 +14,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Table()
  * @ORM\Entity(repositoryClass="Acme\UserBundle\Entity\UserRepository")
  */
-class User implements UserInterface
+class User implements UserInterface, \Serializable
 {
     /**
      * @var integer $id
@@ -25,19 +26,25 @@ class User implements UserInterface
     private $id;
 
     /**
+     * @ORM\ManyToOne(targetEntity="\Supplier\SupplierBundle\Entity\Company")
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    protected $company;
+    
+    /**
      * @var bigint $username
      *
      * @ORM\Column(name="username", type="bigint", length=14, unique=true)
 	 * @Assert\NotBlank(message="Phonenumber(Username) should not be blank")
      */
-    private $username;
+    protected $username;
 
     /**
 	 * @var string $salt
 	 *
      * @ORM\Column(type="string", length=32)
      */
-    private $salt;
+    protected $salt;
 
     /**
      * @var string $email
@@ -45,7 +52,7 @@ class User implements UserInterface
      * @ORM\Column(name="email", type="string", length=255)
 	 * @Assert\Email( message = "The email '{{ value }}' is not a valid email.")
      */
-    private $email;
+    protected $email;
 
     /**
      * @var string $fullname
@@ -53,7 +60,7 @@ class User implements UserInterface
      * @ORM\Column(name="fullname", type="string", length=255)
 	 * @Assert\NotBlank(message="Full Name should not be blank")
      */
-    private $fullname;
+    protected $fullname;
 
     /**
      * @var string $password
@@ -61,14 +68,20 @@ class User implements UserInterface
      * @ORM\Column(name="password", type="string", length=255)
 	 * @Assert\NotBlank(message="Password should not be blank")
      */
-    private $password;
+    protected $password;
 
 
     /**
      * @ORM\ManyToMany(targetEntity="Group", inversedBy="users")
      *
      */
-    private $groups;
+    protected $groups;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="\Supplier\SupplierBundle\Entity\Restaurant", inversedBy="users")
+     *
+     */
+    protected $restaurants;
 	
 	
     public function __construct()
@@ -182,9 +195,6 @@ class User implements UserInterface
      */
     public function eraseCredentials()
 	{
-    	
-	///	var_dump($_SERVER); die();
-		
 	}
 
     /**
@@ -211,6 +221,16 @@ class User implements UserInterface
     }
 
     /**
+     * Clean groups
+     *
+     * @param Acme\UserBundle\Entity\Group $groups
+     */
+    public function cleanGroup()
+    {
+        $this->groups = array();
+    }
+
+    /**
      * Add groups
      *
      * @param Acme\UserBundle\Entity\Group $groups
@@ -228,5 +248,57 @@ class User implements UserInterface
     public function getGroups()
     {
         return $this->groups;
+    }
+
+    /**
+     * Set company
+     *
+     * @param Supplier\SupplierBundle\Entity\Company $company
+     */
+    public function setCompany(\Supplier\SupplierBundle\Entity\Company $company)
+    {
+        $this->company = $company;
+    }
+
+    /**
+     * Get company
+     *
+     * @return Supplier\SupplierBundle\Entity\Company 
+     */
+    public function getCompany()
+    {
+        return $this->company;
+    }
+    
+    
+    public function serialize()
+    {
+       return serialize($this->id);
+    }
+   
+    public function unserialize($data)
+    {
+        $this->id = unserialize($data);
+    }
+    
+
+    /**
+     * Add restaurants
+     *
+     * @param Supplier\SupplierBundle\Entity\Restaurant $restaurants
+     */
+    public function addRestaurant(\Supplier\SupplierBundle\Entity\Restaurant $restaurants)
+    {
+        $this->restaurants[] = $restaurants;
+    }
+
+    /**
+     * Get restaurants
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function getRestaurants()
+    {
+        return $this->restaurants;
     }
 }
