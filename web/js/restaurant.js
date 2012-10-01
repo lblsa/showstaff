@@ -290,7 +290,8 @@ var RestaurantModel = Backbone.Model.extend({
 					   $('.restaurant').tooltip();  
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
-					   $("#form_add .alert-success").fadeIn()
+					   $("#form_add .alert-success strong").html('Ресторан добавлен')
+					   $("#form_add .alert-success").fadeIn();
 
 					   //  for sort reload
 					   view_restaurants.remove()
