@@ -89,8 +89,8 @@ var ViewUser = Backbone.View.extend({
 		$('.u_email input', this.el).val(this.model.get('email'));
 		
 		$('.u_email', this.el).append('<p class="form-inline">'+
-									'<a class="save btn btn-mini btn-success">save</a>'+
-									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+									'<button class="save btn btn-mini btn-success">save</button>'+
+									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 		
 	},
 	

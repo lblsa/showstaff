@@ -164,8 +164,8 @@ var ViewRestaurant = Backbone.View.extend({
 		$('.p_director input', this.el).val(this.model.get('director'));
 		
 		
-		$('.p_director', this.el).append('<p class="form-inline"> <a class="save btn btn-mini btn-success">save</a>'+
-									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+		$('.p_director', this.el).append('<p class="form-inline"> <button class="save btn btn-mini btn-success">save</button>'+
+									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 	},
 	
 	save: function() {
