@@ -15,17 +15,8 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class SupplierController extends Controller
 {
     /**
-     * @Route("/supplier", name="supplier")
-     * @Template()
-     */    
-    public function indexAction()
-    {
-		return array();
-	}
-	
-	
-    /**
      * @Route("/supplier/del/{id}", name="supplier_del")
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */
     public function delAction($id)
     {
@@ -68,6 +59,7 @@ class SupplierController extends Controller
     /**
      * @Route("/supplier/create", name="supplier_create")
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */    
     public function createAction(Request $request)
     {
@@ -111,6 +103,7 @@ class SupplierController extends Controller
     /**
      * @Route("/supplier/edit/{id}", name="supplier_edit")
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */    
 	public function editAction($id, Request $request)
 	{

@@ -24,21 +24,24 @@
 			<ul class="thumbnails">
 			{% if is_granted('ROLE_RESTAURANT_ADMIN') %}
 				{% if company.id is defined %}
+					{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 					<!-- Менеджер ресторана -->
-					<li class="span4">
-						<div class="thumbnail">
+					<li class="span4 ">
+						<div class=" thumbnail">
 							<div class="caption">
-								<h4>Сделать заказ в ресторане</h4>
+								<h4>Управление ресторанами</h4>
 								<p>Список ресторанов</p>
-								<p><a class="btn" href="{{ path('restaurant', {'cid': company.id }) }}">Смотреть ресторан/ны »</a></p>
+								<p><a class="btn" href="{{ path('restaurant', {'cid': company.id }) }}">Смотреть список ресторанов »</a></p>
 							</div>
 						</div>
 					</li>
+					{% endif %}
 				{% endif %}
 			{% endif %}
 			
 			{% if is_granted('ROLE_ORDER_MANAGER') %}
 				{% if company.id is defined %}
+					{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 					<!-- Менеджер по закупкам -->
 					<li class="span4">
 						<div class="thumbnail">
@@ -67,43 +70,36 @@
 							</div>
 						</div>
 					</li>
+					{% endif %}
 				{% endif %}
 			{% endif %}
 		
 			{% if is_granted('ROLE_COMPANY_ADMIN') %}
 			<!-- Управляющий !некоторыми ресторанами компании-->
-				<li class="span4 ">
-					<div class=" thumbnail">
-						<div class="caption">
-							<h4>Управление ресторанами</h4>
-							<p>Список ресторанов</p>
-							<p><a class="btn" href="{{ path('restaurant', {'cid': company.id }) }}">Смотреть список ресторанов »</a></p>
+				{% if company.id is defined %}
+					{% if is_granted('ROLE_SUPER_ADMIN') == false %}
+					<li class="span4 ">
+						<div class=" thumbnail">
+							<div class="caption">
+								<h4>Управление ресторанами</h4>
+								<p>Список ресторанов</p>
+								<p><a class="btn" href="{{ path('restaurant', {'cid': company.id }) }}">Смотреть список ресторанов »</a></p>
+							</div>
 						</div>
-					</div>
-				</li>
-				<li class="span4 ">
-					<div class=" thumbnail">
-						<div class="caption">
-							<h4>Управление менеджерами</h4>
-							<p>Список пользователей</p>
-							<p><a class="btn" href="{{ path('user_management', {'cid': company.id }) }}">Смотреть список пользователей »</a></p>
+					</li>
+					<li class="span4 ">
+						<div class=" thumbnail">
+							<div class="caption">
+								<h4>Управление менеджерами</h4>
+								<p>Список пользователей</p>
+								<p><a class="btn" href="{{ path('user_management', {'cid': company.id }) }}">Смотреть список пользователей »</a></p>
+							</div>
 						</div>
-					</div>
-				</li>
+					</li>
+					{% endif %}
+				{% endif %}
 			{% endif %}
-			
-			{% if is_granted('ROLE_MANAGER') %}
-			<!-- Управляющий (Администратор компании) -->
-				<li class="span4">
-					<div class="thumbnail">
-						<div class="caption">
-							<h4>Управление ресторанами</h4>
-							<p>Список ресторанов</p>
-							<p><a class="btn" href="#">Смотреть/править список ресторанов »</a></p>
-						</div>
-					</div>
-				</li>
-			{% endif %}
+
 			
 			{% if is_granted('ROLE_SUPER_ADMIN') %}
 			<!-- Администраторов сервиса -->

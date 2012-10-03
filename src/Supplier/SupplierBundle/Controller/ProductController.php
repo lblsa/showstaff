@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Supplier\SupplierBundle\Form\Type\ProductType;
+use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class ProductController extends Controller
 {
@@ -21,6 +22,7 @@ class ProductController extends Controller
 	
     /**
      * @Route("company/{cid}/product/{pid}/delete", name="product_del")
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */
     public function delAction($cid, $pid, Request $request)
     {
@@ -65,6 +67,7 @@ class ProductController extends Controller
     /**
      * @Route("company/{cid}/product/create", name="product_create")
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */    
     public function createAction($cid, Request $request)
     {
@@ -107,6 +110,7 @@ class ProductController extends Controller
     /**
      * @Route("company/{cid}/product/{pid}/edit", name="product_edit")
      * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER")
      */    
 	public function editAction($cid, $pid, Request $request)
 	{
@@ -169,6 +173,7 @@ class ProductController extends Controller
 	/**
 	 * @Route("/company/{cid}/product/{pid}", name="product_show", requirements={"_method" = "GET"})
 	 * @Template()
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function showAction($cid, $pid, Request $request)
 	{		
@@ -202,6 +207,7 @@ class ProductController extends Controller
 	 * 			name="product", 
 	 * 			requirements={"_method" = "GET"})
 	 * @Template()
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function listAction($cid, Request $request)
 	{
@@ -256,6 +262,7 @@ class ProductController extends Controller
 	 * @Route(	"company/{cid}/product/{pid}", 
 	 * 			name="product_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	 public function ajaxupdateAction($cid, $pid, Request $request)
 	 {		 
@@ -323,6 +330,7 @@ class ProductController extends Controller
 	 * @Route(	"company/{cid}/product/{pid}", 
 	 * 			name="product_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function ajaxdeleteAction($cid, $pid, Request $request)
 	{
@@ -356,6 +364,7 @@ class ProductController extends Controller
 	 * @Route(	"company/{cid}/product", 
 	 * 			name="product_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
 	{

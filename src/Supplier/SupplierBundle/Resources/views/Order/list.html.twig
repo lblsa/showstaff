@@ -6,7 +6,7 @@
 		<div class="span12">
 			<div class="row-fluid">
 				<div class="span9">
-	<h2>Компания "<a href="{{ path('company_show', {id: company.id}) }}">{{ company.name }}</a>" заказы на {{ booking_date }}</h2>
+	<h2>Компания "{{ company.name }}" заказы на {{ booking_date }}</h2>
 				</div>
 				<div class="span3">
 					<form class=" pull-right form-inline">
@@ -36,6 +36,12 @@
 			</thead></table>
 			<script src="/js/order.js"></script>
 			<script type="text/javascript">
+			
+				{% if edit_mode %}
+					var edit_mode = true;
+				{% else %}
+					var edit_mode = false;
+				{% endif %}
 			
 				var products = new Backbone.Collection;
 				products.reset({{ products_json|raw }});
@@ -78,6 +84,10 @@
 				
 				orders.reset({{ bookings_json|raw }});
 				
+				
+				if (!edit_mode) {
+					$('.restaurant .edit_order').remove();
+				}
 			</script>
 		</div>
 	</div>

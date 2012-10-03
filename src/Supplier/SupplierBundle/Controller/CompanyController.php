@@ -43,6 +43,7 @@ class CompanyController extends Controller
 	
     /**
      * @Route("company/{id}/del", name="company_del")
+     * @Secure(roles="ROLE_SUPER_ADMIN")
      */
     public function delAction($id, Request $request)
     {
@@ -85,6 +86,7 @@ class CompanyController extends Controller
     /**
      * @Route("company/{id}/edit", name="company_edit")
 	 * @Template()
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
      */
     public function editAction($id, Request $request)
     {
@@ -143,6 +145,7 @@ class CompanyController extends Controller
      * 			name="company_show",
      * 			requirements={"_method" = "GET"})
      * @Template()
+     * @Secure(roles="ROLE_SUPER_ADMIN")
      */
     public function showAction($id, Request $request)
     {
@@ -172,6 +175,7 @@ class CompanyController extends Controller
 	 * @Route(	"company/{cid}", 
 	 * 			name="company_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, Request $request)
 	 {		 
@@ -243,6 +247,7 @@ class CompanyController extends Controller
 	 * @Route(	"company", 
 	 * 			name="company_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function ajaxcreateAction(Request $request)
 	{
@@ -302,6 +307,7 @@ class CompanyController extends Controller
 	 * @Route(	"company/{cid}", 
 	 * 			name="company_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function ajaxdeleteAction($cid, Request $request)
 	{

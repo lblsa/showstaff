@@ -231,6 +231,16 @@ class User implements UserInterface, \Serializable
     }
 
     /**
+     * Clean Restaurant
+     *
+     * @param Supplier\SupplierBundle\Entity\Restaurant $restaurants
+     */
+    public function cleanRestaurant()
+    {
+        $this->restaurants = array();
+    }
+
+    /**
      * Add groups
      *
      * @param Acme\UserBundle\Entity\Group $groups

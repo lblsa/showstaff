@@ -177,7 +177,9 @@ var ViewRestaurant = Backbone.View.extend({
 	tagName: "tr",
 	className: "restaurant",
 	
-	template: _.template(	'<td><h4 class="pull-left">#<%= id %> <%= name %></h4></td>'),
+	template: _.template(	'<td>'+
+								'<h4 class="pull-left">#<%= id %> <%= name %> <span class="edit_order">( <a href="/company/<%= company %>/restaurant/<%= id %>/order">править заказ ресторана</a> )</span></h4>'+
+							'</td>'),
 	
 	initialize: function() {
 		this.model.view = this;
