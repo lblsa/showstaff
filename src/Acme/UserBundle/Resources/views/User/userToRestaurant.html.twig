@@ -1,0 +1,59 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+	<div  class="row">
+		<div class="span12">
+			<h2><a href="{{ path('user_management', {'cid': company.id }) }}">Управление пользователями</a> / Назначить к ресторану</h2>
+			<table class="table table-bordered table-striped" id="user_list">
+			 <thead>
+			  <tr>
+				<th>ФИО</th>
+				<th>Номер телефона</th>
+				<th>Email</th>
+				<th>Роль</th>
+				<th>Рестораны</th>
+				<th>Сохранить</th>
+			  </tr>
+			 </thead>
+			</table>
+		</div>
+		<script src="/js/user_to_restaurant.js"></script>
+		<script type="text/javascript">
+			var roles = new Backbone.Collection;
+			roles.reset({{ roles_json|raw }});
+			
+			var restaurants = new Backbone.Collection;
+			restaurants.reset({{ restaurants_json|raw }});
+			
+			// Collection users
+			var Users = Backbone.Collection.extend({
+			  
+			  model: UserModel,
+			  
+			  url: '/company/{{ company.id }}/user',
+			  
+			  initialize: function(){
+				  this.bind('add', this.addUser);
+			  },
+			  
+			  addUser: function(user){
+				user.save({wait: true});
+			  },
+			  
+			});
+			
+			var users = new Users; 
+			
+			var view_users = new ViewUsers({collection: users}); // initialize view
+			
+			users.comparator = function(user) {
+			  return user.get("fullname");
+			};
+			
+			$('#user_list').append(view_users.render().el); // add template
+			
+			users.reset({{ users_json|raw }});
+		</script>
+	</div>
+{% endblock %}
+

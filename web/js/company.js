@@ -122,8 +122,9 @@ var ViewCompany = Backbone.View.extend({
 							'<td class="p_link">'+
 								'<a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
 								' <a href="/company/<%= id %>/supplier" class="link">Поставщики компании</a>&nbsp;|&nbsp; '+
-								' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a>&nbsp;|&nbsp; '+
-								' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>'+
+								' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a><br> '+
+								' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>&nbsp;|&nbsp; '+
+								' <a href="/company/<%= id %>/user" class="link">Менеджеры компании</a>'+
 							'</td>'),
 	
 	events: {

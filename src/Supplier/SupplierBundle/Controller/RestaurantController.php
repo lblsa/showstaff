@@ -24,6 +24,13 @@ class RestaurantController extends Controller
 	 */
 	public function listAction($cid, Request $request)
 	{		
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		{
+			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
+		}
+		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany($cid);
 		
 		if (!$company) {
@@ -73,6 +80,14 @@ class RestaurantController extends Controller
 			}
 		}
 		
+
+		$available_restaurants = array();
+		$user_restaurants = $user->getRestaurants();
+		
+		if ($user_restaurants)
+			foreach($user_restaurants AS $r)
+				$available_restaurants[] = $r->getId();
+		
 		$restaurants = $company->getRestaurants();
 
 		$restaurants_array = array();
@@ -80,11 +95,16 @@ class RestaurantController extends Controller
 		if ($restaurants)
 		{
 			foreach ($restaurants AS $p)
-				$restaurants_array[] = array(	'id' => $p->getId(),
-												'name'=> $p->getName(),
-												'address'=> $p->getAddress(),
-												'director'=> $p->getDirector(),
-												);
+			{
+				if (in_array($p->getId(), $available_restaurants) || $this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+				{
+					$restaurants_array[] = array(	'id' => $p->getId(),
+													'name'=> $p->getName(),
+													'address'=> $p->getAddress(),
+													'director'=> $p->getDirector(),
+													);
+				}
+			}
 		}
 
 		return array(	'restaurants' => $restaurants, 
@@ -234,7 +254,17 @@ class RestaurantController extends Controller
 	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, $rid, Request $request)
-	 {		 
+	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		{
+			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания
+			
+			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
+				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+		}
+		
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $rid == $model['id'])
@@ -306,6 +336,17 @@ class RestaurantController extends Controller
 	 */
 	public function ajaxdeleteAction($cid, $rid, Request $request)
 	{
+			
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		{
+			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания
+			
+			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
+				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+		}
+		
 		$restaurant = $this->getDoctrine()
 					->getRepository('SupplierBundle:Restaurant')
 					->find($rid);
@@ -338,7 +379,17 @@ class RestaurantController extends Controller
 	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
-	{
+	{	
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		{
+			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
+			
+			if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')) //Если у вас нет прав "админа компании" то проверим		
+				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
@@ -402,5 +453,47 @@ class RestaurantController extends Controller
 		$response->sendContent();
 		die();
 	 
+	}
+
+	private function checkUserRightsToCompany($cid, $request, $user)
+	{
+		if ($user->getCompany()->getId() != $cid) // , то проверим из какой компании наш ROLE_RESTAURANT_ADMIN
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+	}
+	
+	private function checkUserRightsToRestaurant($rid, $request, $user)
+	{
+		$available_restaurants = array();
+		$user_restaurants = $user->getRestaurants();
+		
+		if ($user_restaurants)
+			foreach($user_restaurants AS $r)
+				$available_restaurants[] = $r->getId();
+				
+
+		if (!in_array($rid, $available_restaurants)) // , и проверим к какому ресторану вы назначены
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Restaurant');
+			}
+		}
 	}
 }

@@ -63,8 +63,9 @@ class OrderController extends Controller
 		$restaurants_array = array();
 				if ($restaurants)
 					foreach ($restaurants AS $p)
-							$restaurants_array[] = array(	'id' => $p->getId(),
-															'name'=> $p->getName()	);
+							$restaurants_array[] = array(	'id'	=> $p->getId(),
+															'name'	=> $p->getName(),
+															'company'		=> (int)$cid	);
 		
 		$products = $company->getProducts();
 		$products_array = array();
