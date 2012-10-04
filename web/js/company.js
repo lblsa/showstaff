@@ -112,11 +112,10 @@ var ViewCompany = Backbone.View.extend({
 	className: "company",
 	
 	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= name %>'+
+								'<input type="text" class="input-small name" tabindex="1" name="name" value="<%= name %>">'+
 							'</td>'+
-							'<td class="p_extended_name"><%= extended_name %></td>'+
-							'<td class="p_inn">'+
-								'<%= inn %> '+
+							'<td class="p_extended_name"><input type="text" class="extended_name" tabindex="2" name="extended_name" value="<%= extended_name %>"></td>'+
+							'<td class="p_inn"><input type="text" class="inn" name="inn" tabindex="3" value="<%= inn %>">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'+
 							'<td class="p_link">'+
@@ -128,9 +127,9 @@ var ViewCompany = Backbone.View.extend({
 							'</td>'),
 	
 	events: {
-		'dblclick': 'edit',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+        "change input.name":  "save",
+        "change input.extended_name":  "save",
+        "change input.inn":  "save",
 		'click .remove': 'remove',
 	},
 	
@@ -153,22 +152,6 @@ var ViewCompany = Backbone.View.extend({
 		$('.company').tooltip();
 		$('#preloader').fadeOut('fast'); 
 		return this;
-	},
-	
-	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input-small name" tabindex="1" name="name" value="">');
-		$('.p_name input', this.el).val(this.model.get('name'));
-
-		$('.p_extended_name', this.el).html('<input type="text" class="extended_name" tabindex="2" name="extended_name" value="">');
-		$('.p_extended_name input', this.el).val(this.model.get('extended_name'));
-		
-		$('.p_inn', this.el).html('<input type="text" class="inn" name="inn" tabindex="3" value="">');
-		$('.p_inn input', this.el).val(this.model.get('inn'));
-		
-		
-		$('.p_inn', this.el).append('<p class="form-inline">'+
-									'<button class="save btn btn-mini btn-success" tabindex="4">save</button> '+
-									' <button class="cancel btn btn-mini btn-danger" tabindex="5">cancel</button></p>');
 	},
 	
 	save: function() {
