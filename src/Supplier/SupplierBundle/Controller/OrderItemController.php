@@ -123,6 +123,15 @@ class OrderItemController extends Controller
 			}
 			
 		}
+		
+		if ($request->isXmlHttpRequest()) 
+		{
+			$code = 200;
+			$result = array('code' => $code, 'data' => $bookings_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
 
 		return array(	'restaurant' => $restaurant, 
 						'company' => $company,

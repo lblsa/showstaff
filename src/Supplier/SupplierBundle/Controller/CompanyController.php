@@ -38,6 +38,15 @@ class CompanyController extends Controller
 											);
 		}
 
+		if ($request->isXmlHttpRequest()) 
+		{
+			$code = 200;
+			$result = array('code' => $code, 'data' => $companies_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+
 		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array) );
 	}
 	
@@ -55,8 +64,9 @@ class CompanyController extends Controller
 		{
 			if ($request->isXmlHttpRequest()) 
 			{
-				$result = array('has_error' => 1, 'result' => 'No company found for id '.$id);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No company found for id '.$id);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}

@@ -113,7 +113,6 @@ var ViewRestaurant = Backbone.View.extend({
 	className: "restaurant",
 	
 	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>" class="link">#<%= id%></a>'+ 
 								'<%= name %> '+
 							'</td>'+
 							'<td class="p_address" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
