@@ -156,19 +156,19 @@ var ViewCompany = Backbone.View.extend({
 	},
 	
 	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
+		$('.p_name', this.el).html('<input type="text" class="input-small name" tabindex="1" name="name" value="">');
 		$('.p_name input', this.el).val(this.model.get('name'));
 
-		$('.p_extended_name', this.el).html('<input type="text" class="extended_name" name="extended_name" value="">');
+		$('.p_extended_name', this.el).html('<input type="text" class="extended_name" tabindex="2" name="extended_name" value="">');
 		$('.p_extended_name input', this.el).val(this.model.get('extended_name'));
 		
-		$('.p_inn', this.el).html('<input type="text" class="inn" name="inn" value="">');
+		$('.p_inn', this.el).html('<input type="text" class="inn" name="inn" tabindex="3" value="">');
 		$('.p_inn input', this.el).val(this.model.get('inn'));
 		
 		
 		$('.p_inn', this.el).append('<p class="form-inline">'+
-									'<a class="save btn btn-mini btn-success">save</a>'+
-									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+									'<button class="save btn btn-mini btn-success" tabindex="4">save</button> '+
+									' <button class="cancel btn btn-mini btn-danger" tabindex="5">cancel</button></p>');
 	},
 	
 	save: function() {

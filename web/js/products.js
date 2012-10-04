@@ -94,8 +94,8 @@ var ViewProduct = Backbone.View.extend({
 		}
 		$('.p_unit', this.el).html('<p class="form-inline">'+
 									'<select class="span2 unit" name="unit">'+ option+'</select>'+
-									' <a class="save btn btn-mini btn-success">save</a>'+
-									' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+									' <button class="save btn btn-mini btn-success">save</button>'+
+									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 	},
 	
 	save: function() {

@@ -48,7 +48,7 @@ var ViewUser = Backbone.View.extend({
 							'<td class="u_email"><%= email %></td>'+
 							'<td class="u_role"></td>'+
 							'<td class="u_restaurant"></td>'+
-							'<td class="u_save"><a class="save btn btn-mini btn-success">save</a></td>'),
+							'<td class="u_save"><button class="save btn btn-mini btn-success">save</button></td>'),
 							
 	events: {
 		'click .save': 'save',

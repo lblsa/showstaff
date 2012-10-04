@@ -62,8 +62,8 @@ var SupplierProductView = Backbone.View.extend({
 			}
 		});
 		$('.ps_prime', this.el).html(	'<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
-										' <a class="save btn btn-mini btn-success">save</a>'+
-										' <a class="cancel btn btn-mini btn-danger">cancel</a></p>');
+										' <button class="save btn btn-mini btn-success">save</button>'+
+										' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 		
 		if (this.model.get('primary_supplier')) {
 			$('.primary_supplier', this.el).attr('checked','checked');
