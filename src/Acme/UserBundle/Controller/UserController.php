@@ -57,9 +57,9 @@ class UserController extends Controller
      * @Route("/user", name="user",	requirements={"_method" = "GET"})
 	 * )
      * @Template()
-	 * 
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
      */
-    public function listAction() // @Secure(roles="ROLE_SUPER_ADMIN")
+    public function listAction()
     {
 		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
 		$companies_array = array();
@@ -199,9 +199,9 @@ class UserController extends Controller
 	 * @Route(	"user", 
 	 * 			name="user_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
-	 * 
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	public function ajaxcreateAction(Request $request) //@Secure(roles="ROLE_SUPER_ADMIN")
+	public function ajaxcreateAction(Request $request)
 	{
 		$model = (array)json_decode($request->getContent());
 		
@@ -211,7 +211,6 @@ class UserController extends Controller
 			$user = new User();
 			$user->setFullname($model['fullname']);
 			$user->setSalt(md5(time()));
-			$user->setSalt('');
 			$user->setUsername($model['username']);
 			$user->setEmail($model['email']);
 			
