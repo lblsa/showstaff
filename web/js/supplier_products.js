@@ -12,18 +12,23 @@ var SupplierProductView = Backbone.View.extend({
 	tagName: "tr",
 	className: "supplier_product",
 	
-	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= supplier_product_name %></td>'+
-							'<td class="ps_price"><%= price %></td>'+
-							'<td class="ps_product"><% print(products._byId[product].attributes.name); %> - <% print(units[products._byId[product].attributes.unit]); %></td>'+
+	template: _.template(	'<td class="ps_name">'+
+								'<input type="text" value="<%= supplier_product_name %>" class="supplier_product_name">'+
+							'</td>'+
+							'<td class="ps_price">'+
+								'<input type="text" value="<%= price %>" class="price">'+
+							'</td>'+
+							'<td class="ps_product"></td>'+
 							'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
 	events: {
-		'dblclick .ps_name': 'edit',
 		'click .remove'	: 'remove',
-		'click .cancel'	: 'cancel',
-		'click .save'	: 'save',
+		'change input.supplier_product_name':  'save',
+		'change input.price':  'save',
+		'change input.primary_supplier':  'save',
+		'change select.product':  'save',
 	},
 	
 	initialize: function() {
@@ -41,33 +46,28 @@ var SupplierProductView = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('#preloader_s').fadeOut('fast');
-		return this;
-	},
-	
-	edit: function() {
-		$('.ps_name', this.el).html('<input type="text" value="'+this.model.get('supplier_product_name')+'" class="supplier_product_name">');
-		$('.ps_price', this.el).html('<input type="text" value="'+this.model.get('price')+'" class="price input-small">');
-		$('.ps_product', this.el).html('<select class="product"></select>');		
-		
+		$('.ps_product', this.el).html('<select class="product span3"></select>');		
+		var select_product = $('.product', this.el);
 		var product_id = this.model.get('product');
+		products._byId[product_id].attributes.use = 0;
 		products.each(function(p){
-			products._byId[product_id].attributes.use = 0;
 			if (p.attributes.use == 0) {
 				var view = new OptionProducts({model:p});
-				$('.product', this.el).append(view.render().el);
+				$(select_product).append(view.render().el);
 				if(p.id == product_id) {
 					$(view.render().el).attr('selected','selected');
 				}
 			}
 		});
-		$('.ps_prime', this.el).html(	'<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
-										' <button class="save btn btn-mini btn-success">save</button>'+
-										' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
-		
-		if (this.model.get('primary_supplier')) {
+		products._byId[product_id].attributes.use = 1;
+		$('.ps_prime', this.el).prepend('<p>'+
+						'<label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
+						'</p>');
+		if (this.model.get('primary_supplier'))
 			$('.primary_supplier', this.el).attr('checked','checked');
-		}
+			
+		$('#preloader_s').fadeOut('fast');
+		return this;
 	},
 	
 	remove: function() {
@@ -86,23 +86,7 @@ var SupplierProductView = Backbone.View.extend({
 							product: $('.product', this.el).val(),
 							primary_supplier: $('.primary_supplier', this.el).is(':checked')?1:0,
 						},{wait: true});
-	},
-	
-	cancel: function() {
-		var product_id = this.model.get('product');
-		products.each(function(p){
-			products._byId[product_id].attributes.use = 1;
-			if (p.attributes.use == 0) {
-				var view = new OptionProducts({model:p});
-				$('.product', this.el).append(view.render().el);
-				if(p.id == product_id) {
-					$(view.render().el).attr('selected','selected');
-				}
-			}
-		});
-		return this.render().el;	
-	}
-	
+	},	
 })
 
 // view list supplier products

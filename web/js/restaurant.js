@@ -112,22 +112,22 @@ var ViewRestaurant = Backbone.View.extend({
 	tagName: "tr",
 	className: "restaurant",
 	
-	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= name %> '+
+	template: _.template(	'<td class="p_name">'+
+								'<input type="text" class="input-small name" name="name" value="<%= name %>"> '+
 							'</td>'+
-							'<td class="p_address" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= address %> '+
+							'<td class="p_address">'+
+								'<input type="text" class="input-small address" name="address" value="<%= address %>"> '+
 							'</td>'+
-							'<td class="p_director" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= director %>'+
+							'<td class="p_director">'+
+								'<input type="text" class="input-small director" name="director" value="<%= director %>">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a><br>'+
 								'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>/order" class="link">Заказ продуктов</a>'+
 							'</td>'),
 	
 	events: {
-		'dblclick': 'edit',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+        "change input.name":  "save",
+        "change input.address":  "save",
+        "change input.director":  "save",
 		'click .remove': 'remove',
 	},
 	
@@ -147,24 +147,8 @@ var ViewRestaurant = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.restaurant').tooltip();
 		$('#preloader').fadeOut('fast'); 
 		return this;
-	},
-	
-	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input-small name" name="name" value="">');
-		$('.p_name input', this.el).val(this.model.get('name'));
-		
-		$('.p_address', this.el).html('<input type="text" class="input-small address" name="name" value="">');
-		$('.p_address input', this.el).val(this.model.get('address'));
-		
-		$('.p_director', this.el).html('<input type="text" class="input-small director" name="name" value="">');
-		$('.p_director input', this.el).val(this.model.get('director'));
-		
-		
-		$('.p_director', this.el).append('<p class="form-inline"> <button class="save btn btn-mini btn-success">save</button>'+
-									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 	},
 	
 	save: function() {
@@ -174,10 +158,6 @@ var ViewRestaurant = Backbone.View.extend({
 							address: $('.address', this.el).val(),
 							director: $('.director', this.el).val() 	
 						},{wait: true});
-	},
-	
-	cancel: function() {
-		return this.render().el;
 	},
 
 	remove: function() {
@@ -286,7 +266,6 @@ var RestaurantModel = Backbone.Model.extend({
 					   var content = view.render().el;
 					   
 					   $('.restaurants').prepend(content);
-					   $('.restaurant').tooltip();  
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
 					   $("#form_add .alert-success strong").html('Ресторан добавлен')
