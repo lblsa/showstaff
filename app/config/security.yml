@@ -1,6 +1,13 @@
 security:
     encoders:
-        Acme\UserBundle\Entity\User: plaintext
+        Acme\UserBundle\Entity\User:
+            algorithm:   sha1
+            iterations: 10
+            encode_as_base64: true
+        Symfony\Component\Security\Core\User\User:
+            algorithm:   sha1
+            iterations: 10
+            encode_as_base64: true
 
     role_hierarchy:
         ROLE_RESTAURANT_ADMIN: ROLE_RESTAURANT_ADMIN
@@ -11,7 +18,13 @@ security:
         
 
     providers:
-        main:
+        chain_provider:
+            providers: [in_memory, user_db]
+        in_memory:
+            users:
+                super_admin: { password: z3HXBWxM9rvJX1MijCTh7N+GbQo= , roles: 'ROLE_SUPER_ADMIN' } 
+                  #1234
+        user_db:
             entity: { class: AcmeUserBundle:User, property: username}
 
     firewalls:

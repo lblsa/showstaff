@@ -292,6 +292,7 @@ $(document).ready(function(){
 						username: $('.username_add').val(),
 						email: $('.email_add').val(),
 						company: $('.company_add').val(),
+						password: $('.pass_add').val(),
 						}]);
 		
 		return false;

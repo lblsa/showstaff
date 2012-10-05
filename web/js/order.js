@@ -137,7 +137,7 @@ var ViewOrdersS = Backbone.View.extend({
 	tagName: "tr",
 	className: "order",
 	
-	template: _.template(	'<td><%= name %></td>'+
+	template: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
 							'<td><% print(units[unit]); %></td>'+
@@ -159,7 +159,7 @@ var ViewSupplier = Backbone.View.extend({
 	tagName: "tr",
 	className: "supplier",
 	
-	template: _.template(	'<td><h4 class="pull-left">#<%= id %> <%= name %></h4></td>'),
+	template: _.template(	'<td><h4 class="pull-left"><%= name %></h4></td>'),
 	
 	initialize: function() {
 		this.model.view = this;
@@ -178,7 +178,7 @@ var ViewRestaurant = Backbone.View.extend({
 	className: "restaurant",
 	
 	template: _.template(	'<td>'+
-								'<h4 class="pull-left">#<%= id %> <%= name %> <span class="edit_order">( <a href="/company/<%= company %>/restaurant/<%= id %>/order">править заказ ресторана</a> )</span></h4>'+
+								'<h4 class="pull-left"> <%= name %> <span class="edit_order">( <a href="/company/<%= company %>/restaurant/<%= id %>/order">править заказ ресторана</a> )</span></h4>'+
 							'</td>'),
 	
 	initialize: function() {

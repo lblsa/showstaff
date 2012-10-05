@@ -166,8 +166,7 @@ class User implements UserInterface, \Serializable
      */
     public function setPassword($password)
     {
-       // $this->password = $password;
-        $this->password = $this->fullname;
+       $this->password = $password;
     }
 
     /**
@@ -177,8 +176,7 @@ class User implements UserInterface, \Serializable
      */
     public function getPassword()
     {
-        //return $this->password;
-        return $this->fullname;
+        return $this->password;
     }
 
     /**

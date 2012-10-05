@@ -116,6 +116,17 @@ class OrderController extends Controller
 											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
 			}								
 		
+		
+		if ($request->isXmlHttpRequest()) 
+		{
+			$code = 200;
+			
+			$result = array('code' => $code, 'data' => $bookings_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die(); 
+		}
+		
 		return array(	'company' => $company,
 						'restaurants_json' => json_encode($restaurants_array), 
 						'suppliers_json' => json_encode($suppliers_array), 

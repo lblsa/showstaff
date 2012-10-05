@@ -252,10 +252,8 @@ class ProductController extends Controller
 			$response->sendContent();
 			die(); 
 		}
-
-		$user = $this->get('security.context')->getToken()->getUser();
 		
-		return array('company' => $company, 'products_json' => json_encode($products_array), 'username' => 	$user->getUsername());
+		return array('company' => $company, 'products_json' => json_encode($products_array));
 	}
 	
 	/**

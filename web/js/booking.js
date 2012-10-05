@@ -8,7 +8,7 @@ var ViewBooking = Backbone.View.extend({
 	tagName: "tr",
 	className: "product",
    
-	template: _.template(	'<td class="ps_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><% print(products._byId[product].attributes.name); %></td>'+
+	template: _.template(	'<td class="ps_name"><% print(products._byId[product].attributes.name); %></td>'+
 							'<td class="ps_amount"><%= amount %></td>'+
 							'<td class="ps_unit"><% print(units[products._byId[product].attributes.unit]); %>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),

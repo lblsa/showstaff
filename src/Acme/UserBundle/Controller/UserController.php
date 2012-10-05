@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use JMS\SecurityExtraBundle\Annotation\Secure;
+use Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder;
 
 class UserController extends Controller
 {
@@ -204,15 +205,21 @@ class UserController extends Controller
 	{
 		$model = (array)json_decode($request->getContent());
 		
-		if (count($model) > 0 && isset($model['fullname']) && isset($model['username']))
+		if ( count($model) > 0 && isset($model['fullname']) && isset($model['username']) && isset($model['password']) && $model['password'] != '')
 		{
 			$validator = $this->get('validator');
 			$user = new User();
 			$user->setFullname($model['fullname']);
-			$user->setPassword('');
-			$user->setSalt('');
+			$user->setSalt(md5(time()));
 			$user->setUsername($model['username']);
 			$user->setEmail($model['email']);
+			
+			// шифруем и устанавливаем пароль для пользователя,
+			// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)
+			$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
+			$password = $encoder->encodePassword($model['password'], $user->getSalt());
+			$user->setPassword($password);
+			
 			
 			if ((int)$model['company'] > 0)
 			{
@@ -333,9 +340,7 @@ class UserController extends Controller
 		
 		$user = $this->get('security.context')->getToken()->getUser();	
 		
-		$company = $user->getCompany();
-		
-		return array('company'=>$company);
+		return array();
 	}
 	
     /**
