@@ -120,7 +120,7 @@ var ViewOrders = Backbone.View.extend({
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
 							'<td><% print(units[unit]); %></td>'+
-							'<td>#<%= supplier %> <% print(suppliers._byId[supplier].attributes.name) %></td>'),
+							'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
 	
 	initialize: function() {
 		this.model.view = this;
@@ -141,7 +141,7 @@ var ViewOrdersS = Backbone.View.extend({
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
 							'<td><% print(units[unit]); %></td>'+
-							'<td>#<%= restaurant %> <% print(restaurants._byId[restaurant].attributes.name); %></td>'),
+							'<td><% print(restaurants._byId[restaurant].attributes.name); %></td>'),
 	
 	initialize: function() {
 		this.model.view = this;
