@@ -5690,3 +5690,7 @@ select.product {
   width:490px;
   white-space: nowrap;
 }
+.feedback_message {
+ resize:none;
+ width:510px;
+}
