@@ -77,10 +77,12 @@ class UserController extends Controller
 		{
 			foreach ($users AS $p)
 			{
+				/*
 				$role_super_admin = false;
 				foreach ($p->getRoles() AS $r) 
 					if ($r->getRole() == 'ROLE_COMPANY_ADMIN')
-						$role_super_admin = true;
+				*/
+				$role_super_admin = true;
 				
 				if ($role_super_admin)
 				{
@@ -230,7 +232,7 @@ class UserController extends Controller
 			$user->setPassword($password);
 			
 			
-			if ((int)$model['company'] > 0)
+			if (isset($model['company']) && (int)$model['company'] > 0)
 			{
 				$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$model['company']);
 							
@@ -242,24 +244,25 @@ class UserController extends Controller
 					$response->sendContent();
 					die();
 				}
-			}
-			
-			$user->setCompany($company);
-			
-			$group = $this->getDoctrine()
+				$user->setCompany($company);
+				
+				$group = $this->getDoctrine()
 							->getRepository('AcmeUserBundle:Group')
 							->findOneByRole('ROLE_COMPANY_ADMIN');
-			if (!$group)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No role "ROLE_COMPANY_ADMIN" found');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+							
+				if (!$group)
+				{
+					$code = 404;
+					$result = array('code' => $code, 'message' => 'No role "ROLE_COMPANY_ADMIN" found');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				
+				$user->addGroup($group);
 			}
 			
-			$user->addGroup($group);
-			
+
 			$errors = $validator->validate($user);
 			
 			if (count($errors) > 0) {
@@ -284,7 +287,6 @@ class UserController extends Controller
 																		'fullname' => $user->getFullname(), 
 																		'username' => $user->getUsername(), 
 																		'email' => $user->getEmail(),
-																		'company' => $user->getCompany()->getId(),
 																	));
 				
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));

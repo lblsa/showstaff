@@ -86,7 +86,6 @@ var ViewOrdersBySupplier = Backbone.View.extend({
 				ordersBySupplier.reset(_.filter(orders.models,	function(order){ return order.get('supplier')==model.get('id') }));
 				
 				if (ordersBySupplier.length > 0) {
-					console.log(ordersBySupplier);
 					$('td', content).append('<table class="table table-bordered"><thead><tr>'+
 												'<th>Название Продукта</th>'+
 												'<th>Количество</th>'+
@@ -120,7 +119,7 @@ var ViewOrders = Backbone.View.extend({
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
 							'<td><% print(units[unit]); %></td>'+
-							'<td>#<%= supplier %> <% print(suppliers._byId[supplier].attributes.name) %></td>'),
+							'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
 	
 	initialize: function() {
 		this.model.view = this;
@@ -141,7 +140,7 @@ var ViewOrdersS = Backbone.View.extend({
 							'<td><%= amount %></td>'+
 							'<td><%= price %></td>'+
 							'<td><% print(units[unit]); %></td>'+
-							'<td>#<%= restaurant %> <% print(restaurants._byId[restaurant].attributes.name); %></td>'),
+							'<td><% print(restaurants._byId[restaurant].attributes.name); %></td>'),
 	
 	initialize: function() {
 		this.model.view = this;
@@ -188,6 +187,15 @@ var ViewRestaurant = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
+		if (edit_mode) {
+			var href = window.location.pathname.split('/');
+			if (href[href.length-1] != 'order') {
+				var link = $('.edit_order a').attr('href')+'/'+href[href.length-1];
+				$('.edit_order a').attr( 'href', link);
+			}
+		} else {
+			$('.edit_order', this.$el).remove();
+		}
 		return this;
 	}
 })

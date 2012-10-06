@@ -244,6 +244,7 @@ $(document).ready(function(){
 						fullname: $('.fullname_add').val(),
 						username: $('.username_add').val(),
 						email: $('.email_add').val(),
+						password: $('.pass_add').val(),
 						}]);
 		
 		return false;
