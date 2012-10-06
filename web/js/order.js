@@ -86,7 +86,6 @@ var ViewOrdersBySupplier = Backbone.View.extend({
 				ordersBySupplier.reset(_.filter(orders.models,	function(order){ return order.get('supplier')==model.get('id') }));
 				
 				if (ordersBySupplier.length > 0) {
-					console.log(ordersBySupplier);
 					$('td', content).append('<table class="table table-bordered"><thead><tr>'+
 												'<th>Название Продукта</th>'+
 												'<th>Количество</th>'+
