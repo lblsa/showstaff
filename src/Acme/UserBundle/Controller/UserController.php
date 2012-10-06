@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\SecurityContext;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder;
 
@@ -956,5 +957,45 @@ class UserController extends Controller
 		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
-	}	
+	}
+	
+	
+	/**
+	 * @Route(	"/feedback", 
+	 * 			name="feedback", 
+	 * 			requirements={"_method" = "PUT"})
+	 */
+	public function feedbackAction(Request $request)
+	{
+		
+		$data = (array)json_decode($request->getContent());
+
+		if (count($data) > 0 && isset($data['feedback_message']) && $data['feedback_message'] != '')
+		{
+			$message = \Swift_Message::newInstance()
+				->setSubject('Error Report')
+				->setFrom('tester@showstaff.ru')
+				->setTo(array('vladimir.stasevich@gmail.com', 'roman.efimushkin@gmail.com'))
+				->setBody(	$this->renderView(	'AcmeUserBundle:User:email_error_report.txt.twig',
+												array(	'feedback_message' => $data['feedback_message'],
+														'url' => $data['url'],
+														'date' => date('Y-m-d H:i')	)));
+			$this->get('mailer')->send($message);
+
+			$code = 200;
+			$result = array('code' => $code, 'message'=> 'Succes send');
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();	
+
+		} else {
+			
+			$code = 400;
+			$result = array('code' => $code, 'message'=> 'Invalid request');
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+
+		}	
+	}
 }
