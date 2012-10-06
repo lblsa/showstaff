@@ -111,15 +111,18 @@ var ViewCompany = Backbone.View.extend({
 	tagName: "tr",
 	className: "company",
 	
-	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
+	template: _.template(	'<td class="p_name">'+
 								'<input type="text" class="input-small name" tabindex="1" name="name" value="<%= name %>">'+
 							'</td>'+
-							'<td class="p_extended_name"><input type="text" class="extended_name" tabindex="2" name="extended_name" value="<%= extended_name %>"></td>'+
-							'<td class="p_inn"><input type="text" class="inn" name="inn" tabindex="3" value="<%= inn %>">'+
-								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
+							'<td class="p_extended_name">'+
+								'<input type="text" class="extended_name" tabindex="2" name="extended_name" value="<%= extended_name %>">'+
+							'</td>'+
+							'<td class="p_inn">'+
+								'<input type="text" class="inn" name="inn" tabindex="3" value="<%= inn %>">'+
 							'</td>'+
 							'<td class="p_link">'+
-								'<a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
+								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a> '+
+								' <a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
 								' <a href="/company/<%= id %>/supplier" class="link">Поставщики компании</a>&nbsp;|&nbsp; '+
 								' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a><br> '+
 								' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>&nbsp;|&nbsp; '+
@@ -149,7 +152,6 @@ var ViewCompany = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.company').tooltip();
 		$('#preloader').fadeOut('fast'); 
 		return this;
 	},
@@ -269,7 +271,6 @@ var CompanyModel = Backbone.Model.extend({
 					   var view = new ViewCompany({model:model});
 					   var content = view.render().el;
 					   $('.companies').prepend(content);
-					   $('.company').tooltip();  
 					   $('.name_add').val('');
 					   $('.extended_name').val('');
 					   $('.inn_add').val('');

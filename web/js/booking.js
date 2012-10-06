@@ -8,16 +8,17 @@ var ViewBooking = Backbone.View.extend({
 	tagName: "tr",
 	className: "product",
    
-	template: _.template(	'<td class="ps_name"><% print(products._byId[product].attributes.name); %></td>'+
-							'<td class="ps_amount"><%= amount %></td>'+
-							'<td class="ps_unit"><% print(units[products._byId[product].attributes.unit]); %>'+
+	template: _.template(	'<td class="ps_name"></td>'+
+							'<td class="ps_amount">'+
+								'<input type="text" class="input-small amount" name="amount" value="<%= amount %>">'+
+							'</td>'+
+							'<td class="ps_unit">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),
 
 	events: {
-		'dblclick .ps_name': 'edit',
 		'click .remove'	: 'remove',
-		'click .cancel'	: 'cancel',
-		'click .save'	: 'save',
+		'change input.amount':  'save',
+		'change select.product_edit':  'save',
 	},
 	
 	initialize: function() {
@@ -28,9 +29,27 @@ var ViewBooking = Backbone.View.extend({
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
 		$('#preloader').fadeOut('fast');
-		if (!edit_mode) {
+		if (edit_mode) {
+		
+			$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
+			
+			var select = $('.product_edit', this.el);
+			
+			products._byId[this.model.get('product')].attributes.use = 0;
+			products.each(function(p){
+				if (p.attributes.use == 0) {
+					var view = new OptionProducts({model:p});
+					$(select).append(view.render().el);
+				}
+			});
+			
+			$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
+			products._byId[this.model.get('product')].attributes.use = 1;
+		} else {
 			$('.remove', this.$el).remove();
-		}	
+			$('.ps_name', this.el).html(this.model.get('name')+' ['+units[products._byId[this.model.get('product')].attributes.unit]+']');
+			$('.ps_amount', this.el).html(this.model.get('amount'));
+		}
 		return this;
 	},
 	
@@ -40,29 +59,6 @@ var ViewBooking = Backbone.View.extend({
 		var p = this.$el.position();
 		$('#preloader').css({'left':p.left, 'top': p.top});
 		$('#preloader').fadeIn('fast');
-	},
-	
-	edit: function() {
-		if (edit_mode) {
-			$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
-			
-			products._byId[this.model.get('product')].attributes.use = 0;
-			
-			products.each(function(p){
-				if (p.attributes.use == 0) {
-					var view = new OptionProducts({model:p});
-					$('.product_edit', this.el).append(view.render().el);
-				}
-	        });
-			$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
-			
-			$('.ps_amount', this.el).html('<input type="text" class="input-small amount" name="amount" value="">');
-			$('.ps_amount input', this.el).val(this.model.get('amount'));
-			
-			$('.ps_unit', this.el).html('<p class="form-inline">'+
-										' <button class="save btn btn-mini btn-success">save</button>'+
-										' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
-		}
 	},
 	
 	remove: function() {
@@ -75,26 +71,15 @@ var ViewBooking = Backbone.View.extend({
 		}
 	},
 	
-	cancel: function() {
-		products._byId[this.model.get('product')].attributes.use = 1;
-		
-		products.each(function(p){
-			if (p.attributes.use == 0) {
-				var view = new OptionProducts({model:p});
-				$('.product_edit', this.el).append(view.render().el);
-			}
-        });
-        
-		this.render();
-	},
-	
 	save: function() {
-		this.preloader();
-		this.model.save({
-						product: $('.product_edit', this.el).val(),
-						name: products._byId[$('.product_edit').val()].attributes.name,
-						amount: $('.amount', this.el).val(),
-						},{wait: true});
+		if (edit_mode) {
+			this.preloader();
+			this.model.save({
+							product: $('.product_edit', this.el).val(),
+							name: products._byId[$('.product_edit').val()].attributes.name,
+							amount: $('.amount', this.el).val(),
+							},{wait: true});
+		}
 	},
 	
 	

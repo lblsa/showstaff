@@ -52,15 +52,16 @@ var ViewProduct = Backbone.View.extend({
 	tagName: "tr",
 	className: "product",
 	
-	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit"><%= name %></td>'+
-							'<td class="p_unit"><% print(units[unit]); %>'+
+	template: _.template(	'<td class="p_name">'+
+								'<input type="text" class="input name" name="name" value="<%= name %>">'+
+							'</td>'+
+							'<td class="p_unit">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 	
 	events: {
-		'dblclick': 'edit',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+		'change input.name':  'save',
+		'change select.unit':  'save',
 		'click .remove': 'remove',
 	},
 	
@@ -80,22 +81,15 @@ var ViewProduct = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.product').tooltip();
-		$('#preloader').fadeOut('fast'); 
-		return this;
-	},
-	
-	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input name" name="name" value="">');
-		$('.p_name input', this.el).val(this.model.get('name'));
+		
 		var option = '';
 		for(var key in units) {
 			option += '<option value="'+key+'"'+ ((this.model.get('unit') == key)?' selected="selected"':'') +'>'+units[key]+'</option>';
 		}
-		$('.p_unit', this.el).html('<p class="form-inline">'+
-									'<select class="span2 unit" name="unit">'+ option+'</select>'+
-									' <button class="save btn btn-mini btn-success">save</button>'+
-									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
+		$('.p_unit', this.el).prepend('<select class="span2 unit" name="unit">'+ option+'</select>');
+									
+		$('#preloader').fadeOut('fast'); 
+		return this;
 	},
 	
 	save: function() {
@@ -104,10 +98,6 @@ var ViewProduct = Backbone.View.extend({
 						name: $('.name', this.el).val(), 
 						unit: $('.unit', this.el).val()
 						},{wait: true});
-	},
-	
-	cancel: function() {
-		return this.render().el;
 	},
 
 	remove: function() {
@@ -232,7 +222,6 @@ var ProductsModel = Backbone.Model.extend({
 					   var view = new ViewProduct({model:model});
 					   var content = view.render().el;
 					   $('.products').prepend(content);
-					   $('.product').tooltip();  
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
 					   $("#form_add .alert-success").fadeIn();

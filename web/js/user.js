@@ -41,19 +41,25 @@ var ViewUser = Backbone.View.extend({
 	tagName: "tr",
 	className: "user",
 	
-	template: _.template(	'<td class="u_fullname" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= fullname %>'+
+	template: _.template(	'<td class="u_fullname">'+
+								'<input type="text" class="input-large fullname" name="fullname" value="<%= fullname %>">'+
 							'</td>'+
-							'<td class="u_username"><%= username %></td>'+
+							'<td class="u_username">'+
+								'<input type="number" class="input-large username" name="username" value="<%= username %>">'+
+							'</td>'+
+							'<td class="u_password">'+
+								'<input type="password" class="input-large password" name="password" value="">'+
+							'</td>'+
 							'<td class="u_email">'+
-								'<%= email %> '+
+								'<input type="email" class="input-large email" name="email" value="<%= email %>"> '+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 							
 	events: {
-		'dblclick': 'edit',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+		'change input.fullname':  'save',
+		'change input.username':  'save',
+		'change input.email':  	  'save',
+		'change input.password':  'save',
 		'click .remove': 'remove',
 	},
 	
@@ -78,32 +84,13 @@ var ViewUser = Backbone.View.extend({
 		return this;
 	},
 	
-	edit: function() {
-		$('.u_fullname', this.el).html('<input type="text" class="input-large fullname" name="name" value="">');
-		$('.u_fullname input', this.el).val(this.model.get('fullname'));
-		
-		$('.u_username', this.el).html('<input type="number" class="input-large username" name="name" value="">');
-		$('.u_username input', this.el).val(this.model.get('username'));
-		
-		$('.u_email', this.el).html('<input type="email" class="input-large email" name="name" value="">');
-		$('.u_email input', this.el).val(this.model.get('email'));
-		
-		$('.u_email', this.el).append('<p class="form-inline">'+
-									'<button class="save btn btn-mini btn-success">save</button>'+
-									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
-		
-	},
-	
 	save: function() {
 		this.preloader();
 		this.model.save({	fullname: $('.fullname', this.el).val(), 
 							username: $('.username', this.el).val(), 
-							email: $('.email', this.el).val(), 	
+							email: $('.email', this.el).val(), 
+							password: $('.password', this.el).val(), 
 						},{wait: true});
-	},
-	
-	cancel: function() {
-		return this.render().el;
 	},
 	
 	remove: function() {
@@ -213,7 +200,7 @@ var UserModel = Backbone.Model.extend({
 					   model.set(resp.data,{silent: true});
 					   model.view.render();			   
 					   //  for sort reload
-					   users.sort({silent: true});
+					   //users.sort({silent: true});
 					   
 					   view_users.remove()
 					   view_users = new ViewUsers({collection: users});

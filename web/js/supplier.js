@@ -47,8 +47,8 @@ var ViewSupplier = Backbone.View.extend({
 	tagName: "tr",
 	className: "supplier",
 	
-	template: _.template(	'<td class="p_name" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= name %> '+
+	template: _.template(	'<td class="p_name">'+
+								'<input type="text" class="input name" name="name" value="<%= name %>">'+
 								'<a href="supplier/<%= id %>/product" class="link pull-right ">Продукты поставщика</a>'+
 							'</td>'+
 							'<td class="p_unit">'+
@@ -56,9 +56,7 @@ var ViewSupplier = Backbone.View.extend({
 							'</td>'),
 	
 	events: {
-		'dblclick': 'edit',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+		'change input.name':  'save',
 		'click .remove': 'remove',
 	},
 	
@@ -78,16 +76,8 @@ var ViewSupplier = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
-		$('.supplier').tooltip();
 		$('#preloader').fadeOut('fast'); 
 		return this;
-	},
-	
-	edit: function() {
-		$('.p_name', this.el).html('<input type="text" class="input name" name="name" value="">');
-		$('.p_name input', this.el).val(this.model.get('name'));
-		$('.p_unit', this.el).html('<p class="form-inline"> <button class="save btn btn-mini btn-success">save</button>'+
-									' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 	},
 	
 	save: function() {
@@ -202,8 +192,7 @@ var SupplierModel = Backbone.Model.extend({
 					   model.set(resp.data, {silent:true});
 					   var view = new ViewSupplier({model:model});
 					   var content = view.render().el;
-					   $('.suppliers').prepend(content);
-					   $('.supplier').tooltip();  
+					   $('.suppliers').prepend(content); 
 					   $('.name_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
 					   $("#form_add .alert-success strong").html('Поставщик успешно создан');

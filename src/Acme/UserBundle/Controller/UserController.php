@@ -129,8 +129,17 @@ class UserController extends Controller
 			$validator = $this->get('validator');
 
 			$user->setFullname($model['fullname']);
-			$user->setPassword('');
-			$user->setSalt('');
+			
+			if (isset($model['password']) && strlen($model['password'])>3)
+			{
+				// шифруем и устанавливаем пароль для пользователя,
+				// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)
+				$user->setSalt(md5(time()));
+				$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
+				$password = $encoder->encodePassword($model['password'], $user->getSalt());
+				$user->setPassword($password);
+			}	
+			
 			$user->setUsername($model['username']);
 			$user->setEmail($model['email']);
 			
@@ -210,12 +219,12 @@ class UserController extends Controller
 			$validator = $this->get('validator');
 			$user = new User();
 			$user->setFullname($model['fullname']);
-			$user->setSalt(md5(time()));
 			$user->setUsername($model['username']);
 			$user->setEmail($model['email']);
 			
 			// шифруем и устанавливаем пароль для пользователя,
 			// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)
+			$user->setSalt(md5(time()));
 			$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
 			$password = $encoder->encodePassword($model['password'], $user->getSalt());
 			$user->setPassword($password);
@@ -295,7 +304,7 @@ class UserController extends Controller
 	
 	
 	/**
-	 * @Route(	"user/{uid}", 
+	 * @Route(	"/user/{uid}", 
 	 * 			name="user_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
@@ -338,7 +347,7 @@ class UserController extends Controller
         $request = $this->getRequest();
         $session = $request->getSession();
 		
-		$user = $this->get('security.context')->getToken()->getUser();	
+		$user = $this->get('security.context')->getToken()->getUser();
 		
 		return array();
 	}
@@ -551,7 +560,7 @@ class UserController extends Controller
 	
 	/**
 	 * @Route(	"/company/{cid}/user/{uid}", 
-	 * 			name="user_ajax_delete", 
+	 * 			name="user_ajax_delete_manager", 
 	 * 			requirements={"_method" = "DELETE"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
