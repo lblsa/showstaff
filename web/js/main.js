@@ -40,7 +40,6 @@ $(document).ready(function(){
 	
 })
 
-
 var units = {1:'кг', 
 			 2:'литр',
 			 3:'шт',
