@@ -188,6 +188,8 @@ var ViewRestaurant = Backbone.View.extend({
 	render: function(){
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
+		if (!edit_mode) $('.edit_order', this.$el).remove();
+			
 		return this;
 	}
 })
