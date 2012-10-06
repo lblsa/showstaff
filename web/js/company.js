@@ -272,7 +272,7 @@ var CompanyModel = Backbone.Model.extend({
 					   var content = view.render().el;
 					   $('.companies').prepend(content);
 					   $('.name_add').val('');
-					   $('.extended_name').val('');
+					   $('.extended_name_add').val('');
 					   $('.inn_add').val('');
 					   $(".alert-success").clone().appendTo('#form_add');
 					   $("#form_add .alert-success strong").html('Компания успешно создана');
