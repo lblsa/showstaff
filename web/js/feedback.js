@@ -20,7 +20,14 @@ $(document).ready(function(){
 		}
 	});
 })
-
+$(document).keydown(function(e){
+	if (e.altKey && e.keyCode == 13)
+    {
+		$('.modal-body .alert').remove();
+		$('.modal-body .feedback_message').html('');
+		$('#myModal').modal('show');
+    }
+});
 
 function send_feedback() {
 	if ($('.feedback_message').val() != '') {
