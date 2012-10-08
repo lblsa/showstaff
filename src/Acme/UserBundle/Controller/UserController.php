@@ -978,7 +978,7 @@ class UserController extends Controller
 				->setTo(array('vladimir.stasevich@gmail.com', 'roman.efimushkin@gmail.com'))
 				->setBody(	$this->renderView(	'AcmeUserBundle:User:email_error_report.txt.twig',
 												array(	'feedback_message' => $data['feedback_message'],
-														'url' => $data['url'],
+														'url' => $_SERVER['HTTP_HOST'].$data['url'],
 														'date' => date('Y-m-d H:i')	)));
 			$this->get('mailer')->send($message);
 
