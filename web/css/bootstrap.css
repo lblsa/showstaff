@@ -5647,13 +5647,13 @@ a.badge:hover {
 .table td.p_name {
   width:140px;
 }
-#form_add .alert{
+.forms .alert{
   margin-top:14px;
 }
 .form_add_supplier_product {
   padding-top:14px;
 }
-#form_add {
+.forms {
   padding-top:14px;
 }
 #preloader.progress, #preloader_s.progress {

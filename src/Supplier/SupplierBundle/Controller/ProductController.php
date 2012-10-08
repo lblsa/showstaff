@@ -14,12 +14,6 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class ProductController extends Controller
 {
-	public $unit = array(	'1' => 'кг',
-							'2' => 'литр',
-							'3' => 'шт',
-							'4' => 'пучок',
-							'5' => 'бутылка',);
-	
     /**
      * @Route("company/{cid}/product/{pid}/delete", name="product_del")
      * @Secure(roles="ROLE_ORDER_MANAGER")
@@ -200,7 +194,40 @@ class ProductController extends Controller
 		
 		return array('product' => $product, 'company' => $company, 'unit' => $this->unit);
 	}
-	
+
+
+	/**
+	 * @Route(	"units", 
+	 * 			name="units", 
+	 * 			requirements={"_method" = "GET"})
+	 * @Template()
+	 */
+	public function unitsAction()
+	{
+		$units = $this->getDoctrine()
+						->getRepository('SupplierBundle:Unit')
+						->findAll();
+		if ($units)
+		{
+			foreach ($units AS $p)
+				$units_array[] = array('id' => $p->getId(), 'name'=> $p->getName());
+				
+				
+			$code = 200;
+
+			$response = new Response(json_encode($units_array), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die(); 
+		}
+		else
+		{
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No company units');
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+	}	
 	
 	/**
 	 * @Route(	"company/{cid}/product", 
@@ -239,7 +266,7 @@ class ProductController extends Controller
 			foreach ($products AS $p)
 				$products_array[] = array( 	'id' => $p->getId(),
 											'name'=> $p->getName(), 
-											'unit' => $p->getUnit(),
+											'unit' => $p->getUnit()->getId(),
 											);
 		}
 			
@@ -378,16 +405,31 @@ class ProductController extends Controller
 			die();
 		}
 		
+			
+
+
 		$model = (array)json_decode($request->getContent());
 		
 		//print_r($model); die();
 		
 		if (count($model) > 0 && isset($model['unit']) && isset($model['name']))
-		{
+		{	
+			$unit = $this->getDoctrine()
+						->getRepository('SupplierBundle:Unit')
+						->find((int)$model['unit']);
+			
+			if (!$unit) {
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No unit found for id '.(int)$model['unit']);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+		
 			$validator = $this->get('validator');
 			$product = new Product();
-			$product->setName($model['name']);
-			$product->setUnit((int)$model['unit']);
+			$product->setName($model['name']);			
+			$product->setUnit($unit);
 			
 			$errors = $validator->validate($product);
 			
@@ -412,7 +454,7 @@ class ProductController extends Controller
 				$code = 200;
 				$result = array(	'code' => $code, 'data' => array(	'id' => $product->getId(),
 																		'name' => $product->getName(), 
-																		'unit' => $product->getUnit()
+																		'unit' => $product->getUnit()->getId(),
 																	));
 				
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
