@@ -35,7 +35,7 @@ var ViewRestaurants = Backbone.View.extend({
 		} else {
 			$('.restaurants').html('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 								'<button type="button" class="close" data-dismiss="alert">×</button>'+
-								'У вас еще нет рестаранов</div></td></tr>');
+								'У вас еще нет ресторанов</div></td></tr>');
 			$('#preloader').fadeOut('fast');
 		}
 	},

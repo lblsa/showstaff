@@ -15,7 +15,7 @@
 		  <tr id="add_row">
 			<th colspan="2" class="add">
 				<a href="#" id="add_supplier" class="create btn btn-small">Add new Supplier <i class="icon-plus-sign"></i></a>
-				<p class="form-inline hide" id="form_add">
+				<p class="form-inline hide forms">
 					<input name="name_add" type="text" class="input name_add">
 					<button class="add_supplier btn btn-mini btn-success">add</button>
 				</p>
@@ -24,43 +24,6 @@
 		 </thead>
 		</table>
 		<script src="/js/supplier.js"></script>
-		<script type="text/javascript">
-			// Collection supplier
-			var Suppliers = Backbone.Collection.extend({
-			  
-			  model: SupplierModel,
-			  
-			  url: '/company/{{ company.id }}/supplier',
-			  
-			  initialize: function(){
-				  this.bind('add', this.addSupplier);
-			  },
-			  
-			  addSupplier: function(supplier){
-				supplier.save({wait: true});
-			  },
-			  
-			});
-			
-			var suppliers = new Suppliers; // init collection
-
-			var view_suppliers = new ViewSuppliers({collection: suppliers}); // initialize view
-
-			suppliers.comparator = function(supplier) {
-			  return supplier.get("name");
-			};
-
-			$('#supplier_list').append(view_suppliers.render().el); // add template
-
-			$('#preloader').width($('#add_row').width());
-			$('#preloader').height($('#add_row').height());
-			var p = $('#add_row').position();
-			$('#preloader').css({'left':p.left, 'top': p.top});
-			$('#preloader').fadeIn('fast');
-
-			suppliers.reset({{ suppliers_json|raw }});
-
-		</script>
 	</div>
 </div>
 {% endblock %}

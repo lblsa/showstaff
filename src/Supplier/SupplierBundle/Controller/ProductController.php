@@ -267,13 +267,13 @@ class ProductController extends Controller
 				$products_array[] = array( 	'id' => $p->getId(),
 											'name'=> $p->getName(), 
 											'unit' => $p->getUnit()->getId(),
+											'use'	=> 0 
 											);
 		}
 			
 		if ($request->isXmlHttpRequest()) 
 		{
 			$code = 200;
-			
 			$result = array('code' => $code, 'data' => $products_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			$response->sendContent();

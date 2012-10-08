@@ -247,10 +247,6 @@ $(function(){
 			
 			Backbone.sync.call(this, method, model, productOptions);
 		},
-	   
-		//save: function(attributes, options){
-		//	console.log(attributes, options);
-		//}
 	});
 
 
@@ -272,8 +268,6 @@ $(function(){
 		},
 	  
 		parse: function(response) {
-			
-			console.log(ProductModel, response, response.code);
 			
 			if(response.code && (response.code == 200)){
 				return response.data;
