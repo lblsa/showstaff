@@ -5649,12 +5649,23 @@ a.badge:hover {
 }
 .forms .alert{
   margin-top:14px;
+  float: left;
 }
 .form_add_supplier_product {
   padding-top:14px;
 }
 .forms {
   padding-top:14px;
+}
+.forms .controls {
+  float:left;
+  margin-right: 14px;
+}
+.controls-pass {
+  height: 61px;
+}
+.users .help-block {
+  margin-bottom:0;
 }
 #preloader.progress, #preloader_s.progress {
   display: none;

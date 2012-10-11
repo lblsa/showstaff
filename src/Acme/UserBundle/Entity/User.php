@@ -24,12 +24,6 @@ class User implements UserInterface, \Serializable
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="\Supplier\SupplierBundle\Entity\Company")
-     * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
-     */
-    protected $company;
     
     /**
      * @var bigint $username
@@ -72,21 +66,16 @@ class User implements UserInterface, \Serializable
 
 
     /**
-     * @ORM\ManyToMany(targetEntity="Group", inversedBy="users")
+     * @ORM\ManyToMany(targetEntity="Role", inversedBy="users")
      *
+     * @var ArrayCollection $roles
      */
-    protected $groups;
-
-    /**
-     * @ORM\ManyToMany(targetEntity="\Supplier\SupplierBundle\Entity\Restaurant", inversedBy="users")
-     *
-     */
-    protected $restaurants;
+    protected $roles;
 	
 	
     public function __construct()
     {
-        $this->groups = new ArrayCollection();
+        $this->roles = new ArrayCollection();
     }
 
     /**
@@ -202,11 +191,6 @@ class User implements UserInterface, \Serializable
     {
         return $this->username === $user->getUsername();
     }
-	
-    public function getRoles()
-    {
-        return $this->groups->toArray();
-    }
 
     /**
      * Set salt
@@ -219,63 +203,44 @@ class User implements UserInterface, \Serializable
     }
 
     /**
-     * Clean groups
+     * Clean roles
      *
-     * @param Acme\UserBundle\Entity\Group $groups
+     * @param Acme\UserBundle\Entity\Role $roles
      */
-    public function cleanGroup()
+    public function cleanRoles()
     {
-        $this->groups = array();
+        $this->roles = array();
     }
 
     /**
-     * Clean Restaurant
+     * Add role
      *
-     * @param Supplier\SupplierBundle\Entity\Restaurant $restaurants
+     * @param Acme\UserBundle\Entity\Role $role
      */
-    public function cleanRestaurant()
+    public function addRole(\Acme\UserBundle\Entity\Role $role)
     {
-        $this->restaurants = array();
+        $this->roles[] = $role;
     }
-
-    /**
-     * Add groups
-     *
-     * @param Acme\UserBundle\Entity\Group $groups
-     */
-    public function addGroup(\Acme\UserBundle\Entity\Group $groups)
+    
+	/**
+	 * Gets an array of roles.
+	 *
+	 * @return array An array of Role objects
+	 */	
+    public function getRoles()
     {
-        $this->groups[] = $groups;
+        return $this->roles->toArray();
     }
-
+    
+    
     /**
-     * Get groups
+     * Gets the user roles.
      *
-     * @return Doctrine\Common\Collections\Collection 
+     * @return ArrayCollection A Doctrine ArrayCollection
      */
-    public function getGroups()
+    public function getUserRoles()
     {
-        return $this->groups;
-    }
-
-    /**
-     * Set company
-     *
-     * @param Supplier\SupplierBundle\Entity\Company $company
-     */
-    public function setCompany(\Supplier\SupplierBundle\Entity\Company $company)
-    {
-        $this->company = $company;
-    }
-
-    /**
-     * Get company
-     *
-     * @return Supplier\SupplierBundle\Entity\Company 
-     */
-    public function getCompany()
-    {
-        return $this->company;
+        return $this->roles;
     }
     
     
@@ -287,26 +252,5 @@ class User implements UserInterface, \Serializable
     public function unserialize($data)
     {
         $this->id = unserialize($data);
-    }
-    
-
-    /**
-     * Add restaurants
-     *
-     * @param Supplier\SupplierBundle\Entity\Restaurant $restaurants
-     */
-    public function addRestaurant(\Supplier\SupplierBundle\Entity\Restaurant $restaurants)
-    {
-        $this->restaurants[] = $restaurants;
-    }
-
-    /**
-     * Get restaurants
-     *
-     * @return Doctrine\Common\Collections\Collection 
-     */
-    public function getRestaurants()
-    {
-        return $this->restaurants;
     }
 }

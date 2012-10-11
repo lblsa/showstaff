@@ -246,7 +246,7 @@ $(function(){
 		  
 		parse: function(response) {
 		
-			if(response.code && (response.code == 200)){
+			if(response.code && response.data  && (response.code == 200)){
 				return response.data;
 			} else {
 				$('.suppliers').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+

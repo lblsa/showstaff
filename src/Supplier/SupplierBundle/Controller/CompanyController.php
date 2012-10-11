@@ -12,15 +12,21 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Supplier\SupplierBundle\Form\Type\CompanyType;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 
+
+/**
+ * Permission controller.
+ *
+ * @Route("/company")
+ */
 class CompanyController extends Controller
 {
 	
 	/**
-	 * @Route(	"company", 
+	 * @Route(	"", 
 	 * 			name="company",
 	 * 			requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_SUPER_ADMIN")
+     * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function listAction(Request $request)
 	{
@@ -51,28 +57,28 @@ class CompanyController extends Controller
 	}
 	
     /**
-     * @Route("company/{id}/del", name="company_del")
+     * @Route("/{cid}/del", name="company_del")
      * @Secure(roles="ROLE_SUPER_ADMIN")
      */
-    public function delAction($id, Request $request)
+    public function delAction($cid, Request $request)
     {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->find($id);
+						->find($cid);
 						
 		if (!$company) 
 		{
 			if ($request->isXmlHttpRequest()) 
 			{
 				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.$id);
+				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}
 			else
 			{
-				throw $this->createNotFoundException('No company found for id '.$id);
+				throw $this->createNotFoundException('No company found for id '.$cid);
 			}
 		}
 		
@@ -82,7 +88,7 @@ class CompanyController extends Controller
 		
 		if ($request->isXmlHttpRequest()) 
 		{
-			$result = array('has_error' => 0, 'result' => 'Company  #'.$id.' is removed');
+			$result = array('has_error' => 0, 'result' => 'Company  #'.$cid.' is removed');
 			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
 			$response->sendContent();
 			die();
@@ -94,27 +100,27 @@ class CompanyController extends Controller
     }
 	
     /**
-     * @Route("company/{id}/edit", name="company_edit")
+     * @Route("/{cid}/edit", name="company_edit")
 	 * @Template()
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
      */
-    public function editAction($id, Request $request)
+    public function editAction($cid, Request $request)
     {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->find($id);
+						->find($cid);
 						
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
-				$result = array('has_error' => 1, 'result' => 'No company found for id '.$id);
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
 				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}
 			else
 			{
-				throw $this->createNotFoundException('No company found for id '.$id);
+				throw $this->createNotFoundException('No company found for id '.$cid);
 			}
 		}
 		
@@ -134,7 +140,7 @@ class CompanyController extends Controller
 				
 				if ($request->isXmlHttpRequest()) 
 				{
-					$result = array('has_error' => 0, 'result' => 'Company #'.$id.' is updated');
+					$result = array('has_error' => 0, 'result' => 'Company #'.$cid.' is updated');
 					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
 					$response->sendContent();
 					die();
@@ -151,29 +157,29 @@ class CompanyController extends Controller
     }
 	
     /**
-     * @Route(	"company/{id}", 
+     * @Route(	"/{cid}", 
      * 			name="company_show",
      * 			requirements={"_method" = "GET"})
      * @Template()
      * @Secure(roles="ROLE_SUPER_ADMIN")
      */
-    public function showAction($id, Request $request)
+    public function showAction($cid, Request $request)
     {
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
-						->find($id);
+						->find($cid);
 						
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
-				$result = array('has_error' => 1, 'result' => 'No company found for id '.$id);
+				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
 				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
 			}
 			else
 			{
-				throw $this->createNotFoundException('No company found for id '.$id);
+				throw $this->createNotFoundException('No company found for id '.$cid);
 			}
 		}
 	
@@ -182,7 +188,7 @@ class CompanyController extends Controller
 	
 	
 	/**
-	 * @Route(	"company/{cid}", 
+	 * @Route(	"/{cid}", 
 	 * 			name="company_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
@@ -254,7 +260,7 @@ class CompanyController extends Controller
 	 
 
 	/**
-	 * @Route(	"company", 
+	 * @Route(	"", 
 	 * 			name="company_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
@@ -314,7 +320,7 @@ class CompanyController extends Controller
 	
 	
 	/**
-	 * @Route(	"company/{cid}", 
+	 * @Route(	"/{cid}", 
 	 * 			name="company_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
