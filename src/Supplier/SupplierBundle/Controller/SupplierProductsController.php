@@ -149,10 +149,8 @@ class SupplierProductsController extends Controller
 	 * 			name="supplier_products_list", 
 	 * 			requirements={"_method" = "GET"})
 	 * @Template()
-	 * 
+	 * @Secure(roles="ROLE_ORDER_MANAGER")
 	 */
-	 
-	 //@Secure(roles="ROLE_ORDER_MANAGER")
 	public function listAction($cid, $sid, Request $request)
     {
 		$company = $this->getDoctrine()
@@ -185,8 +183,7 @@ class SupplierProductsController extends Controller
 			foreach ($products AS $p)
 				$products_array[$p->getId()] = array( 	'id' => $p->getId(),
 														'name'	=> $p->getName(), 
-														'unit'	=> $p->getUnit(),
-														'use'	=> 0 );
+														'unit'	=> $p->getUnit(), );
 		}
 		
 		foreach ($suppliers AS $s)
@@ -205,12 +202,18 @@ class SupplierProductsController extends Controller
 												'product'				=>	$p->getProduct()->getId(),
 												'primary_supplier'		=>	$p->getPrime(),
 												'supplier_product_name'	=>	$p->getSupplierName(),
-												);
-			if (isset($products_array[$p->getProduct()->getId()]))
-				$products_array[$p->getProduct()->getId()]['use'] = 1;
-												
+												);												
 		}
 		$products_array = array_values($products_array);
+
+		if ($request->isXmlHttpRequest()) 
+		{
+			$code = 200;
+			$result = array('code' => $code, 'data' => $supplier_products_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die(); 
+		}
 
 		return array(	'supplier_products' => $supplier_products, 
 						'company' => $company, 

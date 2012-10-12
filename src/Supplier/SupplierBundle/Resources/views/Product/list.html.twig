@@ -15,8 +15,8 @@
 		  </tr>
 		  <tr id="add_row">
 			<th colspan="2" class="add">
-				<a href="#" id="add_product" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
-				<p class="form-inline hide" id="form_add">
+				<a href="#" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
+				<p class="form-inline hide forms">
 					<input name="name_add" type="text" class="input name_add">
 					<select class="span2 unit_add" name="unit"></select>
 					<button class="add_product btn btn-mini btn-success">add</button>
@@ -26,43 +26,6 @@
 		 </thead>
 		</table>
 		<script src="/js/products.js"></script>
-		<script type="text/javascript">
-			// Collection products
-			var Products = Backbone.Collection.extend({
-			  
-			  model: ProductsModel,
-			  
-			  url: '/company/{{ company.id }}/product',
-			  
-			  initialize: function(){
-				  this.bind('add', this.addProduct);
-			  },
-			  
-			  addProduct: function(product){
-				product.save({wait: true});
-			  },
-			  
-			});
-			
-			var products = new Products; // init collection
-
-			var view_products = new ViewProducts({collection: products}); // initialize view
-
-			products.comparator = function(product) {
-			  return product.get("name");
-			};
-
-			$('#product_list').append(view_products.render().el); // add template
-
-			$('#preloader').width($('#add_row').width());
-			$('#preloader').height($('#add_row').height());
-			var p = $('#add_row').position();
-			$('#preloader').css({'left':p.left, 'top': p.top});
-			$('#preloader').fadeIn('fast');
-
-			products.reset({{ products_json|raw }});
-
-		</script>
 		</div>
 	</div>
 {% endblock %}

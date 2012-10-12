@@ -36,13 +36,10 @@ class Product
     private $name;
 
     /**
-     * @var integer $unit
+     * @ORM\ManyToOne(targetEntity="Unit", inversedBy="products")
+     * @ORM\JoinColumn(name="unit", referencedColumnName="id", onDelete="CASCADE")
      *
-     * @ORM\Column(name="unit", type="integer", length=11)
 	 * @Assert\NotBlank()
-	 * @Assert\Type(type="numeric", message="Unit '{{ value }}' is not a valid {{ type }}.")
-     * @Assert\Min(1)
-     * @Assert\Max(10)
      */
     private $unit;
 
@@ -83,26 +80,6 @@ class Product
     }
 
     /**
-     * Set unit
-     *
-     * @param integer $unit
-     */
-    public function setUnit($unit)
-    {
-        $this->unit = $unit;
-    }
-
-    /**
-     * Get unit
-     *
-     * @return integer 
-     */
-    public function getUnit()
-    {
-        return $this->unit;
-    }
-
-    /**
      * Set company
      *
      * @param Supplier\SupplierBundle\Entity\Company $company
@@ -120,5 +97,25 @@ class Product
     public function getCompany()
     {
         return $this->company;
+    }
+
+    /**
+     * Set unit
+     *
+     * @param Supplier\SupplierBundle\Entity\Unit $unit
+     */
+    public function setUnit(\Supplier\SupplierBundle\Entity\Unit $unit)
+    {
+        $this->unit = $unit;
+    }
+
+    /**
+     * Get unit
+     *
+     * @return Supplier\SupplierBundle\Entity\Unit 
+     */
+    public function getUnit()
+    {
+        return $this->unit;
     }
 }
