@@ -23,24 +23,22 @@
 		<div class="span12">
 			<ul class="thumbnails">
 			{% if is_granted('ROLE_RESTAURANT_ADMIN') %}
-				{% if app.user.company.id is defined %}
-					{% if is_granted('ROLE_SUPER_ADMIN') == false %}
+				{% if cid is defined %}
 					<!-- Менеджер ресторана -->
 					<li class="span4 ">
 						<div class=" thumbnail">
 							<div class="caption">
-								<h4>Управление ресторанами</h4>
+								<h4>Смотреть доступные рестораны</h4>
 								<p>Список ресторанов</p>
-								<p><a class="btn" href="{{ path('restaurant', {'cid': app.user.company.id }) }}">Смотреть список ресторанов »</a></p>
+								<p><a class="btn" href="{{ path('restaurant', {'cid': cid }) }}">Смотреть список ресторанов »</a></p>
 							</div>
 						</div>
 					</li>
-					{% endif %}
 				{% endif %}
 			{% endif %}
 			
 			{% if is_granted('ROLE_ORDER_MANAGER') %}
-				{% if app.user.company.id is defined %}
+				{% if cid is defined %}
 					{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 					<!-- Менеджер по закупкам -->
 					<li class="span4">
@@ -48,7 +46,7 @@
 							<div class="caption">
 								<h4>Cформировать заказ</h4>
 								<p>Страница списка продуктов по ресторанам/постовщикам</p>
-								<p><a class="btn" href="{{ path('Order_list', {'cid': app.user.company.id }) }}">Смотреть заказанные продукты »</a></p>
+								<p><a class="btn" href="{{ path('Order_list', {'cid': cid }) }}">Смотреть заказанные продукты »</a></p>
 							</div>
 						</div>
 					</li>	
@@ -57,7 +55,7 @@
 							<div class="caption">
 								<h4>Управление поставщиками</h4>
 								<p>Список постовщиков</p>
-								<p><a class="btn" href="{{ path('supplier', {'cid': app.user.company.id }) }}">Смотреть/править список поставщиков »</a></p>
+								<p><a class="btn" href="{{ path('supplier', {'cid': cid }) }}">Смотреть/править список поставщиков »</a></p>
 							</div>
 						</div>
 					</li>
@@ -66,7 +64,7 @@
 							<div class="caption">
 								<h4>Управление продуктами</h4>
 								<p>Список продуктов</p>
-								<p><a class="btn" href="{{ path('product', {'cid': app.user.company.id }) }}">Смотреть/править список продуктов »</a></p>
+								<p><a class="btn" href="{{ path('product', {'cid': cid }) }}">Смотреть/править список продуктов »</a></p>
 							</div>
 						</div>
 					</li>
@@ -76,14 +74,14 @@
 
 			{% if is_granted('ROLE_COMPANY_ADMIN') %}
 			<!-- Управляющий !некоторыми ресторанами компании-->
-				{% if app.user.company.id is defined %}
+				{% if cid is defined %}
 					{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 					<li class="span4 ">
 						<div class=" thumbnail">
 							<div class="caption">
 								<h4>Управление ресторанами</h4>
 								<p>Список ресторанов</p>
-								<p><a class="btn" href="{{ path('restaurant', {'cid': app.user.company.id }) }}">Смотреть список ресторанов »</a></p>
+								<p><a class="btn" href="{{ path('restaurant', {'cid': cid }) }}">Смотреть список ресторанов »</a></p>
 							</div>
 						</div>
 					</li>
@@ -92,7 +90,7 @@
 							<div class="caption">
 								<h4>Управление менеджерами</h4>
 								<p>Список пользователей</p>
-								<p><a class="btn" href="{{ path('user_management', {'cid': app.user.company.id }) }}">Смотреть список пользователей »</a></p>
+								<p><a class="btn" href="{{ path('user_management', {'cid': cid }) }}">Смотреть список пользователей »</a></p>
 							</div>
 						</div>
 					</li>

@@ -3,7 +3,7 @@
 {% block body %}
 	<div  class="row">
 		<div class="span12">
-			<h2>Управление пользователями / <a href="{{ path('user_to_restaurant', {'cid': company.id }) }}">Назначить пользователя к ресторану</a></h2>
+			<h2>Управление пользователями</a></h2>
 			<table class="table table-bordered table-striped" id="user_list">
 			 <thead>
 			  <tr>
@@ -11,12 +11,13 @@
 				<th>Номер телефона</th>
 				<th>Email</th>
 				<th>Роль</th>
-				<th>Удалить</th>
+				<th>Рестораны</th>
+				<th></th>
 			  </tr>
 			  <tr id="add_row">
-				<th colspan="5" class="add">
+				<th colspan="6" class="add">
 					<a href="#" id="add_company_admin" class="create btn btn-small">Add new User (Company Manager) <i class="icon-plus-sign"></i></a>
-					<div class="form-inline hide" id="form_add">
+					<div class="form-inline hide forms">
 						<table class="table table-bordered">
 						<tr>
 							<th>ФИО</th>

@@ -387,6 +387,25 @@ class UserController extends Controller
 		
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+		
+		if (!$permission)
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden');
+			}
+		} else {
+			$company = $permission->getCompany();
+			return array('cid' => $company->getId());
+		}
+		
 		return array();
 	}
 	
@@ -400,22 +419,22 @@ class UserController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если не супер админ, то проверим из какой компании наш ROLE_COMPANY_ADMIN
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+		
+		if (!$permission || $permission->getCompany()->getId() != $cid)
 		{
-			if ($user->getCompany()->getId() != $cid)
+			if ($request->isXmlHttpRequest()) 
 			{
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				} else {
-					throw new AccessDeniedHttpException('Forbidden');
-				}
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden');
 			}
 		}
+
 		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
@@ -442,17 +461,17 @@ class UserController extends Controller
 		}
 
 		
-		$users = $this->getDoctrine()
-					->getRepository('AcmeUserBundle:User')
+		$permissions = $this->getDoctrine()
+					->getRepository('AcmeUserBundle:Permission')
 					->findByCompany($cid);
 
 		$users_array = array();
-		if ($users)
+		if ($permissions)
 		{
-			foreach ($users AS $p)
-			{
+			foreach ($permissions AS $p)
+			{				
 				$available_role = true;
-				foreach ($p->getRoles() AS $r)
+				foreach ($p->getUser()->getRoles() AS $r)
 				{
 					$role = $r->getRole();
 					//var_dump($role);
@@ -462,24 +481,21 @@ class UserController extends Controller
 				if ($available_role)
 				{
 					$roles = array();
-					foreach ($p->getRoles() AS $r)
-						$roles[] = $r->getId();
+					foreach ($p->getUser()->getRoles() AS $r)
+						$roles[] = $r->getRole();
 					
-					$users_array[] = array( 	'id'		=> $p->getId(),
-												'username'	=> $p->getUsername(), 
-												'email'		=> $p->getEmail(), 
-												'password'	=> $p->getPassword(), 
-												'company'	=> ($p->getCompany())?$p->getCompany()->getId():0,
-												'fullname'	=> $p->getFullname(),
-												'salt'		=> $p->getSalt(),
+					$users_array[] = array( 	'id'		=> $p->getUser()->getId(),
+												'username'	=> $p->getUser()->getUsername(), 
+												'email'		=> $p->getUser()->getEmail(),  
+												'company'	=> $cid,
+												'fullname'	=> $p->getUser()->getFullname(),
 												'roles'		=> $roles,
 											);
 				}
 			}
 		}
 
-		return array(	'users' => $users, 
-						'users_json' => json_encode($users_array),
+		return array(	'users_json' => json_encode($users_array),
 						'company' => $company,
 						'roles_json' => json_encode($roles_array));
 	}
