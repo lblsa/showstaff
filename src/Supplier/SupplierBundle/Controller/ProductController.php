@@ -214,8 +214,8 @@ class ProductController extends Controller
 				
 				
 			$code = 200;
-
-			$response = new Response(json_encode($units_array), $code, array('Content-Type' => 'application/json'));
+			$result = array('code' => $code, 'data' => $units_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			$response->sendContent();
 			die(); 
 		}

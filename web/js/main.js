@@ -32,6 +32,13 @@ var Units = Backbone.Collection.extend({
 	url: '/units',
 	initialize: function(){
 		this.fetch();
+	},
+	parse: function(response, xhr){
+		if(response.code && (response.code == 200)){
+			return response.data;
+		} else {
+			console.log('bad unit request');
+		}
 	}
 });
 

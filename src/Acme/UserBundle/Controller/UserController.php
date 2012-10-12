@@ -63,9 +63,9 @@ class UserController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$role_id = 2; // ROLE_SUPER_ADMIN = #1, ROLE_COMPANY_ADMIN = #2
+		$role_id = 'ROLE_COMPANY_ADMIN';
 		
-		$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->find($role_id);
+		$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
 		
 		if (!$role)
 		{
@@ -249,8 +249,9 @@ class UserController extends Controller
 		if ( count($model) > 0 && isset($model['fullname']) && isset($model['username']) && isset($model['password']) )
 		{
 			
-			$role_id = 2; // ROLE_SUPER_ADMIN = #1, ROLE_COMPANY_ADMIN = #2
-			$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->find($role_id);
+			$role_id = 'ROLE_COMPANY_ADMIN';
+			
+			$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
 			
 			if (!$role)
 			{
@@ -429,7 +430,7 @@ class UserController extends Controller
 			die();
 		}
 		
-		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('id' => array(3,4,5))); // available roles
+		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_MANAGER'))); // available roles
 
 		if ($available_roles)
 		{
