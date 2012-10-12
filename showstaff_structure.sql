@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: localhost
--- Время создания: Окт 01 2012 г., 14:30
+-- Время создания: Окт 12 2012 г., 10:06
 -- Версия сервера: 5.5.24
 -- Версия PHP: 5.3.10-1ubuntu3.4
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `Company` (
   `extended_name` longtext COLLATE utf8_unicode_ci,
   `inn` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=10 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=13 ;
 
 -- --------------------------------------------------------
 
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `OrderItem` (
   KEY `IDX_73D03BB5B1E7706E` (`restaurant_id`),
   KEY `IDX_73D03BB52ADD6D8C` (`supplier_id`),
   KEY `IDX_73D03BB54584665A` (`product_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=64 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=90 ;
 
 -- --------------------------------------------------------
 
@@ -69,7 +69,20 @@ CREATE TABLE IF NOT EXISTS `Orders` (
   `completed` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX_E283F8D8979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=2 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=5 ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `Permission`
+--
+
+CREATE TABLE IF NOT EXISTS `Permission` (
+  `user_id` int(11) NOT NULL,
+  `company_id` int(11) NOT NULL,
+  PRIMARY KEY (`user_id`),
+  KEY `IDX_AF14917A979B1AD6` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -80,11 +93,12 @@ CREATE TABLE IF NOT EXISTS `Orders` (
 CREATE TABLE IF NOT EXISTS `Product` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `unit` int(11) NOT NULL,
+  `unit` int(11) DEFAULT NULL,
   `company_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `IDX_1CF73D31979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=108 ;
+  KEY `IDX_1CF73D31979B1AD6` (`company_id`),
+  KEY `IDX_1CF73D31DCBB0C53` (`unit`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=124 ;
 
 -- --------------------------------------------------------
 
@@ -100,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `Restaurant` (
   `director` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX_A4C811EF979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=27 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=28 ;
 
 -- --------------------------------------------------------
 
@@ -115,7 +129,7 @@ CREATE TABLE IF NOT EXISTS `Supplier` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `IDX_625C0E28979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=23 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=38 ;
 
 -- --------------------------------------------------------
 
@@ -136,7 +150,19 @@ CREATE TABLE IF NOT EXISTS `SupplierProducts` (
   KEY `IDX_A8DED6134584665A` (`product_id`),
   KEY `IDX_A8DED6132ADD6D8C` (`supplier_id`),
   KEY `IDX_A8DED613979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=82 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=92 ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `Unit`
+--
+
+CREATE TABLE IF NOT EXISTS `Unit` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=6 ;
 
 -- --------------------------------------------------------
 
@@ -151,19 +177,17 @@ CREATE TABLE IF NOT EXISTS `User` (
   `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `fullname` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `company_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_2DA17977EFF286D2` (`username`),
-  KEY `IDX_2DA17977979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=18 ;
+  UNIQUE KEY `UNIQ_2DA17977EFF286D2` (`username`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=34 ;
 
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `UserGroups`
+-- Структура таблицы `UserRole`
 --
 
-CREATE TABLE IF NOT EXISTS `UserGroups` (
+CREATE TABLE IF NOT EXISTS `UserRole` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
   `role` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
@@ -174,29 +198,29 @@ CREATE TABLE IF NOT EXISTS `UserGroups` (
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `user_group`
+-- Структура таблицы `users_restaurants`
 --
 
-CREATE TABLE IF NOT EXISTS `user_group` (
+CREATE TABLE IF NOT EXISTS `users_restaurants` (
   `user_id` int(11) NOT NULL,
-  `group_id` int(11) NOT NULL,
-  PRIMARY KEY (`user_id`,`group_id`),
-  KEY `IDX_8F02BF9DA76ED395` (`user_id`),
-  KEY `IDX_8F02BF9DFE54D947` (`group_id`)
+  `restaurant_id` int(11) NOT NULL,
+  PRIMARY KEY (`user_id`,`restaurant_id`),
+  KEY `IDX_5A364BD6A76ED395` (`user_id`),
+  KEY `IDX_5A364BD6B1E7706E` (`restaurant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `user_restaurant`
+-- Структура таблицы `user_role`
 --
 
-CREATE TABLE IF NOT EXISTS `user_restaurant` (
+CREATE TABLE IF NOT EXISTS `user_role` (
   `user_id` int(11) NOT NULL,
-  `restaurant_id` int(11) NOT NULL,
-  PRIMARY KEY (`user_id`,`restaurant_id`),
-  KEY `IDX_4CF2D4D3A76ED395` (`user_id`),
-  KEY `IDX_4CF2D4D3B1E7706E` (`restaurant_id`)
+  `role_id` int(11) NOT NULL,
+  PRIMARY KEY (`user_id`,`role_id`),
+  KEY `IDX_8F02BF9DA76ED395` (`user_id`),
+  KEY `IDX_2DE8C6A3D60322AC` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -219,10 +243,18 @@ ALTER TABLE `Orders`
   ADD CONSTRAINT `FK_E283F8D8979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE;
 
 --
+-- Ограничения внешнего ключа таблицы `Permission`
+--
+ALTER TABLE `Permission`
+  ADD CONSTRAINT `FK_AF14917A979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_AF14917AA76ED395` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE;
+
+--
 -- Ограничения внешнего ключа таблицы `Product`
 --
 ALTER TABLE `Product`
-  ADD CONSTRAINT `FK_1CF73D31979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `FK_1CF73D31979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_1CF73D31DCBB0C53` FOREIGN KEY (`unit`) REFERENCES `Unit` (`id`) ON DELETE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `Restaurant`
@@ -245,24 +277,18 @@ ALTER TABLE `SupplierProducts`
   ADD CONSTRAINT `FK_A8DED613979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE;
 
 --
--- Ограничения внешнего ключа таблицы `User`
+-- Ограничения внешнего ключа таблицы `users_restaurants`
 --
-ALTER TABLE `User`
-  ADD CONSTRAINT `FK_2DA17977979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE;
+ALTER TABLE `users_restaurants`
+  ADD CONSTRAINT `FK_5A364BD6A76ED395` FOREIGN KEY (`user_id`) REFERENCES `Permission` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_5A364BD6B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`);
 
 --
--- Ограничения внешнего ключа таблицы `user_group`
+-- Ограничения внешнего ключа таблицы `user_role`
 --
-ALTER TABLE `user_group`
-  ADD CONSTRAINT `FK_8F02BF9DA76ED395` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `FK_8F02BF9DFE54D947` FOREIGN KEY (`group_id`) REFERENCES `UserGroups` (`id`) ON DELETE CASCADE;
-
---
--- Ограничения внешнего ключа таблицы `user_restaurant`
---
-ALTER TABLE `user_restaurant`
-  ADD CONSTRAINT `FK_4CF2D4D3A76ED395` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `FK_4CF2D4D3B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`) ON DELETE CASCADE;
+ALTER TABLE `user_role`
+  ADD CONSTRAINT `FK_2DE8C6A3D60322AC` FOREIGN KEY (`role_id`) REFERENCES `UserRole` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_role_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

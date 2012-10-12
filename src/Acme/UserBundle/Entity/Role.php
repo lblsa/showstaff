@@ -1,5 +1,5 @@
 <?php
-// src/Acme/UserBundle/Entity/Group.php
+// src/Acme/UserBundle/Entity/Role.php
 namespace Acme\UserBundle\Entity;
 
 use Symfony\Component\Security\Core\Role\RoleInterface;
@@ -7,10 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Table(name="UserGroups")
+ * @ORM\Table(name="UserRole")
  * @ORM\Entity()
  */
-class Group implements RoleInterface
+class Role implements RoleInterface
 {
     /**
      * @ORM\Column(name="id", type="integer")
@@ -30,7 +30,7 @@ class Group implements RoleInterface
     protected $role;
 
     /**
-     * @ORM\ManyToMany(targetEntity="User", mappedBy="groups")
+     * @ORM\ManyToMany(targetEntity="User", mappedBy="roles")
      */
     protected $users;
 

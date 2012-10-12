@@ -35,7 +35,7 @@ var ViewRestaurants = Backbone.View.extend({
 		} else {
 			$('.restaurants').html('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 								'<button type="button" class="close" data-dismiss="alert">×</button>'+
-								'У вас еще нет рестаранов</div></td></tr>');
+								'У вас еще нет ресторанов</div></td></tr>');
 			$('#preloader').fadeOut('fast');
 		}
 	},
@@ -251,8 +251,8 @@ var RestaurantModel = Backbone.Model.extend({
 
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.message + '). ');
-				   $(".alert-error").clone().appendTo('#form_add');
-				   $('#form_add .alert-error').fadeIn();
+				   $(".alert-error").clone().appendTo('.forms');
+				   $('.forms .alert-error').fadeIn();
 				   restaurants.remove(model, {silent:true});
 				   return;
 				   
@@ -267,9 +267,9 @@ var RestaurantModel = Backbone.Model.extend({
 					   
 					   $('.restaurants').prepend(content);
 					   $('.name_add').val('');
-					   $(".alert-success").clone().appendTo('#form_add');
-					   $("#form_add .alert-success strong").html('Ресторан добавлен')
-					   $("#form_add .alert-success").fadeIn();
+					   $(".alert-success").clone().appendTo('.forms');
+					   $(".forms .alert-success strong").html('Ресторан добавлен')
+					   $(".forms .alert-success").fadeIn();
 
 					   //  for sort reload
 					   view_restaurants.remove()
@@ -281,8 +281,8 @@ var RestaurantModel = Backbone.Model.extend({
 					   
 					   $('#preloader').fadeOut('fast'); 
 					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-					   $(".alert-error").clone().appendTo('#form_add');
-					   $('#form_add .alert-error').fadeIn();
+					   $(".alert-error").clone().appendTo('.forms');
+					   $('.forms .alert-error').fadeIn();
 					   restaurants.remove(model, {silent:true});   
 					   return;
 				   }
@@ -309,7 +309,7 @@ var RestaurantModel = Backbone.Model.extend({
 $(document).ready(function(){
 	
 	$('.add_restaurant').click(function() {
-		$("#form_add .alert").remove();
+		$(".forms .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();

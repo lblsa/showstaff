@@ -306,9 +306,9 @@ var CompanyModel = Backbone.Model.extend({
    }
 });
 
-$(document).ready(function(){
+$(function(){
 	$('.add_company').click(function() {
-		$("#form_add .alert").remove();
+		$(".forms .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();
