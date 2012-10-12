@@ -975,7 +975,7 @@ class UserController extends Controller
 			$message = \Swift_Message::newInstance()
 				->setSubject('Error Report')
 				->setFrom('tester@showstaff.ru')
-				->setTo(array('vladimir.stasevich@gmail.com', 'roman.efimushkin@gmail.com'))
+				->setTo(array('vladimir.stasevich@gmail.com', 'roman.efimushkin@gmail.com', 'vladimir.stasevich@db.com'))
 				->setBody(	$this->renderView(	'AcmeUserBundle:User:email_error_report.txt.twig',
 												array(	'feedback_message' => $data['feedback_message'],
 														'url' => $_SERVER['HTTP_HOST'].$data['url'],
