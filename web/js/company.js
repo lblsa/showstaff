@@ -120,13 +120,13 @@ var ViewCompany = Backbone.View.extend({
 							'<td class="p_inn">'+
 								'<input type="text" class="inn" name="inn" tabindex="3" value="<%= inn %>">'+
 							'</td>'+
-							'<td class="p_link">'+
+							'<td>'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a> '+
-								' <a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
-								' <a href="/company/<%= id %>/supplier" class="link">Поставщики компании</a>&nbsp;|&nbsp; '+
-								' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a><br> '+
-								' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>&nbsp;|&nbsp; '+
-								' <a href="/company/<%= id %>/user" class="link">Менеджеры компании</a>'+
+							//	' <a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
+							//	' <a href="/company/<%= id %>/supplier" class="link">Поставщики компании</a>&nbsp;|&nbsp; '+
+							//	' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a><br> '+
+							//	' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>&nbsp;|&nbsp; '+
+							//	' <a href="/company/<%= id %>/user" class="link">Менеджеры компании</a>'+
 							'</td>'),
 	
 	events: {
@@ -258,8 +258,8 @@ var CompanyModel = Backbone.Model.extend({
 
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.message + '). ');
-				   $(".alert-error").clone().appendTo('#form_add');
-				   $('#form_add .alert-error').fadeIn();
+				   $(".alert-error").clone().appendTo('.forms');
+				   $('.forms .alert-error').fadeIn();
 				   companies.remove(model, {silent:true});
 				   return;
 				   
@@ -274,9 +274,9 @@ var CompanyModel = Backbone.Model.extend({
 					   $('.name_add').val('');
 					   $('.extended_name_add').val('');
 					   $('.inn_add').val('');
-					   $(".alert-success").clone().appendTo('#form_add');
-					   $("#form_add .alert-success strong").html('Компания успешно создана');
-					   $("#form_add .alert-success").fadeIn()
+					   $(".alert-success").clone().appendTo('.forms');
+					   $(".forms .alert-success strong").html('Компания успешно создана');
+					   $(".forms .alert-success").fadeIn()
 
 					   //  for sort reload
 					   view_companies.remove()
@@ -288,8 +288,8 @@ var CompanyModel = Backbone.Model.extend({
 					   
 					   $('#preloader').fadeOut('fast'); 
 					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-					   $(".alert-error").clone().appendTo('#form_add');
-					   $('#form_add .alert-error').fadeIn();
+					   $(".alert-error").clone().appendTo('.forms');
+					   $('.forms .alert-error').fadeIn();
 					   companies.remove(model, {silent:true});   
 					   return;
 				   }

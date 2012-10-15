@@ -25,7 +25,41 @@ $(document).ready(function(){
 				$('#link_to_date').attr( 'href', $('.datepicker').val() );
 	});
 	
+	
+	$(document).on("keypress", '.pass_add', function() {
+		if ($('.pass_add').val().length > 0)
+			$('.controls-pass .help-block a').slideDown();
+		else
+			$('.controls-pass .help-block a').slideUp();
+	});
+	
+	$(document).on("focusout", '.pass_add', function() {
+		if ($('.pass_add').val().length > 0)
+			$('.controls-pass .help-block a').slideDown();
+		else
+			$('.controls-pass .help-block a').slideUp();
+	});
+	
+	
+	$('.showpass').toggle(function(){
+		var pass = $('.pass_add').val();
+		$('.pass_add').remove();
+		$('.controls-pass').prepend(	'<input name="pass_add" value="'+pass+
+										'" type="text" placeholder="Password" class="pass_add span2">');
+		$('small', this).html('Скрыть пароль');
+	}, function(){
+		var pass = $('.pass_add').val();
+		$('.pass_add').remove();
+		$('.controls-pass').prepend(	'<input name="pass_add" value="'+pass+
+										'" type="password" placeholder="Password" class="pass_add span2">');
+		$('small', this).html('Показать пароль');
+	});
 })
+
+function error_fetch(message) {
+	$('.span12').append('<div class="alert"><button type="button" class="close" data-dismiss="alert">×</button>'+message+'</div>');
+	$('#preloader').fadeOut('fast');
+}
 
 var href = window.location.pathname.split('/');
 var Units = Backbone.Collection.extend({
@@ -37,7 +71,7 @@ var Units = Backbone.Collection.extend({
 		if(response.code && (response.code == 200)){
 			return response.data;
 		} else {
-			console.log('bad unit request');
+			error_fetch('Ошибка получения едениц измерения');
 		}
 	}
 });

@@ -402,32 +402,5 @@ $(function(){
 		return false;
 	});
 	
-	$(document).on("keypress", '.pass_add', function() {
-		if ($('.pass_add').val().length > 0)
-			$('.controls-pass .help-block a').slideDown();
-		else
-			$('.controls-pass .help-block a').slideUp();
-	});
-	
-	$(document).on("focusout", '.pass_add', function() {
-		if ($('.pass_add').val().length > 0)
-			$('.controls-pass .help-block a').slideDown();
-		else
-			$('.controls-pass .help-block a').slideUp();
-	});
-	
-	
-	$('.showpass').toggle(function(){
-		var pass = $('.pass_add').val();
-		$('.pass_add').remove();
-		$('.controls-pass').prepend(	'<input name="pass_add" value="'+pass+
-										'" type="text" placeholder="Password" class="pass_add">');
-		$('small', this).html('Скрыть пароль');
-	}, function(){
-		var pass = $('.pass_add').val();
-		$('.pass_add').remove();
-		$('.controls-pass').prepend(	'<input name="pass_add" value="'+pass+
-										'" type="password" placeholder="Password" class="pass_add">');
-		$('small', this).html('Показать пароль');
-	});
+
 })
