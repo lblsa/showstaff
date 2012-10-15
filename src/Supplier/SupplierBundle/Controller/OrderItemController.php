@@ -24,20 +24,66 @@ class OrderItemController extends Controller
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0})
      * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
+     * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
     public function listAction($cid, $rid, $booking_date, Request $request)
     {
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
-		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
-			
-			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-		}	
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		// check restaurant {rid} for admin restaurant
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		{
+			$restaurants = $permission->getRestaurants();
+			if (!$restaurants)
+			{
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Restaurant');
+				}
+			}
+			else
+			{
+				$available_restaurants = array();
+				foreach ($restaurants AS $r)
+					$available_restaurants[] = $r->getId();
+					
+				if (!in_array($rid, $available_restaurants))
+				{
+					if ($request->isXmlHttpRequest()) 
+					{
+						$code = 403;
+						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						$response->sendContent();
+						die();
+					} else {
+						throw new AccessDeniedHttpException('Forbidden Restaurant');
+					}
+				}
+			}
+		}
 		
 		
 		if ($booking_date == '0')
@@ -154,14 +200,61 @@ class OrderItemController extends Controller
 	public function ajaxcreateAction($cid, $rid, $booking_date, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
-		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
-			
-			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
 
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		
+		// check restaurant {rid} for admin restaurant
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		{
+			$restaurants = $permission->getRestaurants();
+			if (!$restaurants)
+			{
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Restaurant');
+				}
+			}
+			else
+			{
+				$available_restaurants = array();
+				foreach ($restaurants AS $r)
+					$available_restaurants[] = $r->getId();
+					
+				if (!in_array($rid, $available_restaurants))
+				{
+					if ($request->isXmlHttpRequest()) 
+					{
+						$code = 403;
+						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						$response->sendContent();
+						die();
+					} else {
+						throw new AccessDeniedHttpException('Forbidden Restaurant');
+					}
+				}
+			}
 		}
 		
 		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
@@ -307,19 +400,65 @@ class OrderItemController extends Controller
 	 * 				name="OrderItem_ajax_delete", 
  	 * 				requirements={	"_method" = "DELETE", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={"booking_date" = 0})
-	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxdeleteAction($cid, $rid, $booking_date, $bid)
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
-		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
-			
-			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		// check restaurant {rid} for admin restaurant
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		{
+			$restaurants = $permission->getRestaurants();
+			if (!$restaurants)
+			{
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Restaurant');
+				}
+			}
+			else
+			{
+				$available_restaurants = array();
+				foreach ($restaurants AS $r)
+					$available_restaurants[] = $r->getId();
+					
+				if (!in_array($rid, $available_restaurants))
+				{
+					if ($request->isXmlHttpRequest()) 
+					{
+						$code = 403;
+						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						$response->sendContent();
+						die();
+					} else {
+						throw new AccessDeniedHttpException('Forbidden Restaurant');
+					}
+				}
+			}
 		}	
 		 
 		$company = $this->getDoctrine()
@@ -406,19 +545,65 @@ class OrderItemController extends Controller
 	 * 			requirements={	"_method" = "PUT", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={"booking_date" = 0})
 	 * 			)
-	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxupdateAction($cid, $rid, $booking_date, $bid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
-		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
-			
-			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		// check restaurant {rid} for admin restaurant
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		{
+			$restaurants = $permission->getRestaurants();
+			if (!$restaurants)
+			{
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Restaurant');
+				}
+			}
+			else
+			{
+				$available_restaurants = array();
+				foreach ($restaurants AS $r)
+					$available_restaurants[] = $r->getId();
+					
+				if (!in_array($rid, $available_restaurants))
+				{
+					if ($request->isXmlHttpRequest()) 
+					{
+						$code = 403;
+						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						$response->sendContent();
+						die();
+					} else {
+						throw new AccessDeniedHttpException('Forbidden Restaurant');
+					}
+				}
+			}
 		}
 		
 		
@@ -586,48 +771,6 @@ class OrderItemController extends Controller
 		$response->sendContent();
 		die();
 		 
-	}
-	
-	private function checkUserRightsToCompany($cid, $request, $user)
-	{
-		if ($user->getCompany()->getId() != $cid) // , то проверим из какой компании наш ROLE_RESTAURANT_ADMIN
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
-	}
-	
-	private function checkUserRightsToRestaurant($rid, $request, $user)
-	{
-		$available_restaurants = array();
-		$user_restaurants = $user->getRestaurants();
-		
-		if ($user_restaurants)
-			foreach($user_restaurants AS $r)
-				$available_restaurants[] = $r->getId();
-				
-
-		if (!in_array($rid, $available_restaurants)) // , и проверим к какому ресторану вы назначены
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Restaurant');
-			}
-		}
 	}
 }
 

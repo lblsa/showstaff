@@ -18,7 +18,7 @@ class RestaurantController extends Controller
 	/**
 	 * @Route(	"/company/{cid}/restaurant", name="restaurant",	requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function listAction($cid, Request $request)
 	{
