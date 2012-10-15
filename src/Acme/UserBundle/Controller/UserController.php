@@ -134,7 +134,6 @@ class UserController extends Controller
 											'company'	=> $company );
 			}
 		}
-
 		
 		if ($request->isXmlHttpRequest()) 
 		{

@@ -31,7 +31,7 @@ $(function(){
 				});
 				
 			} else {
-				$('.users').html('<tr class="alert_row"><td colspan="4"><div class="alert">'+
+				$('.users').html('<tr class="alert_row"><td colspan="6"><div class="alert">'+
 									'<button type="button" class="close" data-dismiss="alert">×</button>'+
 									'У вас еще нет пользователей</div></td></tr>');
 				$('#preloader').fadeOut('fast');
@@ -307,14 +307,11 @@ $(function(){
 		},
 		  
 		parse: function(response) {
-
-			if(response.code && response.data  && (response.code == 200)){
+			if(response && 'code' in response && response.code == 200 && 'data' in response) {
 				return response.data;
 			} else {
-				$('.users').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
-									'<button type="button" class="close" data-dismiss="alert">×</button>'+
-									'У вас еще нет пользователей</div></td></tr>');
-				$('#preloader').fadeOut('fast');
+				error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
+				return null
 			}
 		},
 			
@@ -361,7 +358,12 @@ $(function(){
 										$('.company_add').append(content);
 									});
 									
-									users.fetch();
+									users.fetch({
+													error:function(){
+														error_fetch('Ошибка на сервере, обновите страницу или обратитесь к администратору');
+													}
+													
+												});
 									
 									view_users = new ViewUsers({collection: users});
 									$('#user_list').append(view_users.render().el);

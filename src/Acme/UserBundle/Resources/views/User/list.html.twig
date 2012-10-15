@@ -2,51 +2,47 @@
 
 {% block body %}
 
-	<div  class="row">
-		<div class="span12">
-			<h2>Users</h2>
-			<table class="table table-bordered table-striped" id="user_list">
-			 <thead>
-			  <tr>
-				<th>ФИО</th>
-				<th>Номер телефона</th>
-				<th>Email</th>
-				<th>Пароль</th>
-				<th>Компания</th>
-				<th></th>
-			  </tr>
-			  <tr id="add_row">
-				<th colspan="6" class="add">
-					<a href="#" id="add_company_admin" class="create btn btn-small">Добавить администратора компании <i class="icon-plus-sign"></i></a>
-					<div class="form-inline hide forms">
-						<div class="controls">
-							<input name="fullname_add" type="text" placeholder="ФИО" class="input-small fullname_add">
-						</div>
-						<div class="controls">
-							<input name="username_add" type="number"  placeholder="Номер телефона" class="username_add">
-						</div>
-						<div class="controls">
-							<input name="email_add" type="email" placeholder="Email" class="email_add">
-						</div>
-						<div class="controls controls-pass">
-							<input name="pass_add" type="password" placeholder="Пароль" class="pass_add">
-							<span class="help-block"><a href="#" class="showpass hide"><small>Показать пароль</small></a></span>
-						</div>
-						<div class="controls">
-							<select name="company_add" type="text" placeholder="Company" class="company_add">
-								<option value="0">Компания</option>
-							</select>
-						</div>
-						<div class="controls">
-							<button class="add_user btn btn-success">Add</button>
-						</div>
-					</div>
-				</th>
-			  </tr>
-			 </thead>
-			</table>
+<h2>Users</h2>
+<table class="table table-bordered table-striped" id="user_list">
+ <thead>
+  <tr>
+	<th>ФИО</th>
+	<th>Номер телефона</th>
+	<th>Email</th>
+	<th>Пароль</th>
+	<th>Компания</th>
+	<th></th>
+  </tr>
+  <tr id="add_row">
+	<th colspan="6" class="add">
+		<a href="#" id="add_company_admin" class="create btn btn-small">Добавить администратора компании <i class="icon-plus-sign"></i></a>
+		<div class="form-inline hide forms">
+			<div class="controls">
+				<input name="fullname_add" type="text" placeholder="ФИО" class="input-small fullname_add">
+			</div>
+			<div class="controls">
+				<input name="username_add" type="number"  placeholder="Номер телефона" class="username_add">
+			</div>
+			<div class="controls">
+				<input name="email_add" type="email" placeholder="Email" class="email_add">
+			</div>
+			<div class="controls controls-pass">
+				<input name="pass_add" type="password" placeholder="Пароль" class="pass_add">
+				<span class="help-block"><a href="#" class="showpass hide"><small>Показать пароль</small></a></span>
+			</div>
+			<div class="controls">
+				<select name="company_add" type="text" placeholder="Company" class="company_add">
+					<option value="0">Компания</option>
+				</select>
+			</div>
+			<div class="controls">
+				<button class="add_user btn btn-success">Add</button>
+			</div>
 		</div>
-		<script src="/js/user.js"></script>
-	</div>
+	</th>
+  </tr>
+ </thead>
+</table>
+<script src="/js/user.js"></script>
 {% endblock %}
 

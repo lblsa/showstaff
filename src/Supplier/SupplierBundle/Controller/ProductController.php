@@ -212,7 +212,6 @@ class ProductController extends Controller
 			foreach ($units AS $p)
 				$units_array[] = array('id' => $p->getId(), 'name'=> $p->getName());
 				
-				
 			$code = 200;
 			$result = array('code' => $code, 'data' => $units_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
