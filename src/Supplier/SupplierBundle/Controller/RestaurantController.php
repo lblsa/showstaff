@@ -183,7 +183,6 @@ class RestaurantController extends Controller
 	 */
 	public function ajaxdeleteAction($cid, $rid, Request $request)
 	{
-			
 		$user = $this->get('security.context')->getToken()->getUser();
 		
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
