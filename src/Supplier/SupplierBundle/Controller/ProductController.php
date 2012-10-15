@@ -14,192 +14,8 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class ProductController extends Controller
 {
-    /**
-     * @Route("company/{cid}/product/{pid}/delete", name="product_del")
-     * @Secure(roles="ROLE_ORDER_MANAGER")
-     */
-    public function delAction($cid, $pid, Request $request)
-    {
-		$product = $this->getDoctrine()
-						->getRepository('SupplierBundle:Product')
-						->find($pid);
-		
-		if (!$product) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 200;
-				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No product found for id '.$pid);
-			}
-		}
-		
-		$em = $this->getDoctrine()->getEntityManager();				
-		$em->remove($product);
-		$em->flush();
-		
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'message' => 'Product #'.$pid.' is deleted');
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
-		else
-		{
-			return $this->redirect($this->generateUrl('product'));
-		}
-    }
-    
-
-    /**
-     * @Route("company/{cid}/product/create", name="product_create")
-     * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER")
-     */    
-    public function createAction($cid, Request $request)
-    {
-		$product = new Product();
-		
-		$form = $this->createForm(new ProductType($this->unit), $product);
-					
-		if ($request->getMethod() == 'POST')
-		{
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$product = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($product);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 200;
-					$result = array('code' => $code, 'message' => 'Product #'.$product->getId().' is created');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('product'));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView());
-	}
-	
-	
-    /**
-     * @Route("company/{cid}/product/{pid}/edit", name="product_edit")
-     * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER")
-     */    
-	public function editAction($cid, $pid, Request $request)
-	{
-		$product = $this->getDoctrine()
-						->getRepository('SupplierBundle:Product')
-						->findOneByIdJoinedToCompany($pid, $cid);
-		
-		if (!$product) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 400;
-				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No product found for id '.$pid);
-			}
-		}
-		
-		$company = $product->getCompany();
-		
-		$form = $this->createForm(new ProductType($this->unit), $product);
-					
-		if ($request->getMethod() == 'POST')
-		{
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$product = $form->getData();
-				$product->setCompany($company);		
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($product);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 200;
-					$result = array('code' => $code, 'message' => 'Product #'.$pid.' is updated');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('product', array('cid' => $cid)));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView(), 'product' => $product, 'company' => $company);
-	}
-	
-	
 	/**
-	 * @Route("/company/{cid}/product/{pid}", name="product_show", requirements={"_method" = "GET"})
-	 * @Template()
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
-	 */
-	public function showAction($cid, $pid, Request $request)
-	{		
-		$product = $this->getDoctrine()
-						->getRepository('SupplierBundle:Product')
-						->findOneByIdJoinedToCompany($pid, $cid);
-		
-		if (!$product) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 200;
-				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No product found for id '.$pid);
-			}
-		}
-		
-		$company = $product->getCompany();
-		
-		return array('product' => $product, 'company' => $company, 'unit' => $this->unit);
-	}
-
-
-	/**
-	 * @Route(	"units", 
-	 * 			name="units", 
-	 * 			requirements={"_method" = "GET"})
+	 * @Route(	"units", name="units", requirements={"_method" = "GET"})
 	 * @Template()
 	 */
 	public function unitsAction()
@@ -229,14 +45,30 @@ class ProductController extends Controller
 	}	
 	
 	/**
-	 * @Route(	"company/{cid}/product", 
-	 * 			name="product", 
-	 * 			requirements={"_method" = "GET"})
+	 * @Route(	"company/{cid}/product", name="product", requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN")
 	 */
 	public function listAction($cid, Request $request)
 	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findAllProductsByCompany($cid);
@@ -283,13 +115,29 @@ class ProductController extends Controller
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/product/{pid}", 
-	 * 			name="product_ajax_update", 
-	 * 			requirements={"_method" = "PUT"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Route(	"company/{cid}/product/{pid}", name="product_ajax_update", requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, $pid, Request $request)
-	 {		 
+	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		  
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $pid == $model['id'])
@@ -309,8 +157,18 @@ class ProductController extends Controller
 			
 			$validator = $this->get('validator');
 
+			$unit = $this->getDoctrine()->getRepository('SupplierBundle:Unit')->find((int)$model['unit']);
+			if (!$unit)
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No unit found for id '.(int)$model['unit']);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			
 			$product->setName($model['name']);
-			$product->setUnit((int)$model['unit']);
+			$product->setUnit($unit);
 			
 			$errors = $validator->validate($product);
 			
@@ -333,7 +191,10 @@ class ProductController extends Controller
 				
 				$code = 200;
 				
-				$result = array('code'=> $code, 'data' => array('name' => $product->getName(), 'unit' => $product->getUnit()));
+				$result = array('code'=> $code, 'data' => array(
+																'name' => $product->getName(), 
+																'unit' => $product->getUnit()->getId()
+															));
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
@@ -351,13 +212,29 @@ class ProductController extends Controller
 	 
 	
 	/**
-	 * @Route(	"company/{cid}/product/{pid}", 
-	 * 			name="product_ajax_delete", 
-	 * 			requirements={"_method" = "DELETE"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Route(	"company/{cid}/product/{pid}", name="product_ajax_delete", requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxdeleteAction($cid, $pid, Request $request)
 	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$product = $this->getDoctrine()
 					->getRepository('SupplierBundle:Product')
 					->find($pid);
@@ -385,16 +262,30 @@ class ProductController extends Controller
 	
 
 	/**
-	 * @Route(	"company/{cid}/product", 
-	 * 			name="product_ajax_create", 
-	 * 			requirements={"_method" = "POST"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Route(	"company/{cid}/product", name="product_ajax_create", requirements={"_method" = "POST"})
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
 	{
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 						
 		if (!$company) {
 			$code = 404;
@@ -403,19 +294,12 @@ class ProductController extends Controller
 			$response->sendContent();
 			die();
 		}
-		
-			
-
 
 		$model = (array)json_decode($request->getContent());
 		
-		//print_r($model); die();
-		
 		if (count($model) > 0 && isset($model['unit']) && isset($model['name']))
 		{	
-			$unit = $this->getDoctrine()
-						->getRepository('SupplierBundle:Unit')
-						->find((int)$model['unit']);
+			$unit = $this->getDoctrine()->getRepository('SupplierBundle:Unit')->find((int)$model['unit']);
 			
 			if (!$unit) {
 				$code = 404;

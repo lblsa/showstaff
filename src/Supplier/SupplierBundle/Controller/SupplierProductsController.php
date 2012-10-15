@@ -15,144 +15,32 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class SupplierProductsController extends Controller
 {
-	public $unit = array(	'1' => 'кг',
-							'2' => 'литр',
-							'3' => 'шт',
-							'4' => 'пучок',
-							'5' => 'бутылка',);
-	
-    /**
-     * @Route("/supplier/products/del/{id}", name="supplier_products_del")
-     */
-    public function delAction($id, Request $request)
-    {
-		$supplier_product = $this->getDoctrine()
-						->getRepository('SupplierBundle:SupplierProducts')
-						->find($id);
-						
-		if (!$supplier_product) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'errors' => 'No Supplier Products found for id '.$id);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No Supplier Products found for id '.$id);
-			}
-		}
-		
-		$em = $this->getDoctrine()->getEntityManager();					
-		$em->remove($supplier_product);
-		$em->flush();
-		
-		if ($request->isXmlHttpRequest()) 
-		{
-			$result = array('has_error' => 0, 'errors' => 'Supplier Products found for id #'.$id.' is deleted');
-			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
-		else
-		{
-			return $this->redirect($this->generateUrl('supplier_products_list'));
-		}
-    }
-	
-	 /**
-     * @Route("/supplier/products/create", name="supplier_products_create")
-     * @Template()
-     */    
-    public function createAction(Request $request)
-    {
-		$supplier_product = new SupplierProducts();
-		
-		$form = $this->createForm(new SupplierProductsType(), $supplier_product);
-					
-		if ($request->getMethod() == 'POST')
-		{			
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$supplier_product = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier_product);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$result = array('has_error' => 1, 'errors' => 'Supplier Products #'.$supplier_product->getId.' is created');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('supplier_products_list'));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView());
-	}
-	
-	 /**
-     * @Route("/supplier/products/edit/{id}", name="supplier_products_edit")
-     * @Template()
-     */    
-    public function editAction($id, Request $request)
-    {
-		$supplier_product = $this->getDoctrine()
-						->getRepository('SupplierBundle:SupplierProducts')
-						->find($id);
-						
-		$form = $this->createForm(new SupplierProductsType(), $supplier_product);
-					
-		if ($request->getMethod() == 'POST')
-		{			
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$supplier_product = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier_product);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 200;
-					$result = array('code' => $code, 'message' => 'Supplier Products #'.$id.' is updated');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('supplier_products_list'));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView(), 'id' => $id);
-	}
-	
 	/**
 	 * @Route(	"/company/{cid}/supplier/{sid}/product", 
 	 * 			name="supplier_products_list", 
 	 * 			requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function listAction($cid, $sid, Request $request)
     {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
@@ -221,40 +109,7 @@ class SupplierProductsController extends Controller
 						'supplier_products_json' => json_encode($supplier_products_array),
 						'products_json' => json_encode($products_array), );
 
-	}
-	
-	
-	/**
-	 * @Route("/supplier/products/json", name="supplier_products_list_json")
-	 */
-	 public function jsonAction()
-	 {
-		 $supplier_products = $this->getDoctrine()
-					->getRepository('SupplierBundle:SupplierProducts')
-					->get();
-					
-		 $products_array = array();
-
-		if ($supplier_products)
-			foreach ($supplier_products AS $p)
-				$products_array[] = array(
-										'id' => $p->getId(), 
-										'supplier_product_name'=>$p->getSupplierName(), 
-										'primary_supplier'=>$p->getPrime(), 
-										'price'=>$p->getPrice(), 
-										'product'=>$p->getProduct()->getId(), 
-										'product_name'=>$p->getProduct()->getName(), 
-										'supplier'=>$p->getSupplier()->getId(),
-										'supplier_name'=>$p->getSupplier()->getName(),
-										'unit' => $p->getProduct()->getUnit(),										
-										);
-
-		 $response = new Response(json_encode($products_array), 200);
-		 $response->headers->set('Content-Type', 'application/json');
-		 $response->sendContent();
-		 die(); 
-	 }
-	 
+	} 
 	 
 	/**
 	 * @Route("/supplier_products/supplier/{id}", name="supplier_products_by_supplier")
@@ -285,10 +140,27 @@ class SupplierProductsController extends Controller
 	 * @Route(	"/company/{cid}/supplier/{sid}/product/{pid}",
 	 * 			name="supplier_products_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, $sid, $pid, Request $request)
 	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
@@ -415,10 +287,28 @@ class SupplierProductsController extends Controller
 	 * @Route(	"/company/{cid}/supplier/{sid}/product", 
 	 * 			name="supplier_products_ajax_create",
 	 * 			requirements={"_method" = "POST"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxcreateAction($cid, $sid, Request $request)
 	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
@@ -528,10 +418,27 @@ class SupplierProductsController extends Controller
 	 * @Route(	"/company/{cid}/supplier/{sid}/product/{pid}", 
 	 * 			name="supplier_products_ajax_delete", 
  	 * 			requirements={"_method" = "DELETE"})
- 	 * @Secure(roles="ROLE_ORDER_MANAGER")
+ 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxdeleteAction($cid, $sid, $pid)
 	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
