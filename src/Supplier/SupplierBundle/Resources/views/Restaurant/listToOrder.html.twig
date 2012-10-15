@@ -1,0 +1,23 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+<h2>You Restaurants in the Company "{{ company.name }}"</h2>
+<table class="table table-bordered table-striped" id="restaurants_list">
+ <thead>
+  <tr>
+	<th>Название ресторана</th>
+	<th>Ссылка к заказу продуктов</th>
+  </tr>
+ </thead>
+ <tbody>
+	{% for restaurant in restaurants %}
+		<tr>
+			<td>{{ restaurant.name }}</td>
+			<td><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid':restaurant.id} ) }}">Заказы ресторана</a></td>
+		</tr>
+	{% endfor %}
+ </tbody>
+</table>
+{% endblock %}
+
+
