@@ -325,7 +325,7 @@ $(function(){
 		},
 	  
 		parse: function(response) {
-			if(response.code && response.data  && (response.code == 200)){
+			if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
 				return response.data;
 			} else {
 				console.log('error restaurant request');
