@@ -181,8 +181,8 @@ $(function(){
 
 					   $('#preloader').fadeOut('fast'); 
 					   $('.alert-error strong').html(' (' + resp.message + '). ');
-					   $(".alert-error").clone().appendTo('#form_add');
-					   $('#form_add .alert-error').fadeIn();
+					   $(".alert-error").clone().appendTo('.forms');
+					   $('.forms .alert-error').fadeIn();
 					   suppliers.remove(model, {silent:true});
 					   return;
 					   
@@ -195,9 +195,9 @@ $(function(){
 						   var content = view.render().el;
 						   $('.suppliers').prepend(content); 
 						   $('.name_add').val('');
-						   $(".alert-success").clone().appendTo('#form_add');
-						   $("#form_add .alert-success strong").html('Поставщик успешно создан');
-						   $("#form_add .alert-success").fadeIn();
+						   $(".alert-success").clone().appendTo('.forms');
+						   $(".forms .alert-success strong").html('Поставщик успешно создан');
+						   $(".forms .alert-success").fadeIn();
 
 						   //  for sort reload
 						   view_suppliers.remove();
@@ -209,8 +209,8 @@ $(function(){
 						   
 						   $('#preloader').fadeOut('fast'); 
 						   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-						   $(".alert-error").clone().appendTo('#form_add');
-						   $('#form_add .alert-error').fadeIn();
+						   $(".alert-error").clone().appendTo('.forms');
+						   $('.forms .alert-error').fadeIn();
 						   suppliers.remove(model, {silent:true});   
 						   return;
 					   }
@@ -280,7 +280,7 @@ $(function(){
 	$('#supplier_list').append(view_suppliers.render().el); // add template
 	
 	$('.add_supplier').click(function() {
-		$("#form_add .alert").remove();
+		$(".forms .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();

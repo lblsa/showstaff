@@ -14,162 +14,34 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 
 class SupplierController extends Controller
 {
-    /**
-     * @Route("/supplier/del/{id}", name="supplier_del")
-     * @Secure(roles="ROLE_ORDER_MANAGER")
-     */
-    public function delAction($id)
-    {
-		$supplier = $this->getDoctrine()
-						->getRepository('SupplierBundle:Supplier')
-						->find($id);
-						
-		if (!$supplier) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'errors' => 'No Supplier found for id '.$id);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No Supplier found for id '.$id);
-			}
-		}
-		
-		$em = $this->getDoctrine()->getEntityManager();		
-		$em->remove($supplier);
-		$em->flush();
-
-		if ($request->isXmlHttpRequest()) 
-		{
-			$result = array('has_error' => 0, 'result' => 'Supplier #'.$id.' is deleted');
-			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
-		else
-		{
-			return $this->redirect($this->generateUrl('supplier_list'));
-		}
-    }
-	
-	
-    /**
-     * @Route("/supplier/create", name="supplier_create")
-     * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER")
-     */    
-    public function createAction(Request $request)
-    {
-		$supplier = new Supplier();
-		
-		$form = $this->createFormBuilder($supplier)
-					->add('name', 'text')
-					->getForm();
-					
-		if ($request->getMethod() == 'POST')
-		{			
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$supplier = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$result = array('has_error' => 0, 'result' => 'Supplier #'.$supplier->getId().' is created');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('supplier_list'));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView());
-	}
-	
-	
-    /**
-     * @Route("/supplier/edit/{id}", name="supplier_edit")
-     * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER")
-     */    
-	public function editAction($id, Request $request)
-	{
-		$supplier = $this->getDoctrine()
-						->getRepository('SupplierBundle:Supplier')
-						->find($id);
-		
-		if (!$supplier) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'errors' => 'No Supplier found for id '.$id);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No Supplier found for id '.$id);
-			}
-		}
-		
-		$form = $this->createFormBuilder($supplier)
-					->add('name', 'text')
-					->getForm();
-					
-		if ($request->getMethod() == 'POST')
-		{
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$supplier = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest())
-				{
-					$result = array('has_error' => 0, 'result' => 'Supplier #'.$id.' is updated');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('supplier_list'));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView(), 'supplier' => $supplier);
-	}
-	
-
 	/**
 	 * @Route(	"company/{cid}/supplier", 
 	 * 			name="supplier",
 	 * 			requirements={"_method" = "GET"})
 	 * 			
 	 * @Template()
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function listAction($cid, Request $request)
 	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findAllSupplierByCompany($cid);
@@ -248,10 +120,28 @@ class SupplierController extends Controller
 	 * @Route(	"company/{cid}/supplier/{sid}", 
 	 * 			name="supplier_ajax_update", 
 	 * 			requirements={"_method" = "PUT"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, $sid, Request $request)
-	 {		 
+	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		} 
+			 
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $sid == $model['id'])
@@ -314,10 +204,28 @@ class SupplierController extends Controller
 	 * @Route(	"company/{cid}/supplier/{sid}", 
 	 * 			name="supplier_ajax_delete", 
 	 * 			requirements={"_method" = "DELETE"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxdeleteAction($cid, $sid, Request $request)
 	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$supplier = $this->getDoctrine()
 					->getRepository('SupplierBundle:Supplier')
 					->find($sid);
@@ -347,10 +255,28 @@ class SupplierController extends Controller
 	 * @Route(	"company/{cid}/supplier", 
 	 * 			name="supplier_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
-	 * @Secure(roles="ROLE_ORDER_MANAGER")
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
 	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
