@@ -321,7 +321,7 @@ var Roles = Backbone.Collection.extend({
 	initialize: function(){},
   
 	parse: function(response) {
-		if(response.code && response.data  && (response.code == 200)){
+		if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
 			return response.data;
 		} else {
 			console.log('error role request');
@@ -337,7 +337,7 @@ var Users = Backbone.Collection.extend({
 	url: '/company/'+href[2]+'/user',
 	
 	parse: function(response) {
-		if(response.code && (response.code == 200)){
+		if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
 			return response.data;
 		} else {
 			error_fetch('Ошибка при получении пользователей');
@@ -364,7 +364,7 @@ var Restaurants = Backbone.Collection.extend({
 	initialize: function(){},
   
 	parse: function(response) {
-		if(response.code && response.data  && (response.code == 200)){
+		if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
 			return response.data;
 		} else {
 			error_fetch('Ошибка при получении ресторанов');

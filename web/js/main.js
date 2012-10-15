@@ -65,10 +65,14 @@ var href = window.location.pathname.split('/');
 var Units = Backbone.Collection.extend({
 	url: '/units',
 	initialize: function(){
-		this.fetch();
+		this.fetch({
+						error: function(){
+							error_fetch('Ошибка получения едениц измерения');
+						}
+					});
 	},
-	parse: function(response, xhr){
-		if(response.code && (response.code == 200)){
+	parse: function(response, xhr){		
+		if(response && 'code' in response && response.code == 200 && 'data' in response) {
 			return response.data;
 		} else {
 			error_fetch('Ошибка получения едениц измерения');
