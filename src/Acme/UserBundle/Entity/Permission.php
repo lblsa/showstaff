@@ -99,4 +99,14 @@ class Permission
     {
         return $this->restaurants;
     }
+
+    /**
+     * Clean restaurants
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function cleanRestaurants()
+    {
+        return $this->restaurants = new ArrayCollection();
+    }
 }

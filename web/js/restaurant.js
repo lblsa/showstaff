@@ -128,9 +128,9 @@ $(function(){
 								'</td>'),
 		
 		events: {
-			"change input.name":  "save",
-			"change input.address":  "save",
-			"change input.director":  "save",
+			"change .name":  "save",
+			"change .address":  "save",
+			"change .director":  "save",
 			'click .remove': 'remove',
 		},
 		

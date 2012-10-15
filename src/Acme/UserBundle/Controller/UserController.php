@@ -53,6 +53,36 @@ class UserController extends Controller
     public function logoutAction()
     {
 	}
+
+    /**
+     * @Route("/role", name="roles", requirements={"_method" = "GET"})
+     * @Template()
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+     */
+    public function listRolesAction(Request $request)  // only COMPANY_ADMIN
+    {
+		$available_roles = $this->getDoctrine()
+							->getRepository('AcmeUserBundle:Role')
+							->findBy(array('role' => array(
+										'ROLE_RESTAURANT_ADMIN',
+										'ROLE_ORDER_MANAGER',
+										'ROLE_MANAGER'))); // available roles for company admin
+
+		if ($available_roles)
+		{
+			foreach ($available_roles AS $r)
+				$roles_array[] = array( 'id' => $r->getId(),
+										'name' => $r->getName(),
+										'role' => $r->getRole(), );
+				
+		}
+		
+		$code = 200;
+		$result = array('code' => $code, 'data' => $roles_array);
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+	}
 	
     /**
      * @Route("/user", name="user",	requirements={"_method" = "GET"})
@@ -116,6 +146,164 @@ class UserController extends Controller
 		}
 
 		return array( 'users_json' => json_encode($users_array) );
+	}
+
+	/**
+	 * @Route(	"/company/{cid}/user/{uid}", name="user_ajax_update_manag", requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+	 */
+	 public function ajaxupdateManagerAction($cid, $uid, Request $request)
+	 {
+		$curent_user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}		 
+		 
+		$model = (array)json_decode($request->getContent());
+		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $uid == $model['id'])
+		{
+			$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($model['id']);
+			if (!$user)
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+						
+			$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$cid);
+						
+			if (!$company) 
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No company found for id '.(int)$cid);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+			
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			if (!$permission) // Если еще не существаволо то создадим
+			{
+				$permission = new Permission();
+				$permission->setUser($user);
+				$permission->setCompany($company);
+			} else {
+				$permission->setCompany($company);	
+			}
+			
+			//* User
+			$validator = $this->get('validator');
+
+			if (isset($model['fullname']) && strlen($model['fullname']))
+				$user->setFullname($model['fullname']);
+			
+			if (isset($model['username']) && strlen($model['username']))
+				$user->setUsername($model['username']);
+				
+			if (isset($model['email']) && strlen($model['email']))
+				$user->setEmail($model['email']);
+			
+			if (isset($model['password']) && strlen($model['password']))
+				$user->setPassword($model['password']);
+				
+			$errors = $validator->validate($user);
+			
+			if (count($errors) > 0) {
+				
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
+					
+				$code = 400;
+				$result = array('code' => $code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				// шифруем и устанавливаем пароль для пользователя,
+				// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)
+					
+				$user->setSalt(md5(time()));
+				$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
+				$password = $encoder->encodePassword($model['password'], $user->getSalt());
+				$user->setPassword($password);
+				
+				if (isset($model['roles']) && is_array($model['roles']) && count($model['roles'])>0)
+				{
+					$user->cleanRoles();
+					$available_roles = $this->getDoctrine()
+											->getRepository('AcmeUserBundle:Role')
+											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
+																			'ROLE_ORDER_MANAGER',
+																			'ROLE_MANAGER')));
+					$roles = array();
+					foreach ($available_roles AS $r)
+						if (in_array($r->getId(), $model['roles']))
+						{
+							$user->addRole($r);
+							$roles[] = $r->getId();
+						}
+				}
+			
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($user);
+				$em->flush();
+				
+				if (isset($model['restaurants']) && is_array($model['restaurants']) && count($model['restaurants'])>0)
+				{
+					$permission->cleanRestaurants();
+					$available_restaurants = $this->getDoctrine()
+										->getRepository('SupplierBundle:Restaurant')
+										->findByCompany($permission->getCompany()->getId());
+					$restaurants = array();
+					foreach ($available_restaurants AS $r)
+						if (in_array($r->getId(), $model['restaurants']))
+						{
+							$permission->addRestaurant($r);
+							$restaurants[] = $r->getId();
+						}
+				}
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($permission);
+				$em->flush();
+
+
+				$code = 200;
+				$result = array(	'code' => $code, 'data' => array(	'id' => $user->getId(),
+																		'fullname' => $user->getFullname(), 
+																		'username' => $user->getUsername(), 
+																		'email' => $user->getEmail(),
+																		'restaurants' => $restaurants,
+																		'roles' => $roles,
+																	));
+				
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+		}
+		
+		$code = 400;
+		$result = array('code'=> $code, 'message' => 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
 	}
 	
 	/**
@@ -235,11 +423,137 @@ class UserController extends Controller
 		 
 	 }
 	 
+	/**
+	 * @Route(	"/company/{cid}/user", name="user_ajax_create_manag", requirements={"_method" = "POST"})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+	 */
+	public function ajaxcreateManagerAction($cid, Request $request) // create company manager
+	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		$model = (array)json_decode($request->getContent());
+		
+		if ( count($model) > 0 && isset($model['fullname']) && isset($model['username']) && isset($model['password']) )
+		{
+			$validator = $this->get('validator');
+			$new_user = new User();
+			$new_user->setFullname($model['fullname']);
+			$new_user->setUsername($model['username']);
+			$new_user->setEmail($model['email']);
+			$new_user->setPassword($model['password']);
+			$errors = $validator->validate($new_user);
+			
+			if (count($errors) > 0) {
+				
+				foreach($errors AS $error)
+					$errorMessage[] = $error->getMessage();
+					
+				$code = 400;
+				$result = array('code' => $code, 'message'=>$errorMessage);
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+				
+			} else {
+				// шифруем и устанавливаем пароль для пользователя,
+				// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)		
+				$new_user->setSalt(md5(time()));
+				$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
+				$password = $encoder->encodePassword($model['password'], $new_user->getSalt());
+				$new_user->setPassword($password);
+			
+				if (isset($model['roles']) && is_array($model['roles']) && count($model['roles'])>0)
+				{
+					$available_roles = $this->getDoctrine()
+											->getRepository('AcmeUserBundle:Role')
+											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
+																			'ROLE_ORDER_MANAGER',
+																			'ROLE_MANAGER')));
+					$roles = array();
+					foreach ($available_roles AS $r)
+						if (in_array($r->getId(), $model['roles']))
+						{
+							$new_user->addRole($r);
+							$roles[] = $r->getId();
+						}
+				}
+			
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($new_user);
+				$em->flush();
+			
+				$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+								
+				if (!$company)
+				{
+					$code = 404;
+					$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
+				
+				$permission = new Permission();
+				$permission->setUser($new_user);
+				$permission->setCompany($company);
+				if (isset($model['restaurants']) && is_array($model['restaurants']) && count($model['restaurants'])>0)
+				{
+					$available_restaurants = $this->getDoctrine()
+										->getRepository('SupplierBundle:Restaurant')
+										->findByCompany($permission->getCompany()->getId());
+					$permissions = array();
+					foreach ($available_restaurants AS $r)
+						if (in_array($r->getId(), $model['restaurants']))
+						{
+							$permission->addRestaurant($r);
+							$permissions[] = $r->getId();
+						}
+				}
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($permission);
+				$em->flush();
+				
+				$code = 200;
+				$result = array(	'code' => $code, 'data' => array(	'id' => $new_user->getId(),
+																		'fullname' => $new_user->getFullname(), 
+																		'username' => $new_user->getUsername(), 
+																		'email' => $new_user->getEmail(),
+																		'permissions' => $permissions,
+																		'roles' => $roles,
+																	));
+				
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			}
+		}
+		
+		$code = 400;
+		$result = array('code' => $code, 'message'=> 'Invalid request');
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+	}
 
 	/**
-	 * @Route(	"user", 
-	 * 			name="user_ajax_create", 
-	 * 			requirements={"_method" = "POST"})
+	 * @Route(	"user", name="user_ajax_create", requirements={"_method" = "POST"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function ajaxcreateAction(Request $request) // create company admin
@@ -248,7 +562,6 @@ class UserController extends Controller
 		
 		if ( count($model) > 0 && isset($model['fullname']) && isset($model['username']) && isset($model['password']) )
 		{
-			
 			$role_id = 'ROLE_COMPANY_ADMIN';
 			
 			$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
@@ -328,7 +641,6 @@ class UserController extends Controller
 				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				$response->sendContent();
 				die();
-			
 			}
 		}
 		
@@ -337,9 +649,56 @@ class UserController extends Controller
 		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		$response->sendContent();
 		die();
-	 
 	}
 	
+	/**
+	 * @Route(	"/company/{cid}/user/{uid}", name="user_ajax_delete_manag", requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+	 */
+	public function ajaxdeleteManagerAction($cid, $uid, Request $request)
+	{
+		
+		$curent_user = $this->get('security.context')->getToken()->getUser();
+		
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}	
+		
+		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($uid);
+					
+		if (!$user)
+		{
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		
+
+		$em = $this->getDoctrine()->getEntityManager();				
+		$em->remove($user);
+		$em->flush();
+		
+		$code = 200;
+		$result = array('code' => $code, 'data' => $uid);
+		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$response->sendContent();
+		die();
+	}
+
 	
 	/**
 	 * @Route(	"/user/{uid}", 
@@ -387,25 +746,28 @@ class UserController extends Controller
 		
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 		
-		if (!$permission)
+		if (false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			
+			if (!$permission)
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden');
+				}
 			} else {
-				throw new AccessDeniedHttpException('Forbidden');
+				$company = $permission->getCompany();
+				return array('cid' => $company->getId());
 			}
-		} else {
-			$company = $permission->getCompany();
-			return array('cid' => $company->getId());
 		}
-		
 		return array();
 	}
 	
@@ -469,20 +831,22 @@ class UserController extends Controller
 		if ($permissions)
 		{
 			foreach ($permissions AS $p)
-			{				
+			{
 				$available_role = true;
 				foreach ($p->getUser()->getRoles() AS $r)
-				{
-					$role = $r->getRole();
-					//var_dump($role);
-					if ($r->getRole() == 'ROLE_SUPER_ADMIN' || $r->getRole() == 'ROLE_COMPANY_ADMIN')
+					if ($r->getRole() == 'ROLE_COMPANY_ADMIN')
 						$available_role = false;
-				}
+						
 				if ($available_role)
 				{
+					$restaurants = array();
+					foreach ($p->getRestaurants() AS $r)
+						$restaurants[] = $r->getId();
+					
+					
 					$roles = array();
 					foreach ($p->getUser()->getRoles() AS $r)
-						$roles[] = $r->getRole();
+						$roles[] = $r->getId();
 					
 					$users_array[] = array( 	'id'		=> $p->getUser()->getId(),
 												'username'	=> $p->getUser()->getUsername(), 
@@ -490,14 +854,23 @@ class UserController extends Controller
 												'company'	=> $cid,
 												'fullname'	=> $p->getUser()->getFullname(),
 												'roles'		=> $roles,
+												'restaurants'		=> $restaurants,
 											);
 				}
 			}
 		}
 
+		if ($request->isXmlHttpRequest()) 
+		{
+			$code = 200;
+			$result = array('code' => $code, 'data' => $users_array);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+
 		return array(	'users_json' => json_encode($users_array),
-						'company' => $company,
-						'roles_json' => json_encode($roles_array));
+						'company' => $company );
 	}
 	
 	

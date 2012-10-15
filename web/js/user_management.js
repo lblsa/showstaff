@@ -1,3 +1,4 @@
+
 var sort = 'asc';
 // view list users
 var ViewUsers = Backbone.View.extend({
@@ -27,11 +28,12 @@ var ViewUsers = Backbone.View.extend({
 			});
 			
 		} else {
-			$('.users').html('<tr class="alert_row"><td colspan="5"><div class="alert">'+
+			$('.users').html('<tr class="alert_row"><td colspan="6"><div class="alert">'+
 								'<button type="button" class="close" data-dismiss="alert">×</button>'+
 								'У вас еще нет пользователей</div></td></tr>');
 			$('#preloader').fadeOut('fast');
 		}
+		return this;
 	}
 });
 
@@ -41,20 +43,18 @@ var ViewUser = Backbone.View.extend({
 	tagName: "tr",
 	className: "user",
 	
-	template: _.template(	'<td class="u_fullname" rel="tooltip" data-placement="bottom" data-original-title="Double click for edit">'+
-								'<%= fullname %>'+
-							'</td>'+
-							'<td class="u_username"><%= username %></td>'+
-							'<td class="u_email"><%= email %></td>'+
+	template: _.template(	'<td class="u_fullname"><input type="text" class="input-large fullname span2" name="fullname" value="<%= fullname %>"></td>'+
+							'<td class="u_username"><input type="number" class="input-large username span2" name="username" value="<%= username %>"></td>'+
+							'<td class="u_email"><input type="email" class="input-large email span2" name="email" value="<%= email %>"></td>'+
+							'<td class="u_pass"><input type="password" class="input-large password span2" name="password" value=""></td>'+
 							'<td class="u_role"></td>'+
+							'<td class="u_restaurant"></td>'+
 							'<td class="u_controls">'+
 								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 							'</td>'),
 							
 	events: {
-		'dblclick': 'edit',
-		'click .save': 'save',
-		'click .cancel': 'cancel',
+		'change input':  'save',
 		'click .remove': 'remove',
 	},
 	
@@ -75,46 +75,31 @@ var ViewUser = Backbone.View.extend({
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
 		var u_role = $('.u_role', this.$el);
-		var user_model = this.model;
-		u_role.html('');
-		roles.each(function(r){
-			var view = new RolesView({model:r});
-			u_role.append(view.render().el);
-			if (_.contains(user_model.attributes.roles, r.id)) {
-				view.$el.addClass('label-success');
-			}
-		})
-		$('.user').tooltip();
-		$('#preloader').fadeOut('fast'); 
-		return this;
-	},
-	
-	edit: function() {
-		$('.u_fullname', this.el).html('<input type="text" class="input-large fullname" name="name" value="">');
-		$('.u_fullname input', this.el).val(this.model.get('fullname'));
-		
-		$('.u_username', this.el).html('<input type="number" class="input-large username" name="name" value="">');
-		$('.u_username input', this.el).val(this.model.get('username'));
-		
-		$('.u_email', this.el).html('<input type="email" class="input-large email" name="name" value="">');
-		$('.u_email input', this.el).val(this.model.get('email'));
+		var u_restaurant = $('.u_restaurant', this.$el);
 		
 		var user_model = this.model;
-		var u_role = $('.u_role', this.el);
+		
 		u_role.html('');
 		roles.each(function(r){
-			var view = new RolesCheckboxView({model:r});
+			var view = new RoleView({model:r});
 			u_role.append(view.render().el);
 			if (_.contains(user_model.attributes.roles, r.id)) {
 				$('input', view.$el).attr('checked','checked');
 			}
 		})
 		
+		u_restaurant.html('');
+		restaurants.each(function(r){
+			var view = new RestaurantView({model:r});
+			u_restaurant.append(view.render().el);
+			if (_.contains(user_model.attributes.restaurants, r.id)) {
+				$('input', view.$el).attr('checked','checked');
+			}
+		})
 		
-		$('.u_controls', this.el).html(	'<p class="form-inline">'+
-										'<button class="save btn btn-mini btn-success">save</button>'+
-										' <button class="cancel btn btn-mini btn-danger">cancel</button></p>');
 		
+		$('#preloader').fadeOut('fast'); 
+		return this;
 	},
 	
 	save: function() {
@@ -125,10 +110,17 @@ var ViewUser = Backbone.View.extend({
 			roles.push(parseInt($(this).val()));	
 		});
 		
+		var restaurants = [];
+		$(".restaurant_upd[name='restaurants[]']:checked", this.el).each(function() {
+			restaurants.push(parseInt($(this).val()));	
+		});
+		
 		this.model.save({	fullname: $('.fullname', this.el).val(), 
 							username: $('.username', this.el).val(), 
-							email: $('.email', this.el).val(), 	
-							roles: roles, 	
+							email: $('.email', this.el).val(), 
+							password: $('.password', this.el).val(), 
+							roles: roles,
+							restaurants: restaurants,
 						},{wait: true});
 	},
 	
@@ -158,8 +150,8 @@ var UserModel = Backbone.Model.extend({
 
 				   $('#preloader').fadeOut('fast'); 
 				   $('.alert-error strong').html(' (' + resp.message + '). ');
-				   $(".alert-error").clone().appendTo('#form_add');
-				   $('#form_add .alert-error').fadeIn();
+				   $(".alert-error").clone().appendTo('.forms');
+				   $('.forms .alert-error').fadeIn();
 				   users.remove(model, {silent:true});
 				   return;
 				   
@@ -175,9 +167,18 @@ var UserModel = Backbone.Model.extend({
 					   $('.username_add').val('');
 					   $('.fullname_add').val('');
 					   $('.email_add').val('');
-					   $(".alert-success").clone().appendTo('#form_add');
-					   $("#form_add .alert-success strong").html('Пользователь добавлен');
-					   $("#form_add .alert-success").fadeIn()
+					   $('.pass_add').val('');
+						$(".forms input[name='roles[]']:checked").each(function() {
+							$(this).removeAttr('checked');
+						});
+						
+						$(".forms input[name='restaurants[]']:checked").each(function() {
+							$(this).removeAttr('checked');
+						});
+					   
+					   $(".alert-success").clone().appendTo('.forms');
+					   $(".forms .alert-success strong").html('Пользователь добавлен');
+					   $(".forms .alert-success").fadeIn()
 
 					   //  for sort reload
 					   view_users.remove()
@@ -189,8 +190,8 @@ var UserModel = Backbone.Model.extend({
 					   
 					   $('#preloader').fadeOut('fast'); 
 					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-					   $(".alert-error").clone().appendTo('#form_add');
-					   $('#form_add .alert-error').fadeIn();
+					   $(".alert-error").clone().appendTo('.forms');
+					   $('.forms .alert-error').fadeIn();
 					   users.remove(model, {silent:true});   
 					   return;
 				   }
@@ -231,9 +232,12 @@ var UserModel = Backbone.Model.extend({
         if (method == 'update') {
 			userOptions.success = function(resp, status, xhr) {
 				if (resp != null && typeof(resp.message) != 'undefined') {
-				   $('#preloader').fadeOut('fast'); 
-				   $('.u_role .alert', model.view.el).remove();
-				   $('.u_role', model.view.el).append('<div class="alert">'+
+					
+					model.set(model.previousAttributes(), {silent: true});
+					model.view.render();
+					$('#preloader').fadeOut('fast'); 
+					$('.u_role .alert', model.view.el).remove();
+					$('.u_role', model.view.el).append('<div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'Ошибка (' + resp.message + '). '+
 													'Попробуйте еще раз или обратитесь к администратору.</div>');
@@ -242,15 +246,10 @@ var UserModel = Backbone.Model.extend({
 				   if (resp != null && typeof(resp.data) != 'undefined') {
 					   model.set(resp.data,{silent: true});
 					   model.view.render();
-					   users.sort({silent: true});
-					   
-					   view_users.remove()
-					   view_users = new ViewUsers({collection: users});
-					   $('#user_list').append(view_users.render().el);
-					   view_users.renderAll()
-					   
 					   return;
 				   } else {
+					   model.set(model.previousAttributes(), {silent: true});
+					   model.view.render();
 					   $('.u_role .alert', model.view.el).remove();
 					   $('#preloader').fadeOut('fast'); 
 					   $('.u_role', model.view.el).append('<div class="alert">'+
@@ -295,7 +294,7 @@ var OptionCompaies = Backbone.View.extend({
 /**********************************************
  * Role for add/edit Company Manager
  **********************************************/
-var RolesCheckboxView = Backbone.View.extend({
+var RoleView = Backbone.View.extend({
 	
 	tagName: "label",
 	className: "checkbox",
@@ -310,24 +309,140 @@ var RolesCheckboxView = Backbone.View.extend({
 	},
 	
 })
-var RolesView = Backbone.View.extend({
+
+
+/****************************************
+ * Collection roles
+ ***************************************/
+var Roles = Backbone.Collection.extend({
+
+	url: '/role',
+
+	initialize: function(){},
+  
+	parse: function(response) {
+		if(response.code && response.data  && (response.code == 200)){
+			return response.data;
+		} else {
+			console.log('error role request');
+		}
+	},
+});
+
+// Collection users
+var Users = Backbone.Collection.extend({
+  
+	model: UserModel,
+  
+	url: '/company/'+href[2]+'/user',
 	
-	tagName: "span",
-	className: "label",
+	parse: function(response) {
+		if(response.code && (response.code == 200)){
+			return response.data;
+		} else {
+			error_fetch('Ошибка при получении пользователей');
+		}
+	},
+	
+	initialize: function(){
+	  this.bind('add', this.addUser);
+	},
+
+	addUser: function(user){
+	user.save({wait: true});
+	},
+  
+});
+
+/****************************************
+ * Collection restaurants
+ ***************************************/
+var Restaurants = Backbone.Collection.extend({
+
+	url: '/company/'+href[2]+'/restaurant',
+
+	initialize: function(){},
+  
+	parse: function(response) {
+		if(response.code && response.data  && (response.code == 200)){
+			return response.data;
+		} else {
+			error_fetch('Ошибка при получении ресторанов');
+		}
+	},
+});
+var RestaurantView = Backbone.View.extend({
+	
+	tagName: "label",
+	className: "checkbox",
 	
 	template: _.template('<%= name %>'),
 	
 	render: function() {
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
+		this.$el.prepend('<input type="checkbox" class="restaurant_upd" name="restaurants[]" value="'+this.model.id+'">');
 		return this;
 	},
-	
 })
 
-$(document).ready(function(){
+var users, roles, restaurants, view_users;
+
+$(function() {
+	users = new Users; 
+	roles = new Roles;
+	restaurants = new Restaurants;
+	
+	users.comparator = function(user) {
+	  return user.get("fullname");
+	};
+	
+	$(".forms .alert").remove();
+	$('#preloader').width($('#add_row').width());
+	$('#preloader').height($('#add_row').height());
+	var p = $('#add_row').position();
+	$('#preloader').css({'left':p.left, 'top': p.top});
+	$('#preloader').fadeIn('fast');
+		
+	restaurants.fetch({
+						success: function(collection, response){
+							
+							roles.fetch({
+											success: function(collection, response){
+												
+													users.fetch({	success: function(collection, response){
+																		view_users = new ViewUsers({collection: collection});
+																		$('#user_list').append(view_users.render().el);
+																		view_users.renderAll().el;
+																	}, 
+																	error: function(){
+																		error_fetch('Ошибка при получении пользователей. Обновите страницу или обратитесь к администратору');
+																	}
+
+																});
+											},
+											error: function(){
+												error_fetch('Ошибка при получении ролей пользователей. Обновите страницу или обратитесь к администратору');
+											}
+										});
+						},
+						error: function(){
+							error_fetch('Ошибка при получении ресторанов. Обновите страницу или обратитесь к администратору');
+						}
+					
+					});
+	
+	$('#add_company_admin').click(function() {
+			restaurants.each(function(restaurant){
+				$('.restaurants_add').append('<label class="checkbox">'+
+												'<input type="checkbox" class="restaurant_add" name="restaurants[]" value="'+restaurant.id+'">'+
+												restaurant.get("name")+
+											'</label><br>');
+			});
+	});
+	
 	$('.add_user').click(function() {
-		$("#form_add .alert").remove();
+		$(".forms .alert").remove();
 		$('#preloader').width($('#add_row').width());
 		$('#preloader').height($('#add_row').height());
 		var p = $('#add_row').position();
@@ -335,13 +450,22 @@ $(document).ready(function(){
 		$('#preloader').fadeIn('fast');
 		
 		var roles = [];
-		$("input[name='roles[]']:checked").each(function() {	roles.push(parseInt($(this).val()));	});
+		$(".forms input[name='roles[]']:checked").each(function() {
+			roles.push(parseInt($(this).val()));
+		});
+		
+		var restaurants = [];
+		$(".forms input[name='restaurants[]']:checked").each(function() {
+			restaurants.push(parseInt($(this).val()));
+		});
 		
 		users.add([{
 						fullname: $('.fullname_add').val(),
 						username: $('.username_add').val(),
 						email: $('.email_add').val(),
-						roles: roles
+						password: $('.pass_add').val(),
+						roles: roles,
+						restaurants: restaurants
 						}]);
 		
 		return false;

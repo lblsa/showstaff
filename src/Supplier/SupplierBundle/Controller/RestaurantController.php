@@ -21,9 +21,9 @@ class RestaurantController extends Controller
 	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function listAction($cid, Request $request)
-	{		
+	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
+
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
@@ -87,9 +87,7 @@ class RestaurantController extends Controller
 			die();
 		}
 		
-		return array(	'company' => $company,
-						'restaurants_json' => json_encode($restaurants_array)
-						);
+		return array(	'company' => $company		);
 	}
 	
 	/**
