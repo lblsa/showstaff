@@ -16,22 +16,32 @@ class RestaurantController extends Controller
 {
 	
 	/**
-	 * @Route(	"/company/{cid}/restaurant", 
-	 * 			name="restaurant",
-	 * 			requirements={"_method" = "GET"})
+	 * @Route(	"/company/{cid}/restaurant", name="restaurant",	requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function listAction($cid, Request $request)
-	{		
+	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
 		}
 		
-		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany($cid);
+		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
@@ -48,47 +58,11 @@ class RestaurantController extends Controller
 			}
 		}
 		
-		$restaurant = new Restaurant();
-		
-		$form = $this->createForm(new RestaurantType(), $restaurant);
-		
-		if ($request->getMethod() == 'POST')
-		{
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$restaurant = $form->getData();
-				$restaurant->setCompany($company);		
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($restaurant);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 200;
-					$result = array('code' => $code, 'message' => 'Restaurant #'.$restaurant->getId().' is created');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('restaurant', array('cid' => $cid)));
-				}
-			}
-		}
-		
-
-		$available_restaurants = array();
-		$user_restaurants = $user->getRestaurants();
-		
-		if ($user_restaurants)
-			foreach($user_restaurants AS $r)
-				$available_restaurants[] = $r->getId();
-		
-		$restaurants = $company->getRestaurants();
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+			$restaurants = $permission->getRestaurants();
+			
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+			$restaurants = $company->getRestaurants();
 
 		$restaurants_array = array();
 		
@@ -96,14 +70,11 @@ class RestaurantController extends Controller
 		{
 			foreach ($restaurants AS $p)
 			{
-				if (in_array($p->getId(), $available_restaurants) || $this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-				{
-					$restaurants_array[] = array(	'id' => $p->getId(),
-													'name'=> $p->getName(),
-													'address'=> $p->getAddress(),
-													'director'=> $p->getDirector(),
-													);
-				}
+				$restaurants_array[] = array(	'id' => $p->getId(),
+												'name'=> $p->getName(),
+												'address'=> $p->getAddress(),
+												'director'=> $p->getDirector(),
+												);
 			}
 		}
 		
@@ -116,162 +87,31 @@ class RestaurantController extends Controller
 			die();
 		}
 		
-		return array(	'restaurants' => $restaurants, 
-						'company' => $company,
-						'form' => $form->createView(),
-						'restaurants_json' => json_encode($restaurants_array)
-						);
-	}
-	
-    /**
-     * @Route("/company/{cid}/restaurant/{rid}/delete", name="restaurant_del")
-     * @Secure(roles="ROLE_RESTAURANT_ADMIN")
-     */
-    public function delAction($cid, $rid, Request $request)
-    {
-		$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->find($rid);
-						
-		if (!$restaurant) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'result' => 'No restaurant found for id '.$rid);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No restaurant found for id '.$rid);
-			}
-		}
-		
-		$em = $this->getDoctrine()->getEntityManager();				
-		$em->remove($restaurant);
-		$em->flush();
-			
-		if ($request->isXmlHttpRequest()) 
-		{
-			$result = array('has_error' => 0, 'result' => 'Restaurant #'.$rid.' is deleted');
-			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
-		else
-		{
-			return $this->redirect($this->generateUrl('restaurant', array('cid'=>$cid)));
-		}
-    }
-	
-    /**
-     * @Route("/company/{cid}/restaurant/{rid}/edit", name="restaurant_edit")
-	 * @Template()
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
-     */
-    public function editAction($cid, $rid, Request $request)
-    {
-		$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->findOneByIdJoinedToCompany($rid, $cid);
-						
-		if (!$restaurant) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'result' => 'No restaurant found for id '.$rid);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No restaurant found for id '.$rid);
-			}
-		}
-		
-		$company = $restaurant->getCompany();
-		
-		$form = $this->createForm(new RestaurantType(), $restaurant);
-		
-		if ($request->getMethod() == 'POST')
-		{		
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$restaurant = $form->getData();
-				$restaurant->setCompany($company);		
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($restaurant);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$result = array('has_error' => 0, 'result' => 'Restaurant #'.$rid.' is updated');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('restaurant', array('cid' => $cid)));
-				}
-			}
-		}
-
-
-		return array('restaurant' => $restaurant, 'company' => $company, 'form' => $form->createView());
-    }
-	
-    /**
-     * @Route(	"/company/{cid}/restaurant/{rid}", 
-     * 			name="restaurant_show",
-     *			requirements={"_method" = "GET"}))
-     * @Template()
-     * @Secure(roles="ROLE_RESTAURANT_ADMIN")
-     */
-    public function showAction($cid, $rid, Request $request)
-    {
-		$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->findOneByIdJoinedToCompany($rid, $cid);
-						
-		if (!$restaurant) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'result' => 'No restaurant found for id '.$rid);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No restaurant found for id '.$rid);
-			}
-		}
-		
-		$company = $restaurant->getCompany();
-	
-		return array('company' => $company, 'restaurant' => $restaurant);
+		return array(	'company' => $company		);
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}", 
-	 * 			name="restaurant_ajax_update", 
-	 * 			requirements={"_method" = "PUT"})
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
+	 * @Route(	"company/{cid}/restaurant/{rid}", name="restaurant_ajax_update", requirements={"_method" = "PUT"})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, $rid, Request $request)
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания
-			
-			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
 		}
 		
 		$model = (array)json_decode($request->getContent());
@@ -338,22 +178,28 @@ class RestaurantController extends Controller
 	 }
 	 
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}", 
-	 * 			name="restaurant_ajax_delete", 
-	 * 			requirements={"_method" = "DELETE"})
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
+	 * @Route(	"company/{cid}/restaurant/{rid}", name="restaurant_ajax_delete", requirements={"_method" = "DELETE"})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxdeleteAction($cid, $rid, Request $request)
 	{
 			
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания
-			
-			if (!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER')) //Если у вас нет прав "Менеджера по закупкам" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
 		}
 		
 		$restaurant = $this->getDoctrine()
@@ -385,18 +231,26 @@ class RestaurantController extends Controller
 	 * @Route(	"company/{cid}/restaurant", 
 	 * 			name="restaurant_ajax_create", 
 	 * 			requirements={"_method" = "POST"})
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN")
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
 	{	
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')) //Если у вас нет прав "супер админа" то проверим
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 		{
-			$this->checkUserRightsToCompany($cid, $request, $user); //ваша ли это компания 
-			
-			if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')) //Если у вас нет прав "админа компании" то проверим		
-				$this->checkUserRightsToRestaurant($rid, $request, $user); //ваш ли это ресторан
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
 		}
 		
 		$company = $this->getDoctrine()
@@ -462,23 +316,6 @@ class RestaurantController extends Controller
 		$response->sendContent();
 		die();
 	 
-	}
-
-	private function checkUserRightsToCompany($cid, $request, $user)
-	{
-		if ($user->getCompany()->getId() != $cid) // , то проверим из какой компании наш ROLE_RESTAURANT_ADMIN
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
 	}
 	
 	private function checkUserRightsToRestaurant($rid, $request, $user)

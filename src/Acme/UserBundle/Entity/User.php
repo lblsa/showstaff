@@ -203,16 +203,6 @@ class User implements UserInterface, \Serializable
     }
 
     /**
-     * Clean roles
-     *
-     * @param Acme\UserBundle\Entity\Role $roles
-     */
-    public function cleanRoles()
-    {
-        $this->roles = array();
-    }
-
-    /**
      * Add role
      *
      * @param Acme\UserBundle\Entity\Role $role
@@ -232,7 +222,17 @@ class User implements UserInterface, \Serializable
         return $this->roles->toArray();
     }
     
-    
+
+    /**
+     * Clean roles
+     *
+     * @return Doctrine\Common\Collections\Collection 
+     */
+    public function cleanRoles()
+    {
+        return $this->roles = new ArrayCollection();
+    }
+
     /**
      * Gets the user roles.
      *

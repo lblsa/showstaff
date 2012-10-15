@@ -232,7 +232,7 @@ $(function(){
 	  
 		model: SupplierModel,
 
-		url: '/company/'+parseInt(href[2])+'/supplier',
+		url: '/company/'+href[2]+'/supplier',
 
 		initialize: function(){
 			this.bind('add', this.addSupplier);
