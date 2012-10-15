@@ -24,10 +24,29 @@ class OrderController extends Controller
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
      * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER")
+     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
     public function listAction($cid, $booking_date, Request $request)
     {
+		$user = $this->get('security.context')->getToken()->getUser();
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 		
@@ -144,10 +163,28 @@ class OrderController extends Controller
      * 			requirements={"_method" = "PUT", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
      * @Template()
-     * @Secure(roles="ROLE_ORDER_MANAGER")
+     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
 	public function saveAction($cid, $booking_date, Request $request)
 	{
+		$user = $this->get('security.context')->getToken()->getUser();
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {

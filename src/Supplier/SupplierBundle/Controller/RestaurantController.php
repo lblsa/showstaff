@@ -18,7 +18,7 @@ class RestaurantController extends Controller
 	/**
 	 * @Route(	"/company/{cid}/restaurant", name="restaurant",	requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN")
+	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER")
 	 */
 	public function listAction($cid, Request $request)
 	{
@@ -63,6 +63,9 @@ class RestaurantController extends Controller
 			
 		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
 			$restaurants = $company->getRestaurants();
+			
+		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+			$restaurants = $company->getRestaurants();
 
 			
 		$restaurants_array = array();
@@ -76,8 +79,7 @@ class RestaurantController extends Controller
 												
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))	
 		{
-			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(
-																							'restaurants' => $restaurants_array,
+			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
 																							'company' => $company 	));
 			die();
 		}
@@ -85,9 +87,6 @@ class RestaurantController extends Controller
 		
 		if ($request->isXmlHttpRequest()) 
 		{
-			
-
-			
 			$code = 200;
 			$result = array('code' => $code, 'data' => $restaurants_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));

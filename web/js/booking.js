@@ -124,9 +124,9 @@ var ViewBookings = Backbone.View.extend({
 		
 		} else {
 		
-			this.$('.bookings').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
+			$('.bookings').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
-												'У данного поставщика еще нет продуктов</div></td></tr>');
+												'У данного ресторана нет заказов на текущую дату</div></td></tr>');
 		}
 		
 		return this;
@@ -294,10 +294,15 @@ var BookingModel = Backbone.Model.extend({
 					if ($('.product_add option').length == 0)
         				$('.create, .forms').fadeOut();
 					
+					$('.bookings .alert_row').remove();
+					
 					var view = new ViewBooking({model:model});
 					var content = view.render().el;
 					$('#bookin_list .bookings').prepend(content);
 					$("#up .alert-success").clone().appendTo('#bookin_list .forms');
+					$('#bookin_list .forms .alert-success').css('float','none');
+					$('.controls').css('float','none');
+					
 					$('#bookin_list .forms .alert-success').fadeIn();
 				    
 					$('#bookin_list .amount_add').val('');
@@ -373,7 +378,7 @@ var ContentBooking = Backbone.Collection.extend({
 		if (typeof(href[6])!='undefined')
 			return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
 		else
-			return '/company/'+href[2]+'/restaurant/'+href[4]+'/order';
+			return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
 	},
   
 	parse: function(response){
@@ -397,13 +402,13 @@ var ContentBooking = Backbone.Collection.extend({
 var products = new Products;
 	
 var edit_mode = true;
-var bookings;
+var bookings, view_content;
 
 $(function(){
 	
 	bookings = new ContentBooking({}, {units:units}); // init collection
 
-	var view_content = new ViewBookings({collection: bookings}); // initialize view
+	view_content = new ViewBookings({collection: bookings}); // initialize view
 
 
 	bookings.comparator = function(booking) {
@@ -425,8 +430,9 @@ $(function(){
 	
 	products.fetch({	success:function(){
 							
-									bookings.fetch({	success:function(){
+									bookings.fetch({	success:function(collection, response){
 															console.log('success');
+															
 														},
 														error:function(){
 															console.log('error');
@@ -461,8 +467,7 @@ $(function(){
         if ($('.product_add option').length == 0)
         	$('.create, .forms').fadeOut();
     })
-    
-	$('.product_add').html('');
+    	
     products.each(function(p){
 		if (p.attributes.use == 0) {
 			var view = new OptionProducts({model:p});
@@ -470,8 +475,8 @@ $(function(){
 		}
     });
     
-    if ($('.product_add option').length == 0)
-    	$('.create, .forms').fadeOut();
+   // if ($('.product_add option').length == 0)
+   // 	$('.create, .forms').fadeOut();
     
     
 	$('.add_booking').click(function(){

@@ -47,7 +47,7 @@ class OrderItemController extends Controller
 		}
 		
 		// check restaurant {rid} for admin restaurant
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
 		{
 			$restaurants = $permission->getRestaurants();
 			if (!$restaurants)
@@ -219,7 +219,10 @@ class OrderItemController extends Controller
 		
 		
 		// check restaurant {rid} for admin restaurant
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
+				!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
+				!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
+			)
 		{
 			$restaurants = $permission->getRestaurants();
 			if (!$restaurants)
@@ -423,7 +426,10 @@ class OrderItemController extends Controller
 		}
 		
 		// check restaurant {rid} for admin restaurant
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
+				!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
+				!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
+			)
 		{
 			$restaurants = $permission->getRestaurants();
 			if (!$restaurants)
@@ -544,11 +550,10 @@ class OrderItemController extends Controller
 	 * 			name="OrderItem_ajax_update", 
 	 * 			requirements={	"_method" = "PUT", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={"booking_date" = 0})
-	 * 			)
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxupdateAction($cid, $rid, $booking_date, $bid, Request $request)
-	{
+	{ 
 		$user = $this->get('security.context')->getToken()->getUser();
 				
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -568,7 +573,10 @@ class OrderItemController extends Controller
 		}
 		
 		// check restaurant {rid} for admin restaurant
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
+				!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
+				!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
+			)
 		{
 			$restaurants = $permission->getRestaurants();
 			if (!$restaurants)
@@ -610,7 +618,7 @@ class OrderItemController extends Controller
 
 		
 		$model = (array)json_decode($request->getContent());
-		
+		//print_r($model); 	print_r($bid);	die();
 		if	(	count($model) > 0 && 
 				isset($model['id']) && 
 				is_numeric($model['id']) && 
