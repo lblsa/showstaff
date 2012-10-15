@@ -242,6 +242,7 @@ class UserController extends Controller
 				$password = $encoder->encodePassword($model['password'], $user->getSalt());
 				$user->setPassword($password);
 				
+				$roles = array();
 				if (isset($model['roles']) && is_array($model['roles']) && count($model['roles'])>0)
 				{
 					$user->cleanRoles();
@@ -250,7 +251,7 @@ class UserController extends Controller
 											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
 																			'ROLE_ORDER_MANAGER',
 																			'ROLE_MANAGER')));
-					$roles = array();
+					
 					foreach ($available_roles AS $r)
 						if (in_array($r->getId(), $model['roles']))
 						{
@@ -263,13 +264,14 @@ class UserController extends Controller
 				$em->persist($user);
 				$em->flush();
 				
-				if (isset($model['restaurants']) && is_array($model['restaurants']) && count($model['restaurants'])>0)
+				$restaurants = array();
+				if (isset($model['restaurants']) && is_array($model['restaurants']))
 				{
 					$permission->cleanRestaurants();
 					$available_restaurants = $this->getDoctrine()
 										->getRepository('SupplierBundle:Restaurant')
 										->findByCompany($permission->getCompany()->getId());
-					$restaurants = array();
+					
 					foreach ($available_restaurants AS $r)
 						if (in_array($r->getId(), $model['restaurants']))
 						{
@@ -476,7 +478,8 @@ class UserController extends Controller
 				$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
 				$password = $encoder->encodePassword($model['password'], $new_user->getSalt());
 				$new_user->setPassword($password);
-			
+				
+				$roles = array();
 				if (isset($model['roles']) && is_array($model['roles']) && count($model['roles'])>0)
 				{
 					$available_roles = $this->getDoctrine()
@@ -484,7 +487,7 @@ class UserController extends Controller
 											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
 																			'ROLE_ORDER_MANAGER',
 																			'ROLE_MANAGER')));
-					$roles = array();
+					
 					foreach ($available_roles AS $r)
 						if (in_array($r->getId(), $model['roles']))
 						{
@@ -511,17 +514,19 @@ class UserController extends Controller
 				$permission = new Permission();
 				$permission->setUser($new_user);
 				$permission->setCompany($company);
+				
+				$restaurants = array();
 				if (isset($model['restaurants']) && is_array($model['restaurants']) && count($model['restaurants'])>0)
 				{
 					$available_restaurants = $this->getDoctrine()
 										->getRepository('SupplierBundle:Restaurant')
 										->findByCompany($permission->getCompany()->getId());
-					$permissions = array();
+					
 					foreach ($available_restaurants AS $r)
 						if (in_array($r->getId(), $model['restaurants']))
 						{
 							$permission->addRestaurant($r);
-							$permissions[] = $r->getId();
+							$restaurants[] = $r->getId();
 						}
 				}
 				
@@ -534,7 +539,7 @@ class UserController extends Controller
 																		'fullname' => $new_user->getFullname(), 
 																		'username' => $new_user->getUsername(), 
 																		'email' => $new_user->getEmail(),
-																		'permissions' => $permissions,
+																		'restaurants' => $restaurants,
 																		'roles' => $roles,
 																	));
 				
