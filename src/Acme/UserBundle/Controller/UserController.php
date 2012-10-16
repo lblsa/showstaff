@@ -162,7 +162,7 @@ class UserController extends Controller
 		
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
 
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 		{
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -439,7 +439,7 @@ class UserController extends Controller
 		
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 		{
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -671,7 +671,7 @@ class UserController extends Controller
 		
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
 
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 		{
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -797,7 +797,7 @@ class UserController extends Controller
 		
 		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 		
-		if (!$permission || $permission->getCompany()->getId() != $cid)
+		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN'))
 		{
 			if ($request->isXmlHttpRequest()) 
 			{
