@@ -311,7 +311,6 @@ $(function(){
 				return response.data;
 			} else {
 				error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
-				return null
 			}
 		},
 			

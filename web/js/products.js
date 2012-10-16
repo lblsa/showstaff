@@ -254,7 +254,7 @@ $(function(){
 	  
 		model: ProductModel,
 	  
-		url: '/company/'+parseInt(href[2])+'/product',
+		url: '/company/'+href[2]+'/product',
 		  
 		initialize: function(models, units){
 			
