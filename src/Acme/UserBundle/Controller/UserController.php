@@ -64,9 +64,9 @@ class UserController extends Controller
 		$available_roles = $this->getDoctrine()
 							->getRepository('AcmeUserBundle:Role')
 							->findBy(array('role' => array(
-										'ROLE_RESTAURANT_ADMIN',
-										'ROLE_ORDER_MANAGER',
-										'ROLE_MANAGER'))); // available roles for company admin
+															'ROLE_RESTAURANT_ADMIN',
+															'ROLE_ORDER_MANAGER',
+															'ROLE_MANAGER'))); // available roles for company admin
 
 		if ($available_roles)
 		{
@@ -140,6 +140,11 @@ class UserController extends Controller
 			$code = 200;
 			$result = array('code' => $code, 'data' => $users_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+			header("Cache-Control: post-check=0, pre-check=0", false);
+			header("Pragma: no-cache");// HTTP/1.0
 			$response->sendContent();
 			die();
 		}
@@ -741,7 +746,7 @@ class UserController extends Controller
 	/**
 	 * @Route(	"/", name="start_page" )
 	 * @Template()
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_SUPER_ADMIN")
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_SUPER_ADMIN, ROLE_ADMIN")
 	 */
 	public function indexAction(Request $request)
 	{
@@ -749,7 +754,6 @@ class UserController extends Controller
         $session = $request->getSession();
 		
 		$user = $this->get('security.context')->getToken()->getUser();
-		
 		
 		if (false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
@@ -761,7 +765,7 @@ class UserController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));					
 					$response->sendContent();
 					die();
 				} else {
@@ -772,6 +776,9 @@ class UserController extends Controller
 				return array('cid' => $company->getId());
 			}
 		}
+		
+
+		
 		return array();
 	}
 	
@@ -869,6 +876,11 @@ class UserController extends Controller
 			$code = 200;
 			$result = array('code' => $code, 'data' => $users_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+			header("Cache-Control: post-check=0, pre-check=0", false);
+			header("Pragma: no-cache");// HTTP/1.0
 			$response->sendContent();
 			die();
 		}

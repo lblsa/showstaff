@@ -71,7 +71,6 @@
 	{% endif %}
 
 	{% if is_granted('ROLE_COMPANY_ADMIN') %}
-	<!-- Управляющий !некоторыми ресторанами компании-->
 		{% if cid is defined %}
 			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 			<li class="span4 ">
