@@ -18,7 +18,7 @@ class RestaurantController extends Controller
 	/**
 	 * @Route(	"/company/{cid}/restaurant", name="restaurant",	requirements={"_method" = "GET"})
 	 * @Template()
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
+	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER")
 	 */
 	public function listAction($cid, Request $request)
 	{
@@ -63,20 +63,27 @@ class RestaurantController extends Controller
 			
 		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
 			$restaurants = $company->getRestaurants();
+			
+		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+			$restaurants = $company->getRestaurants();
 
+			
 		$restaurants_array = array();
 		
 		if ($restaurants)
-		{
 			foreach ($restaurants AS $p)
-			{
 				$restaurants_array[] = array(	'id' => $p->getId(),
 												'name'=> $p->getName(),
 												'address'=> $p->getAddress(),
-												'director'=> $p->getDirector(),
-												);
-			}
+												'director'=> $p->getDirector(), );
+												
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))	
+		{
+			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
+																							'company' => $company 	));
+			die();
 		}
+
 		
 		if ($request->isXmlHttpRequest()) 
 		{
@@ -315,30 +322,5 @@ class RestaurantController extends Controller
 		$response->sendContent();
 		die();
 	 
-	}
-	
-	private function checkUserRightsToRestaurant($rid, $request, $user)
-	{
-		$available_restaurants = array();
-		$user_restaurants = $user->getRestaurants();
-		
-		if ($user_restaurants)
-			foreach($user_restaurants AS $r)
-				$available_restaurants[] = $r->getId();
-				
-
-		if (!in_array($rid, $available_restaurants)) // , и проверим к какому ресторану вы назначены
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Restaurant');
-			}
-		}
 	}
 }
