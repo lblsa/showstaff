@@ -202,7 +202,7 @@ var ViewRestaurant = Backbone.View.extend({
 })
 
 $(document).ready(function(){
-	$('#group_by_supp').click(function(){
+	$(document).on('click', "#group_by_supp:not(.disabled)", function(){
 		$('.orders_by_rest').remove();
 		var view_order_by_supp = new ViewOrdersBySupplier({collection: orders});
 		$('#order_list').append(view_order_by_supp.render().el);
@@ -210,12 +210,12 @@ $(document).ready(function(){
 		
 		$('#order_list h3').html('Поставщики');
 		
-		$(this).addClass('disabled');
+		$('#group_by_supp').addClass('disabled');
 		$('#group_by_rest').removeClass('disabled');
 		return false;
 	})
 
-	$('#group_by_rest').click(function(){
+	$(document).on('click', "#group_by_rest:not(.disabled)", function(){
 		$('.order_by_supp').remove();
 		var view_order_by_rest = new ViewOrdersByRestaurant({collection: orders});
 		$('#order_list').append(view_order_by_rest.render().el);
@@ -223,7 +223,7 @@ $(document).ready(function(){
 		
 		$('#order_list h3').html('Рестораны');
 		
-		$(this).addClass('disabled');
+		$('#group_by_rest').addClass('disabled');
 		$('#group_by_supp').removeClass('disabled');
 		return false;
 	})
