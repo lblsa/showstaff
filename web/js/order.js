@@ -177,7 +177,9 @@ var ViewRestaurant = Backbone.View.extend({
 	className: "restaurant",
 	
 	template: _.template(	'<td>'+
-								'<h4 class="pull-left"> <%= name %> <span class="edit_order">( <a href="/company/<%= company %>/restaurant/<%= id %>/order">править заказ ресторана</a> )</span></h4>'+
+								'<h4 class="pull-left"> <%= name %> <span class="edit_order">( '+
+									'<a href="/company/<%= company %>/restaurant/<%= id %>/order">править заказ ресторана</a>'+
+								' )</span></h4>'+
 							'</td>'),
 	
 	initialize: function() {
@@ -188,10 +190,9 @@ var ViewRestaurant = Backbone.View.extend({
 		var content = this.template(this.model.toJSON());
 		this.$el.html(content);
 		if (edit_mode) {
-			var href = window.location.pathname.split('/');
 			if (href[href.length-1] != 'order') {
-				var link = $('.edit_order a').attr('href')+'/'+href[href.length-1];
-				$('.edit_order a').attr( 'href', link);
+				var link = $('.edit_order a', this.$el).attr('href')+'/'+href[href.length-1];
+				$('.edit_order a', this.$el).attr( 'href', link);
 			}
 		} else {
 			$('.edit_order', this.$el).remove();
