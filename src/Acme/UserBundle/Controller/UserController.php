@@ -66,7 +66,7 @@ class UserController extends Controller
 							->findBy(array('role' => array(
 															'ROLE_RESTAURANT_ADMIN',
 															'ROLE_ORDER_MANAGER',
-															'ROLE_MANAGER'))); // available roles for company admin
+															'ROLE_ADMIN'))); // available roles for company admin
 
 		if ($available_roles)
 		{
@@ -255,7 +255,7 @@ class UserController extends Controller
 											->getRepository('AcmeUserBundle:Role')
 											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
 																			'ROLE_ORDER_MANAGER',
-																			'ROLE_MANAGER')));
+																			'ROLE_ADMIN')));
 					
 					foreach ($available_roles AS $r)
 						if (in_array($r->getId(), $model['roles']))
@@ -491,7 +491,7 @@ class UserController extends Controller
 											->getRepository('AcmeUserBundle:Role')
 											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
 																			'ROLE_ORDER_MANAGER',
-																			'ROLE_MANAGER')));
+																			'ROLE_ADMIN')));
 					
 					foreach ($available_roles AS $r)
 						if (in_array($r->getId(), $model['roles']))
@@ -755,6 +755,10 @@ class UserController extends Controller
 		
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		$ROLE_ADMIN = 0;
+		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
+			$ROLE_ADMIN = 1;
+		
 		if (false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -773,13 +777,12 @@ class UserController extends Controller
 				}
 			} else {
 				$company = $permission->getCompany();
-				return array('cid' => $company->getId());
+				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN);
 			}
 		}
-		
 
-		
-		return array();
+
+			return array('ROLE_ADMIN'=>$ROLE_ADMIN);
 	}
 	
 	
@@ -822,7 +825,7 @@ class UserController extends Controller
 			die();
 		}
 		
-		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_MANAGER'))); // available roles
+		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
 
 		if ($available_roles)
 		{
