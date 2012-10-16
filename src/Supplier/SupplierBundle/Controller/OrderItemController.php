@@ -161,7 +161,7 @@ class OrderItemController extends Controller
 						->getRepository('SupplierBundle:Order')
 						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
 			
-			if(!$order)
+			if(!$order || $this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
 				$edit_mode = true;
 			else
 			{
@@ -284,22 +284,24 @@ class OrderItemController extends Controller
 		
 		$company = $restaurant->getCompany();
 		
-		$order = $this->getDoctrine()
-					->getRepository('SupplierBundle:Order')
-					->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-		
-		if($order)
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
 		{
-			if($order->getCompleted())
+			$order = $this->getDoctrine()
+						->getRepository('SupplierBundle:Order')
+						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
+			
+			if($order)
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Order is completed. You can not create order.');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				if($order->getCompleted())
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Order is completed. You can not create order.');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
 			}
 		}
-		
 		
 		$model = (array)json_decode($request->getContent());
 		
@@ -483,23 +485,23 @@ class OrderItemController extends Controller
 			$response->sendContent();
 			die();
 		}
-		 
-		$order = $this->getDoctrine()
-					->getRepository('SupplierBundle:Order')
-					->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
 		
-		if($order)
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
 		{
-			if($order->getCompleted())
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
+			$order = $this->getDoctrine()
+						->getRepository('SupplierBundle:Order')
+						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+			
+			if($order)
+				if($order->getCompleted())
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				}
 		}
-		
 		
 		$restaurant = $this->getDoctrine()
 					->getRepository('SupplierBundle:Restaurant')
@@ -651,21 +653,22 @@ class OrderItemController extends Controller
 				$response->sendContent();
 				die();
 			}
-			 
-			$order = $this->getDoctrine()
-						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
-						
-			if($order)
+			
+			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
 			{
-				if($order->getCompleted())
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
+				$order = $this->getDoctrine()
+							->getRepository('SupplierBundle:Order')
+							->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+							
+				if($order)
+					if($order->getCompleted())
+					{
+						$code = 403;
+						$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
+						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						$response->sendContent();
+						die();
+					}
 			}
 			
 			$restaurant = $this->getDoctrine()
