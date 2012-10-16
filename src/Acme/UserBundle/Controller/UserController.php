@@ -909,14 +909,13 @@ class UserController extends Controller
 		if (count($data) > 0 && isset($data['feedback_message']) && $data['feedback_message'] != '')
 		{
 			$message = \Swift_Message::newInstance()
-				->setSubject('Error Report')
+				->setSubject($data['feedback_message'])
 				->setFrom('tester@showstaff.ru')
-				->setTo('roman.efimushkin@gmail.com')
-				->setCc(array('vladimir.stasevich@gmail.com', 'x+1731174194271@mail.asana.com'))
+				->setTo(array('x+1226812676413@mail.asana.com', 'vladimir.stasevich@gmail.com'))
 				->setBody(	$this->renderView(	'AcmeUserBundle:User:email_error_report.txt.twig',
 												array(	'feedback_message' => $data['feedback_message'],
-														'url' => 'http://'.$_SERVER['HTTP_HOST'].$data['url'],
-														'date' => date('Y-m-d H:i')	)));
+                                                        'username' => 'TODO',
+														'url' => 'http://'.$_SERVER['HTTP_HOST'].$data['url'] )));
 			$this->get('mailer')->send($message);
 
 			$code = 200;
