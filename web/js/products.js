@@ -294,7 +294,7 @@ $(function(){
 	products.fetch({	error:function(){
 								$('.products').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
-												'Некорркектный ответ, обновите страницу или обратитесь к администратору</div></td></tr>');
+												'Некорректный ответ, обновите страницу или обратитесь к администратору</div></td></tr>');
 								$('#preloader').fadeOut('fast');	
 							}
 	});

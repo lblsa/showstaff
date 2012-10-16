@@ -73,24 +73,26 @@
 	{% if is_granted('ROLE_COMPANY_ADMIN') %}
 		{% if cid is defined %}
 			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
-			<li class="span4 ">
-				<div class=" thumbnail">
-					<div class="caption">
-						<h4>Управление ресторанами</h4>
-						<p>Список ресторанов</p>
-						<p><a class="btn" href="{{ path('restaurant', {'cid': cid }) }}">Смотреть список ресторанов »</a></p>
+				<li class="span4 ">
+					<div class=" thumbnail">
+						<div class="caption">
+							<h4>Управление ресторанами</h4>
+							<p>Список ресторанов</p>
+							<p><a class="btn" href="{{ path('restaurant', {'cid': cid }) }}">Смотреть список ресторанов »</a></p>
+						</div>
 					</div>
-				</div>
-			</li>
-			<li class="span4 ">
-				<div class=" thumbnail">
-					<div class="caption">
-						<h4>Управление менеджерами</h4>
-						<p>Список пользователей</p>
-						<p><a class="btn" href="{{ path('user_management', {'cid': cid }) }}">Смотреть список пользователей »</a></p>
+				</li>
+				{% if ROLE_ADMIN == 0 %}
+				<li class="span4 ">
+					<div class=" thumbnail">
+						<div class="caption">
+							<h4>Управление менеджерами</h4>
+							<p>Список пользователей</p>
+							<p><a class="btn" href="{{ path('user_management', {'cid': cid }) }}">Смотреть список пользователей »</a></p>
+						</div>
 					</div>
-				</div>
-			</li>
+				</li>
+				{% endif %}
 			{% endif %}
 		{% endif %}
 	{% endif %}
