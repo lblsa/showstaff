@@ -417,16 +417,16 @@ $(function(){
 
 	$('#bookin_list').append(view_content.render().el); // add template
 	
-	if (edit_mode) {
-		$('#preloader').width($('#add_row').width());
-		$('#preloader').height($('#add_row').height());
-		var p = $('#add_row').position();
-		
-		if (p) {
-			$('#preloader').css({'left':p.left, 'top': p.top});
-			$('#preloader').fadeIn('fast');
-		}
-	}
+
+	$('#preloader').width($('#bookin_list').width());
+	$('#preloader').height($('#bookin_list').height());
+	var p = $('#bookin_list').position();
+	
+	//console.log($('#bookin_list').width(), p);
+	
+	$('#preloader').css({'left':p.left, 'top': p.top});
+	$('#preloader').fadeIn('fast');
+
 	
 	products.fetch({	success:function(){
 							
