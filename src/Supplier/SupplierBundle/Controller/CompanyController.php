@@ -49,143 +49,17 @@ class CompanyController extends Controller
 			$code = 200;
 			$result = array('code' => $code, 'data' => $companies_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+			header("Cache-Control: post-check=0, pre-check=0", false);
+			header("Pragma: no-cache");// HTTP/1.0
 			$response->sendContent();
 			die();
 		}
 
 		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array) );
-	}
-	
-    /**
-     * @Route("/{cid}/del", name="company_del")
-     * @Secure(roles="ROLE_SUPER_ADMIN")
-     */
-    public function delAction($cid, Request $request)
-    {
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-						
-		if (!$company) 
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
-		}
-		
-		$em = $this->getDoctrine()->getEntityManager();				
-		$em->remove($company);
-		$em->flush();
-		
-		if ($request->isXmlHttpRequest()) 
-		{
-			$result = array('has_error' => 0, 'result' => 'Company  #'.$cid.' is removed');
-			$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
-		else
-		{
-			return $this->redirect($this->generateUrl('company'));
-		}
-    }
-	
-    /**
-     * @Route("/{cid}/edit", name="company_edit")
-	 * @Template()
-	 * @Secure(roles="ROLE_SUPER_ADMIN")
-     */
-    public function editAction($cid, Request $request)
-    {
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-						
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
-		}
-		
-		$form = $this->createForm(new CompanyType(), $company);
-					
-		if ($request->getMethod() == 'POST')
-		{
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$product = $form->getData();				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($company);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$result = array('has_error' => 0, 'result' => 'Company #'.$cid.' is updated');
-					$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('company'));
-				}
-			}
-		}
-
-
-		return array('form' => $form->createView(), 'company' => $company);
-    }
-	
-    /**
-     * @Route(	"/{cid}", 
-     * 			name="company_show",
-     * 			requirements={"_method" = "GET"})
-     * @Template()
-     * @Secure(roles="ROLE_SUPER_ADMIN")
-     */
-    public function showAction($cid, Request $request)
-    {
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-						
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-			{
-				$result = array('has_error' => 1, 'result' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), 200, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
-			else
-			{
-				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
-		}
-	
-		return array('company' => $company);
-	}
-	
+	}	
 	
 	/**
 	 * @Route(	"/{cid}", 

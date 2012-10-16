@@ -175,6 +175,11 @@ class OrderItemController extends Controller
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bookings_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+			header("Cache-Control: post-check=0, pre-check=0", false);
+			header("Pragma: no-cache");// HTTP/1.0
 			$response->sendContent();
 			die();
 		}
