@@ -1,12 +1,8 @@
+/****************************************
+ * Supplier Products
+ ****************************************/
+var supplier_products, VSP;
 $(function(){
-	
-	/****************************************
-	 * Supplier Products
-	 ****************************************/
-
-	var supplier_products;
-	var VSP;
-		
 	var SupplierProductView = Backbone.View.extend({
 		
 		tagName: "tr",

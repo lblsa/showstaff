@@ -1,410 +1,408 @@
 /****************************************
  * Booking Product
  ****************************************/
+$(function(){
+	var sort = 'asc';
 
-var sort = 'asc';
+	var ViewBooking = Backbone.View.extend({
+		tagName: "tr",
+		className: "product",
+	   
+		template: _.template(	'<td class="ps_name"></td>'+
+								'<td class="ps_amount">'+
+									'<input type="text" class="input-small amount" name="amount" value="<%= amount %>">'+
+								'</td>'+
+								'<td class="ps_unit">'+
+									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),
 
-var ViewBooking = Backbone.View.extend({
-	tagName: "tr",
-	className: "product",
-   
-	template: _.template(	'<td class="ps_name"></td>'+
-							'<td class="ps_amount">'+
-								'<input type="text" class="input-small amount" name="amount" value="<%= amount %>">'+
-							'</td>'+
-							'<td class="ps_unit">'+
-								'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),
-
-	events: {
-		'click .remove'	: 'remove',
-		'change input.amount':  'save',
-		'change select.product_edit':  'save',
-	},
-	
-	initialize: function() {
-		this.model.view = this;
-	},
-	
-	render: function(){
+		events: {
+			'click .remove'	: 'remove',
+			'change input.amount':  'save',
+			'change select.product_edit':  'save',
+		},
 		
-		var content = this.template(this.model.toJSON());
-		this.$el.html(content);
-		$('#preloader').fadeOut('fast');
-		if (edit_mode) {
+		initialize: function() {
+			this.model.view = this;
+		},
 		
-			$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
+		render: function(){
 			
-			var select = $('.product_edit', this.el);
+			var content = this.template(this.model.toJSON());
+			this.$el.html(content);
+			$('#preloader').fadeOut('fast');
+			if (edit_mode) {
 			
-			products._byId[this.model.get('product')].attributes.use = 0;
-			products.each(function(p){
-				if (p.attributes.use == 0) {
-					var view = new OptionProducts({model:p});
-					$(select).append(view.render().el);
+				$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
+				
+				var select = $('.product_edit', this.el);
+				
+				products._byId[this.model.get('product')].attributes.use = 0;
+				products.each(function(p){
+					if (p.attributes.use == 0) {
+						var view = new OptionProducts({model:p});
+						$(select).append(view.render().el);
+					}
+				});
+				
+				$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
+				products._byId[this.model.get('product')].attributes.use = 1;
+			} else {
+				$('.remove', this.$el).remove();
+				$('.ps_name', this.el).html(this.model.get('name')+' ['+units[products._byId[this.model.get('product')].attributes.unit]+']');
+				$('.ps_amount', this.el).html(this.model.get('amount'));
+			}
+			return this;
+		},
+		
+		preloader: function() {
+			$('#preloader').width(this.$el.width());
+			$('#preloader').height(this.$el.height());
+			var p = this.$el.position();
+			$('#preloader').css({'left':p.left, 'top': p.top});
+			$('#preloader').fadeIn('fast');
+		},
+		
+		remove: function() {
+			if (edit_mode) {
+				if ( confirm ("Вы действительно хотите удалить продукт из заказа?") ) {
+					this.preloader();
+					this.model.destroy({wait: true });
 				}
-			});
-			
-			$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
-			products._byId[this.model.get('product')].attributes.use = 1;
-		} else {
-			$('.remove', this.$el).remove();
-			$('.ps_name', this.el).html(this.model.get('name')+' ['+units[products._byId[this.model.get('product')].attributes.unit]+']');
-			$('.ps_amount', this.el).html(this.model.get('amount'));
-		}
-		return this;
-	},
-	
-	preloader: function() {
-		$('#preloader').width(this.$el.width());
-		$('#preloader').height(this.$el.height());
-		var p = this.$el.position();
-		$('#preloader').css({'left':p.left, 'top': p.top});
-		$('#preloader').fadeIn('fast');
-	},
-	
-	remove: function() {
-		if (edit_mode) {
-			if ( confirm ("Вы действительно хотите удалить продукт из заказа?") ) {
+				return false;
+			}
+		},
+		
+		save: function() {
+			if (edit_mode) {
 				this.preloader();
-				this.model.destroy({wait: true });
+				this.model.save({
+								product: $('.product_edit', this.el).val(),
+								name: products._byId[$('.product_edit').val()].attributes.name,
+								amount: $('.amount', this.el).val(),
+								},{wait: true});
 			}
-			return false;
-		}
-	},
-	
-	save: function() {
-		if (edit_mode) {
-			this.preloader();
-			this.model.save({
-							product: $('.product_edit', this.el).val(),
-							name: products._byId[$('.product_edit').val()].attributes.name,
-							amount: $('.amount', this.el).val(),
-							},{wait: true});
-		}
-	},
-	
-	
-    
-})
+		},
+		
+		
+		
+	})
 
 
-var ViewBookings = Backbone.View.extend({
-   
-	tagName: "tbody",
-	className: "bookings",
-	
-	initialize: function() {
-		_.bindAll(this);
-		this.collection.on('reset', this.renderAll);
-	},
-    
-	render: function() {
-		return this;
-	},
-	
-	renderAll: function() {
-		$('#preloader').hide();
-		this.renderProducts();
-		return this;
-	},
-    
-    renderProducts: function() {
-		if (this.collection.length > 0) {
+	var ViewBookings = Backbone.View.extend({
+	   
+		tagName: "tbody",
+		className: "bookings",
+		
+		initialize: function() {
+			_.bindAll(this);
+			this.collection.on('reset', this.renderAll);
+		},
+		
+		render: function() {
+			return this;
+		},
+		
+		renderAll: function() {
+			$('#preloader').hide();
+			this.renderProducts();
+			return this;
+		},
+		
+		renderProducts: function() {
+			if (this.collection.length > 0) {
+				
+				$('.bookings').html('');
+				this.collection.each(function(model){
+					var view = new ViewBooking({model:model});
+					var content = view.render().el;
+					
+					if (sort == 'desc')
+						$('.bookings').prepend(content);
+					else
+						$('.bookings').append(content);
+				});
 			
-			$('.bookings').html('');
-			this.collection.each(function(model){
-				var view = new ViewBooking({model:model});
-				var content = view.render().el;
-				
-				if (sort == 'desc')
-					$('.bookings').prepend(content);
-				else
-					$('.bookings').append(content);
-			});
-		
-		} else {
-		
-			$('.bookings').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
-												'<button type="button" class="close" data-dismiss="alert">×</button>'+
-												'У данного ресторана нет заказов на текущую дату</div></td></tr>');
-		}
-		
-		return this;
-    },
-	
-	sort_by_name: function() {
-		var list = new Backbone.Collection;
-		list.comparator = function(chapter) {
-		  return chapter.get("name");
-		};
-		
-		if (sort == 'asc') {
-			sort = 'desc';
-			$('.sort_by_name i').attr('class','icon-arrow-down');
-		} else {
-			sort = 'asc';
-			$('.sort_by_name i').attr('class','icon-arrow-up');
-		}
-		
-		list.reset(bookings.models, {silent:true})
-		this.collection = list;
-		
-		this.renderProducts();
-		return false;
-	},
-	
-	sort_by_amount: function() {
-		var list = new Backbone.Collection;
-		list.comparator = function(chapter) {
-		  return chapter.get("amount");
-		};
-		
-		if (sort == 'asc') {
-			sort = 'desc';
-			$('.sort_by_amount i').attr('class','icon-arrow-down');
-		} else {
-			sort = 'asc';
-			$('.sort_by_amount i').attr('class','icon-arrow-up');
-		}
-		
-		list.reset(bookings.models, {silent:true})
-		this.collection = list;
-		
-		this.renderProducts();
-		return false;
-	},
-    
-})
-
-// Model booking products
-var BookingModel = Backbone.Model.extend({
-  
-  sync: function(method, model, options) {
-       var BookingOptions = options;
-       
-        if (method == 'delete') {
-			BookingOptions.success = function(resp, status, xhr) {
-				$('#bookin_list .alert').remove();
-				$('#preloader').fadeOut('fast');
-				
-				if (resp.data == model.id) {
-					
-					products._byId[model.attributes.product].attributes.use = 0;
-					$('.product_add').html('');
-					products.each(function(p){
-						if (p.attributes.use == 0) {
-							var view = new OptionProducts({model:p});
-							$('.product_add').append(view.render().el);
-						}
-					});
-					
-					if ($('.product_add option').length > 0)
-        				$('.create, .forms').fadeIn();
-					
-					$(model.view.el).remove();
-					model.collection.remove(model, {silent: true});
-					return;
-				} else {
-					
-					$('.ps_unit', model.view.el).append('<div class="alert">'+
+			} else {
+			
+				$('.bookings').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-													
-					if (resp != null && typeof(resp.message) != 'undefined')
-						$('.ps_unit .alert').append('<br>('+resp.message+')');
-					
-					return;
-				}
-				return options.success(resp, status, xhr);
-			};
-			BookingOptions.error = function(resp, status, xhr) {			
-				return options.success(resp, status, xhr);
+													'У данного ресторана нет заказов на текущую дату</div></td></tr>');
 			}
-		}
+			
+			return this;
+		},
+		
+		sort_by_name: function() {
+			var list = new Backbone.Collection;
+			list.comparator = function(chapter) {
+			  return chapter.get("name");
+			};
+			
+			if (sort == 'asc') {
+				sort = 'desc';
+				$('.sort_by_name i').attr('class','icon-arrow-down');
+			} else {
+				sort = 'asc';
+				$('.sort_by_name i').attr('class','icon-arrow-up');
+			}
+			
+			list.reset(bookings.models, {silent:true})
+			this.collection = list;
+			
+			this.renderProducts();
+			return false;
+		},
+		
+		sort_by_amount: function() {
+			var list = new Backbone.Collection;
+			list.comparator = function(chapter) {
+			  return chapter.get("amount");
+			};
+			
+			if (sort == 'asc') {
+				sort = 'desc';
+				$('.sort_by_amount i').attr('class','icon-arrow-down');
+			} else {
+				sort = 'asc';
+				$('.sort_by_amount i').attr('class','icon-arrow-up');
+			}
+			
+			list.reset(bookings.models, {silent:true})
+			this.collection = list;
+			
+			this.renderProducts();
+			return false;
+		},
+		
+	})
 
-        if (method == 'update') {
-			BookingOptions.success = function(resp, status, xhr) {
-								
-				$('#bookin_list .alert').remove();
-				$('#preloader').fadeOut('fast');
-				
-				if (resp != null && typeof(resp.message) != 'undefined') {
+	// Model booking products
+	var BookingModel = Backbone.Model.extend({
+	  
+	  sync: function(method, model, options) {
+		   var BookingOptions = options;
+		   
+			if (method == 'delete') {
+				BookingOptions.success = function(resp, status, xhr) {
+					$('#bookin_list .alert').remove();
+					$('#preloader').fadeOut('fast');
 					
-				   $('#preloader').fadeOut('fast'); 
-				   $('.ps_unit', model.view.el).append('<div class="alert">'+
-													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'Ошибка (' + resp.message + '). '+
-													'Попробуйте еще раз или обратитесь к администратору.</div>');
-				   return;
-				} else {
+					if (resp.data == model.id) {
+						
+						products._byId[model.attributes.product].attributes.use = 0;
+						$('.product_add').html('');
+						products.each(function(p){
+							if (p.attributes.use == 0) {
+								var view = new OptionProducts({model:p});
+								$('.product_add').append(view.render().el);
+							}
+						});
+						
+						if ($('.product_add option').length > 0)
+							$('.create, .forms').fadeIn();
+						
+						$(model.view.el).remove();
+						model.collection.remove(model, {silent: true});
+						return;
+					} else {
+						
+						$('.ps_unit', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
+														
+						if (resp != null && typeof(resp.message) != 'undefined')
+							$('.ps_unit .alert').append('<br>('+resp.message+')');
+						
+						return;
+					}
+					return options.success(resp, status, xhr);
+				};
+				BookingOptions.error = function(resp, status, xhr) {			
+					return options.success(resp, status, xhr);
+				}
+			}
+
+			if (method == 'update') {
+				BookingOptions.success = function(resp, status, xhr) {
+									
+					$('#bookin_list .alert').remove();
+					$('#preloader').fadeOut('fast');
+					
+					if (resp != null && typeof(resp.message) != 'undefined') {
+						
+					   $('#preloader').fadeOut('fast'); 
+					   $('.ps_unit', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка (' + resp.message + '). '+
+														'Попробуйте еще раз или обратитесь к администратору.</div>');
+					   return;
+					} else {
+						if (resp != null && typeof(resp.data) != 'undefined') {
+							
+							if (resp.data.product != model.attributes.product ) {
+								
+								products._byId[model.attributes.product].attributes.use = 0;
+								products._byId[resp.data.product].attributes.use = 1;
+								$('.product_add').html('');
+								products.each(function(p){
+									if (p.attributes.use == 0) {
+										var view = new OptionProducts({model:p});
+										$('.product_add').append(view.render().el);
+									}
+								});
+							}
+							
+							model.set(resp.data,{silent: true});
+							model.view.render();
+
+							bookings.sort({silent: true});
+							view_content.remove()
+							view_content = new ViewBookings({collection: bookings});
+							$('#bookin_list').append(view_content.render().el);
+							view_content.renderAll().el
+						
+							return;
+					   } else {
+						   $('#preloader').fadeOut('fast'); 
+						   $('.ps_unit', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
+						   model.set(model.previousAttributes(),{silent: true});
+						   return;
+					   }
+					}
+					return options.success(resp, status, xhr);
+				};
+				BookingOptions.error = function(resp, status, xhr) {
+					return options.success(resp, status, xhr);
+				}
+			}
+
+			if (method == 'create') {
+				BookingOptions.success = function(resp, status, xhr) {
+					
+					$('#bookin_list .alert').remove();
+					$('#preloader').fadeOut('fast');
+					
 					if (resp != null && typeof(resp.data) != 'undefined') {
 						
-						if (resp.data.product != model.attributes.product ) {
-							
-							products._byId[model.attributes.product].attributes.use = 0;
-							products._byId[resp.data.product].attributes.use = 1;
-							$('.product_add').html('');
-							products.each(function(p){
-								if (p.attributes.use == 0) {
-									var view = new OptionProducts({model:p});
-									$('.product_add').append(view.render().el);
-								}
-							});
-						}
+						model.set(resp.data, {silent:true});
 						
-						model.set(resp.data,{silent: true});
-						model.view.render();
+						products._byId[resp.data.product].attributes.use = 1;
+						$('.product_add option[value="'+resp.data.product+'"]').remove();
+						
+						if ($('.product_add option').length == 0)
+							$('.create, .forms').fadeOut();
+						
+						$('.bookings .alert_row').remove();
+						
+						var view = new ViewBooking({model:model});
+						var content = view.render().el;
+						$('#bookin_list .bookings').prepend(content);
+						$("#up .alert-success").clone().appendTo('#bookin_list .forms');
+						$('#bookin_list .forms .alert-success').css('float','none');
+						$('.controls').css('float','none');
+						
+						$('#bookin_list .forms .alert-success').fadeIn();
+						
+						$('#bookin_list .amount_add').val('');
 
 						bookings.sort({silent: true});
 						view_content.remove()
 						view_content = new ViewBookings({collection: bookings});
 						$('#bookin_list').append(view_content.render().el);
 						view_content.renderAll().el
-					
-						return;
-				   } else {
-					   $('#preloader').fadeOut('fast'); 
-					   $('.ps_unit', model.view.el).append('<div class="alert">'+
-													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-					   model.set(model.previousAttributes(),{silent: true});
+					   
 					   return;
-				   }
-				}
-				return options.success(resp, status, xhr);
-			};
-			BookingOptions.error = function(resp, status, xhr) {
-				return options.success(resp, status, xhr);
-			}
-		}
-
-		if (method == 'create') {
-			BookingOptions.success = function(resp, status, xhr) {
-				
-				$('#bookin_list .alert').remove();
-				$('#preloader').fadeOut('fast');
-				
-				if (resp != null && typeof(resp.data) != 'undefined') {
-					
-					model.set(resp.data, {silent:true});
-					
-					products._byId[resp.data.product].attributes.use = 1;
-					$('.product_add option[value="'+resp.data.product+'"]').remove();
-					
-					if ($('.product_add option').length == 0)
-        				$('.create, .forms').fadeOut();
-					
-					$('.bookings .alert_row').remove();
-					
-					var view = new ViewBooking({model:model});
-					var content = view.render().el;
-					$('#bookin_list .bookings').prepend(content);
-					$("#up .alert-success").clone().appendTo('#bookin_list .forms');
-					$('#bookin_list .forms .alert-success').css('float','none');
-					$('.controls').css('float','none');
-					
-					$('#bookin_list .forms .alert-success').fadeIn();
-				    
-					$('#bookin_list .amount_add').val('');
-
-					bookings.sort({silent: true});
-					view_content.remove()
-					view_content = new ViewBookings({collection: bookings});
-					$('#bookin_list').append(view_content.render().el);
-					view_content.renderAll().el
-				   
-				   return;
-				   
-				} else {
-					
-					
-					if (resp != null && typeof(resp.message) != 'undefined')
-						$('#up .alert-error strong').html(''+resp.message);
+					   
+					} else {
 						
-					$("#up .alert-error").clone().appendTo('.forms');
-					$('#bookin_list .alert-error').fadeIn();
-					bookings.remove(model, {silent:true});
-				
-				   return;
+						
+						if (resp != null && typeof(resp.message) != 'undefined')
+							$('#up .alert-error strong').html(''+resp.message);
+							
+						$("#up .alert-error").clone().appendTo('.forms');
+						$('#bookin_list .alert-error').fadeIn();
+						bookings.remove(model, {silent:true});
+					
+					   return;
+					}
+					return options.success(resp, status, xhr);
+				};
+				BookingOptions.error = function(resp, status, xhr) {
+					return options.success(resp, status, xhr);
 				}
-				return options.success(resp, status, xhr);
-			};
-			BookingOptions.error = function(resp, status, xhr) {
-				return options.success(resp, status, xhr);
+			}
+			
+			
+			Backbone.sync.call(this, method, model, BookingOptions);
+	  },
+	});
+
+
+	/**********************************************
+	 * Option Product for add/edit Supplier Product
+	 **********************************************/
+	var OptionProducts = Backbone.View.extend({
+		
+		tagName: "option",
+		
+		template: _.template('<%= name %> [ <% print(units._byId[unit].get("name")); %> ]'),
+		
+		render: function() {
+			var content = this.template(this.model.toJSON());
+			this.$el.html(content);
+			this.$el.attr('value', this.model.id)
+			return this;
+		},
+		
+	})
+
+	var Products = Backbone.Collection.extend({
+		url: '/company/'+parseInt(href[2])+'/product',
+		parse: function(response, xhr){
+			if(response.code && (response.code == 200)){
+				return response.data;
+			} else {
+				console.log('bad request');
 			}
 		}
+	});
+
+	// Collection bookings
+	var ContentBooking = Backbone.Collection.extend({
+	  
+		model: BookingModel,
+	  
+		url: function(){
+			if (typeof(href[6])!='undefined')
+				return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
+			else
+				return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
+		},
+	  
+		parse: function(response){
+			if(response && 'code' in response && response.code == 200 && 'data' in response) {
+				return response.data;
+			} else {
+				error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
+			}
+		},
+	  
+		initialize: function(){
+			this.bind('add', this.addBooking);
+		},
+	  
+		addBooking: function(product){
+			product.save({wait: true});
+		},
+	  
+	});
 		
+	var products = new Products;
 		
-		Backbone.sync.call(this, method, model, BookingOptions);
-  },
-});
-
-
-/**********************************************
- * Option Product for add/edit Supplier Product
- **********************************************/
-var OptionProducts = Backbone.View.extend({
-	
-	tagName: "option",
-	
-	template: _.template('<%= name %> [ <% print(units._byId[unit].get("name")); %> ]'),
-	
-	render: function() {
-		var content = this.template(this.model.toJSON());
-		this.$el.html(content);
-		this.$el.attr('value', this.model.id)
-		return this;
-	},
-	
-})
-
-var Products = Backbone.Collection.extend({
-	url: '/company/'+parseInt(href[2])+'/product',
-	parse: function(response, xhr){
-		if(response.code && (response.code == 200)){
-			return response.data;
-		} else {
-			console.log('bad request');
-		}
-	}
-});
-
-// Collection bookings
-var ContentBooking = Backbone.Collection.extend({
-  
-	model: BookingModel,
-  
-	url: function(){
-		if (typeof(href[6])!='undefined')
-			return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
-		else
-			return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
-	},
-  
-	parse: function(response){
-		if(response && 'code' in response && response.code == 200 && 'data' in response) {
-			return response.data;
-		} else {
-			error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
-		}
-	},
-  
-	initialize: function(){
-		this.bind('add', this.addBooking);
-	},
-  
-	addBooking: function(product){
-		product.save({wait: true});
-	},
-  
-});
-	
-var products = new Products;
-	
-var edit_mode = true;
-var bookings, view_content;
-
-$(function(){
+	var edit_mode = true;
+	var bookings, view_content;
 	
 	bookings = new ContentBooking({}, {units:units}); // init collection
 

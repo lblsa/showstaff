@@ -35,34 +35,36 @@
 		</div>
 		<script src="/js/company.js"></script>
 		<script type="text/javascript">
-			// Collection products
-			var Companies = Backbone.Collection.extend({
-			  
-			  model: CompanyModel,
-			  
-			  url: '/company',
-			  
-			  initialize: function(){
-				  this.bind('add', this.addCompany);
-			  },
-			  
-			  addCompany: function(company){
-				company.save({wait: true});
-			  },
-			  
-			});
+$(function(){
+	// Collection products
+	Companies = Backbone.Collection.extend({
+	  
+	  model: CompanyModel,
+	  
+	  url: '/company',
+	  
+	  initialize: function(){
+		  this.bind('add', this.addCompany);
+	  },
+	  
+	  addCompany: function(company){
+		company.save({wait: true});
+	  },
+	  
+	});
 			
-			var companies = new Companies; 
+	companies = new Companies; 
 			
-			var view_companies = new ViewCompanies({collection: companies}); // initialize view
+	view_companies = new ViewCompanies({collection: companies}); // initialize view
 			
-			companies.comparator = function(company) {
-			  return company.get("name");
-			};
-			
-			$('#companies_list').append(view_companies.render().el); // add template
-			
-			companies.reset({{ companies_json|raw }});
-		</script>
+	companies.comparator = function(company) {
+	  return company.get("name");
+	};
+	
+	$('#companies_list').append(view_companies.render().el); // add template
+	
+	companies.reset({{ companies_json|raw }});
+});
+</script>
 	</div>
 {% endblock %}

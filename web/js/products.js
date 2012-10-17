@@ -1,14 +1,8 @@
 /****************************************
- * 
+ * Products
  ***************************************/ 
+var sort = 'asc';
 $(function(){
-
-	/****************************************
-	 * Products
-	 ****************************************/
-
-	var sort = 'asc';
-
 	// view list products
 	var ViewProducts = Backbone.View.extend({
 		
@@ -112,7 +106,6 @@ $(function(){
 		},
 		
 	})
-
 
 	// Model product
 	var ProductModel = Backbone.Model.extend({
@@ -248,7 +241,6 @@ $(function(){
 			Backbone.sync.call(this, method, model, productOptions);
 		},
 	});
-
 
 	var Products = Backbone.Collection.extend({
 	  

@@ -1,10 +1,8 @@
+/****************************************
+ * Suppliers
+ ****************************************/
+var sort = 'asc';
 $(function(){
-	/****************************************
-	 * Suppliers
-	 ****************************************/
-
-	var sort = 'asc';
-
 	// view list supplier
 	var ViewSuppliers = Backbone.View.extend({
 		
