@@ -1,24 +1,11 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
 {% block body %}
-
-	<!-- <div  class="row">
-		<div class="span12">
-			<div class="hero-unit">
-				<p class="lead"> You ROLE:
-					{% if is_granted('ROLE_SUPER_ADMIN') %}ROLE_SUPER_ADMIN{% endif %}
-					
-					{% if is_granted('ROLE_ADMIN') %},ROLE_ADMIN{% endif %}
-					
-					{% if is_granted('ROLE_COMPANY_ADMIN') %},ROLE_COMPANY_ADMIN{% endif %}
-					
-					{% if is_granted('ROLE_RESTAURANT_ADMIN') %},ROLE_RESTAURANT_ADMIN{% endif %}
-					
-					{% if is_granted('ROLE_ORDER_MANAGER') %},ROLE_ORDER_MANAGER{% endif %}
-				</p>
-			  </div>
-		</div>
-	</div>-->
+	<!-- You ROLE:	{% if is_granted('ROLE_SUPER_ADMIN') %}ROLE_SUPER_ADMIN{% endif %}
+					{% if is_granted('ROLE_ADMIN') %}ROLE_ADMIN{% endif %}
+					{% if is_granted('ROLE_COMPANY_ADMIN') %}ROLE_COMPANY_ADMIN{% endif %}
+					{% if is_granted('ROLE_RESTAURANT_ADMIN') %}ROLE_RESTAURANT_ADMIN{% endif %}
+					{% if is_granted('ROLE_ORDER_MANAGER') %}ROLE_ORDER_MANAGER{% endif %} -->
 	<ul class="thumbnails">
 	{% if is_granted('ROLE_RESTAURANT_ADMIN') %}
 		{% if cid is defined %}
@@ -83,6 +70,33 @@
 					</div>
 				</li>
 				{% if ROLE_ADMIN == 0 %}
+				<li class="span4">
+					<div class="thumbnail">
+						<div class="caption">
+							<h4>Cформировать заказ</h4>
+							<p>Страница списка продуктов по ресторанам/поставщикам</p>
+							<p><a class="btn" href="{{ path('Order_list', {'cid': cid }) }}">Смотреть заказанные продукты »</a></p>
+						</div>
+					</div>
+				</li>	
+				<li class="span4">
+					<div class="thumbnail">
+						<div class="caption">
+							<h4>Управление поставщиками</h4>
+							<p>Список поставщиков</p>
+							<p><a class="btn" href="{{ path('supplier', {'cid': cid }) }}">Смотреть/править список поставщиков »</a></p>
+						</div>
+					</div>
+				</li>
+				<li class="span4">
+					<div class="thumbnail">
+						<div class="caption">
+							<h4>Управление продуктами</h4>
+							<p>Список продуктов</p>
+							<p><a class="btn" href="{{ path('product', {'cid': cid }) }}">Смотреть/править список продуктов »</a></p>
+						</div>
+					</div>
+				</li>
 				<li class="span4 ">
 					<div class=" thumbnail">
 						<div class="caption">
