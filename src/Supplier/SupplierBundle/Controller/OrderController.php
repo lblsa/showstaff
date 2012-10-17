@@ -244,4 +244,75 @@ class OrderController extends Controller
 		$response->sendContent();
 		die();
 	}
+
+    /**
+     * @Route("	company/{cid}/order/export/{booking_date}", 
+     * 			name="export_order", 
+     * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0} )
+     * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
+     */
+	public function exportAction($cid, $booking_date, Request $request)
+	{
+		$user = $this->get('security.context')->getToken()->getUser();
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+		
+		if (!$company) {
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+	
+        // ask the service for a Excel5
+        $excelService = $this->get('xls.service_xls5');
+        // or $this->get('xls.service_pdf');
+        // or create your own is easy just modify services.yml
+
+
+        // create the object see http://phpexcel.codeplex.com documentation
+        $excelService->excelObj->getProperties()->setCreator("Maarten Balliauw")
+                            ->setLastModifiedBy("Maarten Balliauw")
+                            ->setTitle("Office 2005 XLSX Test Document")
+                            ->setSubject("Office 2005 XLSX Test Document")
+                            ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")
+                            ->setKeywords("office 2005 openxml php")
+                            ->setCategory("Test result file");
+        $excelService->excelObj->setActiveSheetIndex(0)
+                    ->setCellValue('A1', 'Hello')
+                    ->setCellValue('A2', 'Viola')
+                    ->setCellValue('B2', 'world!');
+        $excelService->excelObj->getActiveSheet()->setTitle('Simple');
+        // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+        $excelService->excelObj->setActiveSheetIndex(0);
+
+        //create the response
+        $response = $excelService->getResponse();
+        $response->headers->set('Content-Type', 'text/vnd.ms-excel; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment;filename=stdream2.xls');
+
+        // If you are using a https connection, you have to set those two headers for compatibility with IE <9
+        $response->headers->set('Pragma', 'public');
+        $response->headers->set('Cache-Control', 'maxage=1');
+        return $response;   
+	}
 }
