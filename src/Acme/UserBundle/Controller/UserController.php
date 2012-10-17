@@ -914,7 +914,7 @@ class UserController extends Controller
 												array(	'feedback_message' => $data['feedback_message'],
                                                         'username' => $user->getUsername(),
 														'url' => 'http://'.$_SERVER['HTTP_HOST'].$data['url'] )));
-														
+									
 			$this->get('mailer')->send($message);
 
 			$code = 200;
