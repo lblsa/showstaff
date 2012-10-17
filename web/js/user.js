@@ -1,8 +1,6 @@
-var companies;
+var companies, view_users;
+var sort = 'asc';
 $(function(){
-	var sort = 'asc';
-	var view_users;
-	
 	// view list users
 	var ViewUsers = Backbone.View.extend({
 		
@@ -383,8 +381,6 @@ $(function(){
 	$('#preloader').css({'left':p.left, 'top': p.top});
 	$('#preloader').fadeIn('fast');
 	
-	
-	
 	$('.add_user').click(function() {
 		$(".forms .alert").remove();
 		$('#preloader').width($('#add_row').width());
@@ -402,6 +398,4 @@ $(function(){
 		
 		return false;
 	});
-	
-
 })

@@ -897,25 +897,24 @@ class UserController extends Controller
 	
 	
 	/**
-	 * @Route(	"/feedback", 
-	 * 			name="feedback", 
-	 * 			requirements={"_method" = "PUT"})
+	 * @Route(	"/feedback", name="feedback", requirements={"_method" = "PUT"})
 	 */
 	public function feedbackAction(Request $request)
 	{
-		
+		$user = $this->get('security.context')->getToken()->getUser();
 		$data = (array)json_decode($request->getContent());
 
 		if (count($data) > 0 && isset($data['feedback_message']) && $data['feedback_message'] != '')
-		{
+		{												
 			$message = \Swift_Message::newInstance()
 				->setSubject($data['feedback_message'])
 				->setFrom('tester@showstaff.ru')
 				->setTo(array('x+1226812676413@mail.asana.com', 'vladimir.stasevich@gmail.com'))
 				->setBody(	$this->renderView(	'AcmeUserBundle:User:email_error_report.txt.twig',
 												array(	'feedback_message' => $data['feedback_message'],
-                                                        'username' => 'TODO',
+                                                        'username' => $user->getUsername(),
 														'url' => 'http://'.$_SERVER['HTTP_HOST'].$data['url'] )));
+									
 			$this->get('mailer')->send($message);
 
 			$code = 200;

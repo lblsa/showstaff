@@ -1,7 +1,30 @@
+var href = window.location.pathname.split('/');
+var Units, units;
+
 $(document).ready(function(){
+	
+	Units = Backbone.Collection.extend({
+		url: '/units',
+		initialize: function(){
+			this.fetch({
+							error: function(){
+								error_fetch('Ошибка получения едениц измерения');
+							}
+						});
+		},
+		parse: function(response, xhr){		
+			if(response && 'code' in response && response.code == 200 && 'data' in response) {
+				return response.data;
+			} else {
+				error_fetch('Ошибка получения едениц измерения');
+			}
+		}
+	});
+	units = new Units;
+	
 	$('.del').click(function(){
 		return confirm ("Вы действительно хотите удалить элемент?");
-	})
+	});
 	
 	$('.create').toggle(function() {
 		$('i', this).attr('class', 'icon-minus-sign');
@@ -54,31 +77,10 @@ $(document).ready(function(){
 										'" type="password" placeholder="Password" class="pass_add span2">');
 		$('small', this).html('Показать пароль');
 	});
-})
+});
 
 function error_fetch(message) {
 	$('.span12').append('<div class="alert"><button type="button" class="close" data-dismiss="alert">×</button>'+message+'</div>');
 	$('#preloader').fadeOut('fast');
 }
-
-var href = window.location.pathname.split('/');
-var Units = Backbone.Collection.extend({
-	url: '/units',
-	initialize: function(){
-		this.fetch({
-						error: function(){
-							error_fetch('Ошибка получения едениц измерения');
-						}
-					});
-	},
-	parse: function(response, xhr){		
-		if(response && 'code' in response && response.code == 200 && 'data' in response) {
-			return response.data;
-		} else {
-			error_fetch('Ошибка получения едениц измерения');
-		}
-	}
-});
-
-var units = new Units;
 

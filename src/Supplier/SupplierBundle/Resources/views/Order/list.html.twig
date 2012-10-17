@@ -36,58 +36,43 @@
 			</thead></table>
 			<script src="/js/order.js"></script>
 			<script type="text/javascript">
-			
-				{% if edit_mode %}
-					var edit_mode = true;
-				{% else %}
-					var edit_mode = false;
-				{% endif %}
-			
-				var products = new Backbone.Collection;
-				products.reset({{ products_json|raw }});
-				
-				var restaurants = new Backbone.Collection;
-				restaurants.reset({{ restaurants_json|raw }});
-				
-				var suppliers = new Backbone.Collection;
-				suppliers.reset({{ suppliers_json|raw }});
-				
-				// Collection bookings
-				var OrderCollection = Backbone.Collection.extend({
-				  
-				  model: OrderModel,
-				  
-				  url: '/company/{{ company.id }}/order',
-				  
-				  initialize: function(){
-					  this.bind('add', this.addBooking);
-				  },
-				  
-				  addBooking: function(product){
-					product.save({wait: true});
-				  },
-				  
-				});
-				
-				var orders = new OrderCollection; // init collection
-				var view_order_by_rest = new ViewOrdersByRestaurant({collection: orders}); // initialize view
-
-				$('#order_list').append(view_order_by_rest.render().el); // add template
-				
-
-				$('#preloader').width($('#add_row').width());
-				$('#preloader').height($('#add_row').height());
-				var p = $('#add_row').position();
-				$('#preloader').css({'left':p.left, 'top': p.top});
-				$('#preloader').fadeIn('fast');
-
-				
-				orders.reset({{ bookings_json|raw }});
-				
-				
-				if (!edit_mode) {
-					$('.restaurant .edit_order').remove();
-				}
+$(function(){
+	{% if edit_mode %}
+		edit_mode = true;
+	{% else %}
+		edit_mode = false;
+	{% endif %}
+	units.fetch({	success: function(){
+								products = new Backbone.Collection;
+								products.reset({{ products_json|raw }});
+								
+								restaurants = new Backbone.Collection;
+								restaurants.reset({{ restaurants_json|raw }});
+								
+								suppliers = new Backbone.Collection;
+								suppliers.reset({{ suppliers_json|raw }});
+								
+								// Collection bookings
+								OrderCollection = Backbone.Collection.extend({
+								  
+								  model: OrderModel,
+								  
+								  url: '/company/{{ company.id }}/order',
+								  
+								  initialize: function(){  },			  
+								});
+								
+								orders = new OrderCollection({}, {units: units, products: products}); // init collection
+								view_order_by_rest = new ViewOrdersByRestaurant({collection: orders}); // initialize view
+								$('#order_list').append(view_order_by_rest.render().el); // add template
+								orders.reset({{ bookings_json|raw }}, {units: units, test: function(){ console.log(this); }});
+							}
+	});
+	
+	if (!edit_mode) {
+		$('.restaurant .edit_order').remove();
+	}
+});
 			</script>
 		</div>
 	</div>

@@ -1,10 +1,8 @@
 /****************************************
  * Restaurants
  ****************************************/
-
 var sort = 'asc';
-var restaurants; 
-var view_restaurants;
+var restaurants, view_restaurants;
 $(function(){
 	// view list Restaurants
 	var ViewRestaurants = Backbone.View.extend({
@@ -173,7 +171,6 @@ $(function(){
 		
 	})
 
-
 	// Model restaurant
 	var RestaurantModel = Backbone.Model.extend({
 
@@ -306,9 +303,6 @@ $(function(){
 	   }
 	});
 
-
-
-
 	/****************************************
 	 * Collection restaurants
 	 ***************************************/
@@ -363,7 +357,6 @@ $(function(){
 								console.log('error restaurants.fetch');
 							}
 						});
-	
 	
 	$('.add_restaurant').click(function() {
 		$(".forms .alert").remove();

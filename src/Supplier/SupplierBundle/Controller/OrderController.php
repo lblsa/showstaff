@@ -92,7 +92,7 @@ class OrderController extends Controller
 			foreach ($products AS $p)
 				$products_array[] = array(	'id' => $p->getId(),
 											'name'=> $p->getName(), 
-											'unit' => $p->getUnit(),
+											'unit' => $p->getUnit()->getId(),
 											'use' => 0 );
 											
 		$suppler_products = $this->getDoctrine()
@@ -130,7 +130,7 @@ class OrderController extends Controller
 											'restaurant' => $p->getRestaurant()->getId(),
 											'supplier' => $p->getSupplier()->getId(),
 											'name' => $p->getProduct()->getName(),
-											'unit' => $p->getProduct()->getUnit(),
+											'unit' => $p->getProduct()->getUnit()->getId(),
 											'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
 											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
 			}								
