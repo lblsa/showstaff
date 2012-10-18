@@ -1,3 +1,4 @@
+//* update 2012-10-18 16:15:00 *//
 var companies, view_users;
 var sort = 'asc';
 $(function(){
