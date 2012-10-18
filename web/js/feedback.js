@@ -1,3 +1,4 @@
+//* update 2012-10-18 16:15:00 *//
 $(function(){
 	$('body').append('<div class="modal hide" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'+
 						 '<div class="modal-header">'+

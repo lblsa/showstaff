@@ -1,3 +1,4 @@
+//* update 2012-10-18 16:15:00 *//
 var sort = 'asc';
 var users, roles, restaurants, view_users;
 
