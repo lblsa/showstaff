@@ -20,6 +20,7 @@ class AppKernel extends Kernel
             new Acme\AdminBoardBundle\AcmeAdminBoardBundle(),
             new Supplier\SupplierBundle\SupplierBundle(),
             new Acme\UserBundle\AcmeUserBundle(),
+            new Liuggio\ExcelBundle\LiuggioExcelBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test'))) {

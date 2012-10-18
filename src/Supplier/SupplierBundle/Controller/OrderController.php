@@ -244,4 +244,133 @@ class OrderController extends Controller
 		$response->sendContent();
 		die();
 	}
+
+    /**
+     * @Route("/company/{cid}/order/export/{booking_date}", 
+     * 			name="export_order", 
+     * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0} )
+     * @Template()
+     * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
+     */
+	public function exportAction($cid, $booking_date, Request $request)
+	{
+		if ($booking_date == '0')
+			$booking_date = date('Y-m-d');
+		
+		$user = $this->get('security.context')->getToken()->getUser();
+				
+		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Forbidden Company');
+				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$response->sendContent();
+				die();
+			} else {
+				throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+		
+		if (!$company) {
+			$code = 404;
+			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
+			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$response->sendContent();
+			die();
+		}
+		
+		
+		$suppler_products = $this->getDoctrine()
+								->getRepository('SupplierBundle:SupplierProducts')
+								->findByCompany($cid);
+		$suppler_products_array = array();
+		if ($suppler_products)
+			foreach ($suppler_products AS $p)
+			{		
+				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
+				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName();
+			}
+		
+		
+		
+		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')
+										->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+		$bookings_array = array();
+		if ($bookings)
+		{
+			foreach ($bookings AS $p)
+			{	
+				$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
+											'amount' => $p->getAmount(),
+											'product' => $p->getProduct()->getName(),
+											'restaurant' => $p->getRestaurant()->getName(),
+											'supplier' => $p->getSupplier()->getName(),
+											'name' => $p->getProduct()->getName(),
+											'unit' => $p->getProduct()->getUnit()->getName(),
+											'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+			}
+		}
+	
+		//var_dump($bookings_array); die();
+	
+        // ask the service for a Excel5
+        $excelService = $this->get('xls.service_xls5');
+        // or $this->get('xls.service_pdf');
+        // or create your own is easy just modify services.yml
+
+
+        // create the object see http://phpexcel.codeplex.com documentation
+        $excelService->excelObj->getProperties()->setCreator($user->getFullname())
+                            ->setLastModifiedBy($user->getFullname())
+                            ->setTitle("Заказ компании \"".$company->getName()."\" на ".$booking_date." число")
+                            ->setSubject("Заказ компании \"".$company->getName()."\" на ".$booking_date." число")
+                            ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")
+                            ->setKeywords("Order")
+                            ->setCategory("Order result file");
+        $sheet = $excelService->excelObj->setActiveSheetIndex(0);
+
+		$sheet->setCellValue('A1', 'Название продукта поставщика');
+		$sheet->setCellValue('B1', 'Количество');
+		$sheet->setCellValue('C1', 'Единица измерения');
+		$sheet->setCellValue('D1', 'Цена');
+		$sheet->setCellValue('E1', 'Ресторан');
+        
+        $i = 2;
+        foreach ($bookings_array AS $k=>$v)
+        {
+			$sheet->setCellValue('A'.$i++, $k);
+			foreach ($v AS $b)
+			{
+				$sheet->setCellValue('A'.$i, $b['supplier_name']);
+				$sheet->setCellValue('B'.$i, $b['amount']);
+				$sheet->setCellValue('C'.$i, $b['unit']);
+				$sheet->setCellValue('D'.$i, $b['price']);
+				$sheet->setCellValue('E'.$i, $b['restaurant']);
+				$i++;
+			}
+			$i++;
+		}
+        //$excelService->excelObj->setCellValue('B2', '3world!');
+        $excelService->excelObj->getActiveSheet()->setTitle('Order '.$booking_date);
+        // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+        $excelService->excelObj->setActiveSheetIndex(0);
+
+        //create the response
+        $response = $excelService->getResponse();
+        $response->headers->set('Content-Type', 'text/vnd.ms-excel; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment;filename=Order '.$booking_date.'.xls');
+
+        // If you are using a https connection, you have to set those two headers for compatibility with IE <9
+        $response->headers->set('Pragma', 'public');
+        $response->headers->set('Cache-Control', 'maxage=1');
+        return $response;   
+	}
 }
