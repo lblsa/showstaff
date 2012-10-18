@@ -246,7 +246,7 @@ class OrderController extends Controller
 	}
 
     /**
-     * @Route("	company/{cid}/order/export/{booking_date}", 
+     * @Route("/company/{cid}/order/export/{booking_date}", 
      * 			name="export_order", 
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
