@@ -3,6 +3,7 @@
  * Products
  ***************************************/ 
 var sort = 'asc';
+var view_products;
 $(function(){
 	// view list products
 	var ViewProducts = Backbone.View.extend({
@@ -22,14 +23,14 @@ $(function(){
 		renderAll: function() {
 			
 			if (this.collection.length > 0) {
-				this.$('.products').html('');
+				$('.products').html('');
 				this.collection.each(function(model){
 					var view = new ViewProduct({model:model});
 					var content = view.render().el;
 					if (sort == 'desc')
-						this.$('.products').prepend(content);
+						$('.products').prepend(content);
 					else
-						this.$('.products').append(content);
+						$('.products').append(content);
 				});
 				
 			} else {
@@ -38,6 +39,7 @@ $(function(){
 									'У вас еще нет продуктов</div></td></tr>');
 				$('#preloader').fadeOut('fast');
 			}
+			return this;
 		},
 	});
 
@@ -292,7 +294,7 @@ $(function(){
 							}
 	});
 
-	var view_products = new ViewProducts({collection: products}); // initialize view
+	view_products = new ViewProducts({collection: products}); // initialize view
 
 	$('#product_list').append(view_products.render().el); // add template	
 	
@@ -355,5 +357,8 @@ $(function(){
 		$('i', this).attr('class','icon-arrow-up');
 		return false;
 	});
-
+	
+	$(document).keydown(function(e) {
+		if (e.keyCode == 27) view_products.renderAll();
+	});
 })

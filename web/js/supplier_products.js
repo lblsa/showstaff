@@ -535,4 +535,8 @@ $(function(){
 					}],{wait: true});
 		return false;
 	});
+	
+	$(document).keydown(function(e) {
+		if (e.keyCode == 27) VSP.renderAll();
+	});
 })

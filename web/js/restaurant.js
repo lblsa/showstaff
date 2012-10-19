@@ -388,4 +388,8 @@ $(function(){
 		view_restaurants.sort_by_director();
 		return false;
 	});
+	
+	$(document).keydown(function(e) {
+		if (e.keyCode == 27) view_restaurants.renderAll();
+	});
 })

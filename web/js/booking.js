@@ -504,4 +504,7 @@ $(function(){
 		return false;
 	});
 	
+	$(document).keydown(function(e) {
+		if (e.keyCode == 27) view_content.renderAll();
+	});
 })

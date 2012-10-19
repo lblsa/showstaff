@@ -200,7 +200,7 @@ class OrderItemController extends Controller
 	* 			name="OrderItem_ajax_create",
 	* 			requirements={	"_method" = "POST", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	*			defaults={"booking_date" = 0})
-	* @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
+	* @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	*/
 	public function ajaxcreateAction($cid, $rid, $booking_date, Request $request)
 	{
