@@ -39,6 +39,7 @@ $(function(){
 									'У вас еще нет компаний</div></td></tr>');
 				$('#preloader').fadeOut('fast');
 			}
+			return this;
 		},
 		
 
@@ -123,11 +124,6 @@ $(function(){
 								'</td>'+
 								'<td>'+
 									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a> '+
-								//	' <a href="/company/<%= id %>/product" class="link">Продукты компании</a> &nbsp;|&nbsp;'+
-								//	' <a href="/company/<%= id %>/supplier" class="link">Поставщики компании</a>&nbsp;|&nbsp; '+
-								//	' <a href="/company/<%= id %>/restaurant" class="link">Рестораны компании</a><br> '+
-								//	' <a href="/company/<%= id %>/order" class="link">Заказы компании</a>&nbsp;|&nbsp; '+
-								//	' <a href="/company/<%= id %>/user" class="link">Менеджеры компании</a>'+
 								'</td>'),
 		
 		events: {
@@ -335,5 +331,10 @@ $(function(){
 	$('.sort_by_name').click(function(){
 		view_companies.sort_by_name();
 		return false;
+	});
+	
+	
+	$(document).keydown(function(e) {
+		if (e.keyCode == 27) view_companies.renderAll();
 	});
 });

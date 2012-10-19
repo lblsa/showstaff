@@ -90,7 +90,7 @@ class CompanyController extends Controller
 
 			$company->setName($model['name']);
 			$company->setExtendedName($model['extended_name']);
-			$company->setInn((int)$model['inn']);
+			$company->setInn($model['inn']);
 			
 			$errors = $validator->validate($company);
 			

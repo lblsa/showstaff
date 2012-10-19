@@ -3,6 +3,7 @@
  * Suppliers
  ****************************************/
 var sort = 'asc';
+var view_suppliers;
 $(function(){
 	// view list supplier
 	var ViewSuppliers = Backbone.View.extend({
@@ -22,14 +23,14 @@ $(function(){
 		renderAll: function() {
 			
 			if (this.collection.length > 0) {
-				this.$('.suppliers').html('');
+				$('.suppliers').html('');
 				this.collection.each(function(model){
 					var view = new ViewSupplier({model:model});
 					var content = view.render().el;
 					if (sort == 'desc')
-						this.$('.suppliers').prepend(content);
+						$('.suppliers').prepend(content);
 					else
-						this.$('.suppliers').append(content);
+						$('.suppliers').append(content);
 				});
 				
 			} else {
@@ -263,7 +264,7 @@ $(function(){
 	
 	var suppliers = new Suppliers; // init collection
 
-	var view_suppliers = new ViewSuppliers({collection: suppliers}); // initialize view
+	view_suppliers = new ViewSuppliers({collection: suppliers}); // initialize view
 
 	suppliers.comparator = function(supplier) {
 	  return supplier.get("name");
@@ -310,4 +311,7 @@ $(function(){
 		return false;
 	});
 
+	$(document).keydown(function(e) {
+		if (e.keyCode == 27) view_suppliers.renderAll();
+	});
 })
