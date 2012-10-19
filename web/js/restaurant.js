@@ -115,13 +115,13 @@ $(function(){
 		className: "restaurant",
 		
 		template: _.template(	'<td class="p_name">'+
-									'<input type="text" class="input-small name" name="name" value="<%= name %>"> '+
+									'<input type="text" class="name" name="name" value="<%= name %>"> '+
 								'</td>'+
 								'<td class="p_address">'+
-									'<input type="text" class="input-small address" name="address" value="<%= address %>"> '+
+									'<input type="text" class="address" name="address" value="<%= address %>"> '+
 								'</td>'+
 								'<td class="p_director">'+
-									'<input type="text" class="input-small director" name="director" value="<%= director %>">'+
+									'<input type="text" class="director" name="director" value="<%= director %>">'+
 									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a><br>'+
 									'<a href="/company/<% print(restaurants.company_id); %>/restaurant/<%= id %>/order" class="link">Заказ продуктов</a>'+
 								'</td>'),
