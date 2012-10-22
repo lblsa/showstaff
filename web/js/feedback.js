@@ -38,10 +38,14 @@ function send_feedback() {
 		var p = $('#myModal').position();
 		$('#preloader').css({'left':'50%', 'top': '50%', 'position':'fixed', 'z-index': 1051, 'margin': '-250px 0 0 -280px'});
 		$('#preloader').fadeIn('fast');
+		var feedback_message = $('.feedback_message').val();
+		feedback_message = feedback_message.replace(/(["])/g, "#quot;").replace(/\0/g, "\\0");
+		feedback_message = feedback_message.replace(/(['])/g, "#039;").replace(/\0/g, "\\0");
+		//feedback_message = escape(feedback_message);
 		$.ajax({
 		  url: "/feedback",
 		  type: "PUT",
-		  data: '{ "feedback_message": "'+$('.feedback_message').val()+'", "url": "'+window.location.pathname+'"}',
+		  data: '{ "feedback_message": "'+feedback_message+'", "url": "'+window.location.pathname+'"}',
 		  success: function(data) {
 			$('#preloader').fadeOut('fast');
 			$('.modal-body .alert').remove();
@@ -50,6 +54,7 @@ function send_feedback() {
 			
 			if (data != null && typeof(data.message) != 'undefined' && typeof(data.code) != 'undefined' && data.code == 200){
 				$('.modal-body').append('<span class="alert alert-success">Сообщение успешно отправлено</span>');
+				$('.feedback_message').val('');
 				setTimeout("$('#myModal .close').click()", 1000);
 			} else {
 				$('.modal-body').append('<span class="alert hide">Ошибка отправки</span>');

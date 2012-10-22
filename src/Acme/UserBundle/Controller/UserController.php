@@ -905,7 +905,8 @@ class UserController extends Controller
 		$data = (array)json_decode($request->getContent());
 
 		if (count($data) > 0 && isset($data['feedback_message']) && $data['feedback_message'] != '')
-		{												
+		{
+			$data['feedback_message'] = str_replace(array("#quot;", "#039;"), array("\"", "'"), $data['feedback_message']);
 			$message = \Swift_Message::newInstance()
 				->setSubject($data['feedback_message'])
 				->setFrom('tester@showstaff.ru')
@@ -914,7 +915,7 @@ class UserController extends Controller
 												array(	'feedback_message' => $data['feedback_message'],
                                                         'username' => $user->getUsername(),
 														'url' => 'http://'.$_SERVER['HTTP_HOST'].$data['url'] )));
-									
+			
 			$this->get('mailer')->send($message);
 
 			$code = 200;
