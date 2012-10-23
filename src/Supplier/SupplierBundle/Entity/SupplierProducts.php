@@ -43,10 +43,8 @@ class SupplierProducts
     /**
      * @var string $supplierName
      *
-     * @ORM\Column(name="supplier_name", type="string", length=255)
-	 * @Assert\NotBlank(message="<br>Name should not be blank")
+     * @ORM\Column(name="supplier_name", type="string", length=255, nullable=true)
 	 * @Assert\Type(type="string", message="<br>Supplier Name '{{ value }}' is not a valid {{ type }}.")
-     * @Assert\MinLength(limit=3, message="<br>Name must have at least {{ limit }} characters")
      * @Assert\MaxLength(limit=255, message="<br>Name is too long, It should have {{ limit }} characters or less")
      */
     private $supplierName;
