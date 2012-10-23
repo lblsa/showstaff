@@ -224,7 +224,7 @@ class UserController extends Controller
 			
 			if (isset($model['password']) && strlen($model['password']))
 				$user->setPassword($model['password']);
-				
+
 			$errors = $validator->validate($user);
 			
 			if (count($errors) > 0) {
@@ -239,13 +239,15 @@ class UserController extends Controller
 				die();
 				
 			} else {
-				// шифруем и устанавливаем пароль для пользователя,
-				// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)
-					
-				$user->setSalt(md5(time()));
-				$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
-				$password = $encoder->encodePassword($model['password'], $user->getSalt());
-				$user->setPassword($password);
+				if (isset($model['password']) && strlen($model['password'])>5)
+				{
+					// шифруем и устанавливаем пароль для пользователя,
+					// эти настройки должны совпадать с конфигурационным файлом (security.yml - security: encoders:)
+					$user->setSalt(md5(time()));
+					$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
+					$password = $encoder->encodePassword($model['password'], $user->getSalt());
+					$user->setPassword($password);
+				}
 				
 				$roles = array();
 				if (isset($model['roles']) && is_array($model['roles']) && count($model['roles'])>0)

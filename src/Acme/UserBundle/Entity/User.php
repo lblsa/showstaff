@@ -61,6 +61,7 @@ class User implements UserInterface, \Serializable
      *
      * @ORM\Column(name="password", type="string", length=255)
 	 * @Assert\NotBlank(message="Password should not be blank")
+	 * @Assert\MinLength(limit=6, message="Пароль должен содержать как минимум {{ limit }} символов")
      */
     protected $password;
 
