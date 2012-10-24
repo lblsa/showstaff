@@ -90,7 +90,7 @@ class SupplierProductsController extends Controller
 												'price'					=>	$p->getPrice(),
 												'product'				=>	$p->getProduct()->getId(),
 												'primary_supplier'		=>	$p->getPrime(),
-												'supplier_product_name'	=>	$p->getSupplierName(),
+												'supplier_product_name'	=>	$p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName(),
 												);												
 		}
 		$products_array = array_values($products_array);
@@ -243,8 +243,6 @@ class SupplierProductsController extends Controller
 			$supplier_product->setSupplier($supplier);
 			$supplier_product->setProduct($products_array[(int)$model['product']]);
 			$supplier_product->setCompany($company);
-			
-			
 			
 			$errors = $validator->validate($supplier_product);
 			

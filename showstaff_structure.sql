@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: localhost
--- Время создания: Окт 15 2012 г., 15:15
+-- Время создания: Окт 24 2012 г., 00:50
 -- Версия сервера: 5.5.24
 -- Версия PHP: 5.3.10-1ubuntu3.4
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `Company` (
   `extended_name` longtext COLLATE utf8_unicode_ci,
   `inn` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=15 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=10 ;
 
 -- --------------------------------------------------------
 
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `OrderItem` (
   KEY `IDX_73D03BB5B1E7706E` (`restaurant_id`),
   KEY `IDX_73D03BB52ADD6D8C` (`supplier_id`),
   KEY `IDX_73D03BB54584665A` (`product_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=90 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=119 ;
 
 -- --------------------------------------------------------
 
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `Orders` (
   `completed` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX_E283F8D8979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=6 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=8 ;
 
 -- --------------------------------------------------------
 
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `Restaurant` (
   `director` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX_A4C811EF979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=34 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=28 ;
 
 -- --------------------------------------------------------
 
@@ -143,14 +143,14 @@ CREATE TABLE IF NOT EXISTS `SupplierProducts` (
   `supplier_id` int(11) NOT NULL,
   `price` double NOT NULL,
   `primary_supplier` tinyint(1) NOT NULL,
-  `supplier_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `supplier_name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `company_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_sp` (`company_id`,`supplier_id`,`product_id`),
   KEY `IDX_A8DED6134584665A` (`product_id`),
   KEY `IDX_A8DED6132ADD6D8C` (`supplier_id`),
   KEY `IDX_A8DED613979B1AD6` (`company_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=92 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=93 ;
 
 -- --------------------------------------------------------
 
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `User` (
   `password` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UNIQ_2DA17977EFF286D2` (`username`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=44 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=46 ;
 
 -- --------------------------------------------------------
 

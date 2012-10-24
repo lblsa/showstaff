@@ -103,7 +103,7 @@ class OrderController extends Controller
 			foreach ($suppler_products AS $p)
 			{		
 				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName();
+				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
 			}
 		
 		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')
@@ -295,7 +295,7 @@ class OrderController extends Controller
 			foreach ($suppler_products AS $p)
 			{		
 				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName();
+				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
 			}
 		
 		
