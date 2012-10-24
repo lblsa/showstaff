@@ -5708,3 +5708,9 @@ select.product {
 .download_excel {
   margin-bottom:10px;
 }
+.ps_name .supplier_product_name {
+  width: 370px;
+}
+.ps_product .product {
+  width: 384px;
+}

@@ -13,7 +13,7 @@ $(function(){
 									'<input type="text" value="<%= supplier_product_name %>" class="supplier_product_name">'+
 								'</td>'+
 								'<td class="ps_price">'+
-									'<input type="text" value="<%= price %>" class="price">'+
+									'<input type="text" value="<%= price %>" class="price span1">'+
 								'</td>'+
 								'<td class="ps_product"></td>'+
 								'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
