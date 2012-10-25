@@ -186,10 +186,6 @@ class OrderItemController extends Controller
 
 		return array(	'restaurant' => $restaurant, 
 						'company' => $company,
-						'products' => $products,
-						'bookings' => $bookings,
-						'bookings_json' => json_encode($bookings_array),
-						'products_json' => json_encode($products_array),
 						'booking_date' => $booking_date,
 						'edit_mode' => $edit_mode );
 		

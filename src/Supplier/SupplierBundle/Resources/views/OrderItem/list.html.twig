@@ -41,6 +41,10 @@
 {% endif %}
  </thead>
 </table>
-<script src="/js/booking.js"></script>
+{% if edit_mode %}
+	<script src="/js/booking.js"></script>
+{% else %}
+	<script src="/js/booking_complete.js"></script>
+{% endif %}
 {% endblock %}
 

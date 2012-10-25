@@ -96,11 +96,30 @@ class ProductController extends Controller
 		if ($products)
 		{
 			foreach ($products AS $p)
+			{
+				$supplier_products = $this->getDoctrine()
+									->getRepository('SupplierBundle:SupplierProducts')
+									->findBy(
+										array('company'=>$cid, 'product'=>$p->getId()), 
+										array('prime'=>'DESC','price' => 'ASC'),
+										1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+				$price = 0;
+				$supplier_product = 0;
+				if ($supplier_products)
+					foreach ($supplier_products AS $sp)
+					{
+						$price = $sp->getPrice();
+						$supplier_product = $sp->getId();
+					}
+				
 				$products_array[] = array( 	'id' => $p->getId(),
 											'name'=> $p->getName(), 
 											'unit' => $p->getUnit()->getId(),
-											'use'	=> 0 
-											);
+											'use'	=> 0,
+											'price'	=> $price,
+											'supplier_product'	=> $supplier_product );
+				
+			}
 		}
 			
 		if ($request->isXmlHttpRequest()) 
@@ -117,7 +136,7 @@ class ProductController extends Controller
 			die(); 
 		}
 		
-		return array('company' => $company, 'products_json' => json_encode($products_array));
+		return array('company' => $company);
 	}
 	
 	/**
