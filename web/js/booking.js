@@ -37,7 +37,9 @@ $(function(){
 				
 				var select = $('.product_edit', this.el);
 				
-				products._byId[this.model.get('product')].attributes.use = 0;
+				if (typeof(products._byId[this.model.get('product')]) != 'undefined' && typeof(products._byId[this.model.get('product')].attributes) != 'undefined')
+					products._byId[this.model.get('product')].attributes.use = 0;
+					
 				products.each(function(p){
 					if (p.attributes.use == 0) {
 						var view = new OptionProducts({model:p});
@@ -46,7 +48,10 @@ $(function(){
 				});
 				
 				$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
-				products._byId[this.model.get('product')].attributes.use = 1;
+				
+				if (typeof(products._byId[this.model.get('product')]) != 'undefined' && typeof(products._byId[this.model.get('product')].attributes.use) != 'undefined')
+					products._byId[this.model.get('product')].attributes.use = 1;
+					
 			} else {
 				$('.remove', this.$el).remove();
 				$('.ps_name', this.el).html(this.model.get('name')+' ['+units[products._byId[this.model.get('product')].attributes.unit]+']');
