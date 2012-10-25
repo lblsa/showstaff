@@ -24,29 +24,32 @@ class SupplierProductsController extends Controller
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function listAction($cid, $sid, Request $request)
-    {
+	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
-	
-		
+
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -115,32 +118,7 @@ class SupplierProductsController extends Controller
 						'supplier_products_json' => json_encode($supplier_products_array),
 						'products_json' => json_encode($products_array), );
 
-	} 
-	 
-	/**
-	 * @Route("/supplier_products/supplier/{id}", name="supplier_products_by_supplier")
-	 */
-	 public function productsBySupplierAction($id)
-	 {
-		$supplier_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findBy(array('supplier' => $id));
-		$products_array = array();
-		//sleep(1);
-		if ($supplier_products)
-			foreach ($supplier_products AS $p)
-				$products_array[] = array(
-										'id' => $p->getId(), 
-										'supplier_product_name'=>$p->getSupplierName(), 
-										'primary_supplier'=>$p->getPrime(), 
-										'price'=>$p->getPrice(), 
-										'product'=>$p->getProduct()->getId(),
-										'supplier'=>$p->getSupplier()->getId(),
-										);
-
-		 $response = new Response(json_encode($products_array), 200);
-		 $response->headers->set('Content-Type', 'application/json');
-		 $response->sendContent();
-		 die(); 
-	 }
+	}
 	 
 	/**
 	 * @Route(	"/company/{cid}/supplier/{sid}/product/{pid}",
@@ -148,30 +126,33 @@ class SupplierProductsController extends Controller
 	 * 			requirements={"_method" = "PUT"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxupdateAction($cid, $sid, $pid, Request $request)
-	 {
+	public function ajaxupdateAction($cid, $sid, $pid, Request $request)
+	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
 	
-		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -293,31 +274,33 @@ class SupplierProductsController extends Controller
 	 * 			requirements={"_method" = "POST"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxcreateAction($cid, $sid, Request $request)
-	 {
+	public function ajaxcreateAction($cid, $sid, Request $request)
+	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
-	
-		
+
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
 			{
@@ -424,25 +407,29 @@ class SupplierProductsController extends Controller
  	 * 			requirements={"_method" = "DELETE"})
  	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxdeleteAction($cid, $sid, $pid)
-	 {
+	public function ajaxdeleteAction($cid, $sid, $pid)
+	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);

@@ -150,7 +150,7 @@ $(function(){
 		},
 		
 		close_form: function() {
-			$('.sp_list .form_add_supplier_product').slideUp(function(){
+			$('.sp_list .forms').slideUp(function(){
 				$('.sp_list .add_supplier_product_show').removeClass('close_form');
 				$('.sp_list .add_supplier_product_show i').attr('class', 'icon-plus-sign');
 			});
@@ -327,7 +327,7 @@ $(function(){
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
 					   
-					   	if (typeof(resp.data.name) == 'undefined') {
+					   	if (typeof(resp.data.supplier_product_name) == 'undefined') {
 							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
 						}
 
@@ -335,9 +335,9 @@ $(function(){
 						var content = view.render().el;
 					   
 						$('.sp_list .supplier_products').prepend(content);
-						$("#up .alert-success").clone().appendTo('.sp_list .form_add_supplier_product');
+						$("#up .alert-success").clone().appendTo('.sp_list .forms');
 
-						$('.sp_list .form_add_supplier_product .alert-success').fadeIn();
+						$('.sp_list .forms .alert-success').fadeIn();
 						
 						$('.sp_list .name_add_sp').val('');
 						$('.sp_list .price_add_sp').val('');
@@ -357,7 +357,7 @@ $(function(){
 					   if (resp != null && typeof(resp.message) != 'undefined')
 							$('#up .alert-error strong').html(''+resp.message);
 							
-					   $("#up .alert-error").clone().appendTo('.form_add_supplier_product');
+					   $("#up .alert-error").clone().appendTo('.forms');
 					   $('.sp_list .alert-error').fadeIn();
 					   supplier_products.remove(model, {silent:true});
 					   
@@ -511,14 +511,14 @@ $(function(){
 			}
 		});
 		
-		$('.form_add_supplier_product').slideDown(function(){
+		$('.forms').slideDown(function(){
 			$('.add_supplier_product_show i').attr('class', 'icon-minus-sign');
 		});
 		
 		$('.sp_list .name_add_sp').focus();
 		return false;
 	}, function(){
-		$('.form_add_supplier_product').slideUp(function(){
+		$('.forms').slideUp(function(){
 			$('.add_supplier_product_show i').attr('class', 'icon-plus-sign');
 		});
 		return false;

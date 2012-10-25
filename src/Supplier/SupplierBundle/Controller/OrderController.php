@@ -29,23 +29,25 @@ class OrderController extends Controller
     public function listAction($cid, $booking_date, Request $request)
     {
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
-		
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -172,20 +174,23 @@ class OrderController extends Controller
 	public function saveAction($cid, $booking_date, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
@@ -259,20 +264,23 @@ class OrderController extends Controller
 			$booking_date = date('Y-m-d');
 		
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
@@ -328,8 +336,8 @@ class OrderController extends Controller
 
 
         // create the object see http://phpexcel.codeplex.com documentation
-        $excelService->excelObj->getProperties()->setCreator($user->getFullname())
-                            ->setLastModifiedBy($user->getFullname())
+        $excelService->excelObj->getProperties()->setCreator($user->getUsername())
+                            ->setLastModifiedBy($user->getUsername())
                             ->setTitle("Заказ компании \"".$company->getName()."\" на ".$booking_date." число")
                             ->setSubject("Заказ компании \"".$company->getName()."\" на ".$booking_date." число")
                             ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")

@@ -54,19 +54,22 @@ class ProductController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
@@ -147,22 +150,25 @@ class ProductController extends Controller
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
-		  
+		
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $pid == $model['id'])
@@ -244,19 +250,22 @@ class ProductController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
@@ -294,19 +303,22 @@ class ProductController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
