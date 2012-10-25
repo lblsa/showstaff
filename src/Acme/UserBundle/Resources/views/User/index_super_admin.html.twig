@@ -1,0 +1,83 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+<div class="navbar">
+  <div class="navbar-inner">
+    <ul class="nav">
+      <li><a href="{{ path('company') }}">Смотреть/править список компаний</a></li>
+      <li><a href="{{ path('user') }}">Смотреть/править список администраторов компаний</a></li>
+    </ul>
+  </div>
+</div>
+
+<ul class="thumbnails">
+	<li class="span4 ">
+		<div class=" thumbnail">
+			<div class="caption">
+				<h4>Управление ресторанами</h4>
+				<p>Список ресторанов</p>
+				<select>
+					{% for company in companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}
+				</select>
+				<p><a class="btn" href="" rel="restaurant">Смотреть список ресторанов »</a></p>
+			</div>
+		</div>
+	</li>
+	<li class="span4">
+		<div class="thumbnail">
+			<div class="caption">
+				<h4>Cформировать заказ</h4>
+				<p>Страница списка продуктов по ресторанам/поставщикам</p>
+				<select>
+					{% for company in companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}
+				</select>
+				<p><a class="btn" href="" rel="order">Смотреть заказанные продукты »</a></p>
+			</div>
+		</div>
+	</li>	
+	<li class="span4">
+		<div class="thumbnail">
+			<div class="caption">
+				<h4>Управление поставщиками</h4>
+				<p>Список поставщиков</p>
+				<select>
+					{% for company in companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}
+				</select>
+				<p><a class="btn" href="" rel="supplier">Смотреть/править список поставщиков »</a></p>
+			</div>
+		</div>
+	</li>
+	<li class="span4">
+		<div class="thumbnail">
+			<div class="caption">
+				<h4>Управление продуктами</h4>
+				<p>Список продуктов</p>
+				<select>
+					{% for company in companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}
+				</select>
+				<p><a class="btn" href="" rel="product">Смотреть/править список продуктов »</a></p>
+			</div>
+		</div>
+	</li>
+	<li class="span4 ">
+		<div class=" thumbnail">
+			<div class="caption">
+				<h4>Управление менеджерами</h4>
+				<p>Список пользователей</p>
+				<select>
+					{% for company in companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}
+				</select>
+				<p><a class="btn" href="" rel="user">Смотреть список пользователей »</a></p>
+			</div>
+		</div>
+	</li>
+</ul>
+<script type="text/javascript">
+	$('.caption a.btn').click(function(){
+		window.location = '/company/'+$('select', $(this).closest('.caption')).val()+'/'+$(this).attr('rel');
+		return false;
+	});
+</script>
+
+{% endblock %}
+

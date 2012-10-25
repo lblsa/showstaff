@@ -790,9 +790,16 @@ class UserController extends Controller
 				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN);
 			}
 		}
-
-
+		
+		if ($this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+			return $this->render('AcmeUserBundle:User:index_super_admin.html.twig', array(	'companies' => $companies, 'cid' => 1	));
+		}
+		else
+		{
 			return array('ROLE_ADMIN'=>$ROLE_ADMIN);
+		}
 	}
 	
 	
