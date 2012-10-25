@@ -120,18 +120,29 @@ $(function(){
 		tagName: "tr",
 		className: "order",
 		
-		template: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
-								'<td><%= amount %></td>'+
-								'<td><%= price %></td>'+
-								'<td><% print(units._byId[unit].attributes.name); %></td>'+
-								'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
+		template_one: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
+									'<td><%= amount %></td>'+
+									'<td><%= price %></td>'+
+									'<td><% print(units._byId[unit].attributes.name); %></td>'+
+									'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
+								
+		template_two: _.template(	'<td><%= name %></td>'+
+									'<td><%= amount %></td>'+
+									'<td><%= price %></td>'+
+									'<td><% print(units._byId[unit].attributes.name); %></td>'+
+									'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
 		
 		initialize: function() {
 			this.model.view = this;
 		},
 		
-		render: function(){			
-			var content = this.template(this.model.toJSON());
+		render: function(){
+			
+			if (this.model.get('name') == this.model.get('supplier_name') || this.model.get('supplier_name') == '')
+				var content = this.template_two(this.model.toJSON());
+			else
+				var content = this.template_one(this.model.toJSON());
+				
 			this.$el.html(content);
 			return this;
 		}
@@ -141,18 +152,27 @@ $(function(){
 		tagName: "tr",
 		className: "order",
 		
-		template: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
-								'<td><%= amount %></td>'+
-								'<td><%= price %></td>'+
-								'<td><% print(units._byId[unit].attributes.name); %></td>'+
-								'<td><% print(restaurants._byId[restaurant].attributes.name); %></td>'),
+		template_one: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
+									'<td><%= amount %></td>'+
+									'<td><%= price %></td>'+
+									'<td><% print(units._byId[unit].attributes.name); %></td>'+
+									'<td><% print(restaurants._byId[restaurant].attributes.name); %></td>'),
+								
+		template_two: _.template(	'<td><%= name %></td>'+
+									'<td><%= amount %></td>'+
+									'<td><%= price %></td>'+
+									'<td><% print(units._byId[unit].attributes.name); %></td>'+
+									'<td><% print(restaurants._byId[restaurant].attributes.name); %></td>'),
 		
 		initialize: function() {
 			this.model.view = this;
 		},
 		
 		render: function(){
-			var content = this.template(this.model.toJSON());
+			if (this.model.get('name') == this.model.get('supplier_name') || this.model.get('supplier_name') == '')
+				var content = this.template_two(this.model.toJSON());
+			else
+				var content = this.template_one(this.model.toJSON());
 			this.$el.html(content);
 			return this;
 		}
