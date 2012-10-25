@@ -160,22 +160,25 @@ class UserController extends Controller
 	 {
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}		 
-		 
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
+			} 
+		}
+		
 		$model = (array)json_decode($request->getContent());
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $uid == $model['id'])
 		{
@@ -439,19 +442,22 @@ class UserController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 		
@@ -668,24 +674,26 @@ class UserController extends Controller
 	 */
 	public function ajaxdeleteManagerAction($cid, $uid, Request $request)
 	{
-		
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
-		}	
+		}
 		
 		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($uid);
 					
@@ -797,19 +805,22 @@ class UserController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-		
-		if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN'))
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					$response->sendContent();
+					die();
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
 
