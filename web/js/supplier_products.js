@@ -323,18 +323,24 @@ $(function(){
 
 						products._byId[resp.data.product].attributes.use = 1;
 						$('.product_add_sp option[value="'+resp.data.product+'"]').remove();
-					   
+				
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
 					   
-					   var view = new SupplierProductView({model:model});
-					   var content = view.render().el;
-					   $('.sp_list .supplier_products').prepend(content);
-					   $("#up .alert-success").clone().appendTo('.sp_list .form_add_supplier_product');
-					   $('.sp_list .form_add_supplier_product .alert-success').fadeIn();
+					   	if (typeof(resp.data.name) == 'undefined') {
+							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
+						}
+
+						var view = new SupplierProductView({model:model});
+						var content = view.render().el;
+					   
+						$('.sp_list .supplier_products').prepend(content);
+						$("#up .alert-success").clone().appendTo('.sp_list .form_add_supplier_product');
+
+						$('.sp_list .form_add_supplier_product .alert-success').fadeIn();
 						
-					   $('.sp_list .name_add_sp').val('');
-					   $('.sp_list .price_add_sp').val('');
+						$('.sp_list .name_add_sp').val('');
+						$('.sp_list .price_add_sp').val('');
 
 						supplier_products.sort({silent: true});
 						VSP.remove()
@@ -383,7 +389,7 @@ $(function(){
 		initialize: function(models, options) {
 			this.bind('add', this.addProduct);
 			
-			this.fetch({	
+			this.fetch({
 							error: function(){
 								$('#preloader').fadeOut('fast');
 								console.log(' error =( ');
