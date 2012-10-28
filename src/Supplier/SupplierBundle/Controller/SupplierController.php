@@ -16,10 +16,7 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class SupplierController extends Controller
 {
 	/**
-	 * @Route(	"company/{cid}/supplier", 
-	 * 			name="supplier",
-	 * 			requirements={"_method" = "GET"})
-	 * 			
+	 * @Route("company/{cid}/supplier", name="supplier", requirements={"_method" = "GET"})
 	 * @Template()
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
@@ -37,9 +34,7 @@ class SupplierController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -55,45 +50,11 @@ class SupplierController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
 				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
-		}
-		
-		$supplier = new Supplier();
-		
-		$form = $this->createForm(new SupplierType(), $supplier);
-		
-		if ($request->getMethod() == 'POST')
-		{			
-			$validator = $this->get('validator');
-			$form->bindRequest($request);
-
-			if ($form->isValid())
-			{
-				$supplier = $form->getData();
-				$supplier->setCompany($company);		
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier);
-				$em->flush();
-				
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 200;
-					$result = array('code' => $code, 'message' => 'Supplier #'.$supplier->getId().' is created');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				}
-				else
-				{
-					return $this->redirect($this->generateUrl('supplier', array('cid' => $cid)));
-				}
 			}
 		}
 		
@@ -103,25 +64,30 @@ class SupplierController extends Controller
 		if ($suppliers)
 		{
 			foreach ($suppliers AS $p)
-				$suppliers_array[] = array( 'id' => $p->getId(),
-											'name'=> $p->getName());
+			{
+				if($p->getActive())
+				{
+					$suppliers_array[] = array( 'id' => $p->getId(),
+												'name'=> $p->getName());
+				}
+			}
 		}
 			
 		if ($request->isXmlHttpRequest()) 
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $suppliers_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 			header("Cache-Control: post-check=0, pre-check=0", false);
 			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die(); 
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
-		return array('company' => $company, 'suppliers' => $suppliers, 'suppliers_json' => json_encode($suppliers_array), 'form' => $form->createView());
+		return array(	'company' => $company,
+						'suppliers' => $suppliers,
+						'suppliers_json' => json_encode($suppliers_array)	);
 	}
 
 	/**
@@ -144,9 +110,7 @@ class SupplierController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -165,9 +129,7 @@ class SupplierController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for id '.$sid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$validator = $this->get('validator');
@@ -183,10 +145,8 @@ class SupplierController extends Controller
 				
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-				
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+								
 			} else {
 				
 				$em = $this->getDoctrine()->getEntityManager();
@@ -194,20 +154,15 @@ class SupplierController extends Controller
 				$em->flush();
 				
 				$code = 200;
-				
 				$result = array('code'=> $code, 'data' => array('name' => $supplier->getName()));
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 		}
 			
 		$code = 400;
 		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		 
 	 }
 	 
@@ -231,9 +186,8 @@ class SupplierController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -248,21 +202,27 @@ class SupplierController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No supplier found for id '.$sid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
-
+		$supplier->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
-		$em->remove($supplier);
+		$em->persist($supplier);
 		$em->flush();
+		
+		$q = $this->getDoctrine()
+				->getRepository('SupplierBundle:SupplierProducts')
+				->createQueryBuilder('p')
+				->update('SupplierBundle:SupplierProducts p')
+				->set('p.active', 0)
+				->where('p.supplier = :supplier')
+				->setParameters(array('supplier' => $supplier->getId()))
+				->getQuery()
+				->execute();
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $sid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -285,9 +245,8 @@ class SupplierController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -298,12 +257,11 @@ class SupplierController extends Controller
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
 						
-		if (!$company) {
+		if (!$company)
+		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 		$model = (array)json_decode($request->getContent());
@@ -324,9 +282,7 @@ class SupplierController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -339,19 +295,14 @@ class SupplierController extends Controller
 				$result = array(	'code' => $code, 'data' => array(	'id' => $supplier->getId(),
 																		'name' => $supplier->getName()
 																	));
-				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 		}
 		
 		$code = 400;
 		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	 
 	}
 }

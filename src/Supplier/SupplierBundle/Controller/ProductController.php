@@ -31,17 +31,13 @@ class ProductController extends Controller
 				
 			$code = 200;
 			$result = array('code' => $code, 'data' => $units_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die(); 
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		else
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No company units');
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 	}	
 	
@@ -64,9 +60,7 @@ class ProductController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -82,9 +76,7 @@ class ProductController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -100,28 +92,35 @@ class ProductController extends Controller
 		{
 			foreach ($products AS $p)
 			{
-				$supplier_products = $this->getDoctrine()
-									->getRepository('SupplierBundle:SupplierProducts')
-									->findBy(
-										array('company'=>$cid, 'product'=>$p->getId()), 
-										array('prime'=>'DESC','price' => 'ASC'),
-										1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
-				$price = 0;
-				$supplier_product = 0;
-				if ($supplier_products)
-					foreach ($supplier_products AS $sp)
+				if ($p->getActive())
+				{
+					$supplier_products = $this->getDoctrine()
+										->getRepository('SupplierBundle:SupplierProducts')
+										->findBy(
+											array('company'=>$cid, 'product'=>$p->getId()), 
+											array('prime'=>'DESC','price' => 'ASC'),
+											1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+					$price = 0;
+					$supplier_product = 0;
+					if ($supplier_products)
 					{
-						$price = $sp->getPrice();
-						$supplier_product = $sp->getId();
+						foreach ($supplier_products AS $sp)
+						{
+							if ($sp->getActive())
+							{
+								$price = $sp->getPrice();
+								$supplier_product = $sp->getId();
+							}
+						}
 					}
 				
-				$products_array[] = array( 	'id' => $p->getId(),
-											'name'=> $p->getName(), 
-											'unit' => $p->getUnit()->getId(),
-											'use'	=> 0,
-											'price'	=> $price,
-											'supplier_product'	=> $supplier_product );
-				
+					$products_array[] = array( 	'id' => $p->getId(),
+												'name'=> $p->getName(), 
+												'unit' => $p->getUnit()->getId(),
+												'use'	=> 0,
+												'price'	=> $price,
+												'supplier_product'	=> $supplier_product );
+				}
 			}
 		}
 			
@@ -129,14 +128,13 @@ class ProductController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $products_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
 			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 			header("Cache-Control: post-check=0, pre-check=0", false);
 			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die(); 
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 		return array('company' => $company);
@@ -160,9 +158,7 @@ class ProductController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -181,9 +177,14 @@ class ProductController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			}
+			
+			if (!$product->getActive())
+			{
+				$code = 403;
+				$result = array('code'=>$code, 'message'=>'Запрещено редактировать (неактивный продукт)');
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));	
 			}
 			
 			$validator = $this->get('validator');
@@ -193,9 +194,7 @@ class ProductController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No unit found for id '.(int)$model['unit']);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$product->setName($model['name']);
@@ -210,9 +209,7 @@ class ProductController extends Controller
 				
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -226,18 +223,14 @@ class ProductController extends Controller
 																'name' => $product->getName(), 
 																'unit' => $product->getUnit()->getId()
 															));
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 		}
 			
 		$code = 400;
 		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		 
 	 }
 	 
@@ -260,9 +253,7 @@ class ProductController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -277,21 +268,27 @@ class ProductController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
-
+		$product->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
-		$em->remove($product);
+		$em->persist($product);
 		$em->flush();
+		
+		$q = $this->getDoctrine()
+				->getRepository('SupplierBundle:SupplierProducts')
+				->createQueryBuilder('p')
+				->update('SupplierBundle:SupplierProducts p')
+				->set('p.active', 0)
+				->where('p.product = :product')
+				->setParameters(array('product' => $product->getId()))
+				->getQuery()
+				->execute();
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $pid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 
@@ -313,9 +310,7 @@ class ProductController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -327,9 +322,7 @@ class ProductController extends Controller
 		if (!$company) {
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		$model = (array)json_decode($request->getContent());
@@ -341,9 +334,7 @@ class ProductController extends Controller
 			if (!$unit) {
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No unit found for id '.(int)$model['unit']);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		
 			$validator = $this->get('validator');
@@ -360,9 +351,7 @@ class ProductController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -377,18 +366,13 @@ class ProductController extends Controller
 																		'unit' => $product->getUnit()->getId(),
 																	));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));			
 			}
 		}
 		
 		$code = 400;
 		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-	 
+		return Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
 	}
 }

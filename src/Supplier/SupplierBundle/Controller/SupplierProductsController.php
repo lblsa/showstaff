@@ -37,9 +37,7 @@ class SupplierProductsController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -55,9 +53,7 @@ class SupplierProductsController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -65,7 +61,35 @@ class SupplierProductsController extends Controller
 			}
 		}
 		
-		$suppliers = $company->getSuppliers();
+		$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find($sid);
+		
+		if (!$supplier) {
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 404;
+				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid);
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			}
+			else
+			{
+				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
+			}
+		}
+		
+		if (!$supplier->getActive())
+		{
+			if ($request->isXmlHttpRequest()) 
+			{
+				$code = 403;
+				$result = array('code' => $code, 'message' => 'Запрещено редактирование. Поставщик неактивен');
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			}
+			else
+			{
+				throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Запрещено редактирование. Поставщик неактивен');
+			}
+		}
+		
 		$products = $company->getProducts();
 			
 		$products_array = array();
@@ -78,8 +102,8 @@ class SupplierProductsController extends Controller
 														'unit'	=> $p->getUnit(), );
 		}
 		
-		foreach ($suppliers AS $s)
-			$supplier = $s;
+
+		
 		
 		$supplier_products = $this->getDoctrine()
 						->getRepository('SupplierBundle:SupplierProducts')
@@ -89,12 +113,15 @@ class SupplierProductsController extends Controller
 		
 		foreach ($supplier_products AS $p)
 		{	
-			$supplier_products_array[] = array(	'id'					=>	$p->getId(),
-												'price'					=>	$p->getPrice(),
-												'product'				=>	$p->getProduct()->getId(),
-												'primary_supplier'		=>	$p->getPrime(),
-												'supplier_product_name'	=>	$p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName(),
-												);												
+			if ($p->getProduct()->getActive() && $p->getActive())
+			{
+				$supplier_products_array[] = array(	'id'					=>	$p->getId(),
+													'price'					=>	$p->getPrice(),
+													'product'				=>	$p->getProduct()->getId(),
+													'primary_supplier'		=>	$p->getPrime(),
+													'supplier_product_name'	=>	$p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName(),
+													);												
+			}
 		}
 		$products_array = array_values($products_array);
 
@@ -102,14 +129,12 @@ class SupplierProductsController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $supplier_products_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 			header("Cache-Control: post-check=0, pre-check=0", false);
 			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die(); 
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		return array(	'supplier_products' => $supplier_products, 
@@ -140,9 +165,7 @@ class SupplierProductsController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -158,9 +181,7 @@ class SupplierProductsController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -186,20 +207,22 @@ class SupplierProductsController extends Controller
 			{
 				$code = 404;
 				$result = array('code'=>$code, 'message'=>'No supplier product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			}
+
+			if (!$supplier_product->getActive())
+			{
+				$code = 403;
+				$result = array('code'=>$code, 'message'=>'Запрещено редактировать (неактивный продукт)');
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));	
 			}
 			
 			if (!array_key_exists($model['product'], $products_array))
 			{
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>'No product #'.(int)$model['product'].' found for supplier product');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
-			
 			
 			$validator = $this->get('validator');
 			
@@ -234,9 +257,7 @@ class SupplierProductsController extends Controller
 				
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>$errors);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -252,18 +273,13 @@ class SupplierProductsController extends Controller
 								'product' => $supplier_product->getProduct()->getId());
 				$code = 200;
 				$result = array('code'=>$code, 'data'=> $attr);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));			
 			}
 		}
 			
 		$code = 400;
 		$result = array('code'=>$code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
 	 }
 	 
@@ -288,9 +304,7 @@ class SupplierProductsController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -306,9 +320,7 @@ class SupplierProductsController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -330,9 +342,7 @@ class SupplierProductsController extends Controller
 			{
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>'No product #'.(int)$model['product'].' found for supplier product');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 	
 			$price = 0+$model['price'];
@@ -368,9 +378,7 @@ class SupplierProductsController extends Controller
 					
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -386,18 +394,13 @@ class SupplierProductsController extends Controller
 				
 				$code = 200;
 				$result = array('code' => $code, 'data' => $attr);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		}
 		
 		$code = 400;
 		$result = array('code'=>$code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}	
 	 
 	 
@@ -421,9 +424,7 @@ class SupplierProductsController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -439,16 +440,13 @@ class SupplierProductsController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for supplier_id='.$sid.' and company_id='.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
 				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
 			}
 		}
-		 
 		 
 		$supplier_product = $this->getDoctrine()
 				->getRepository('SupplierBundle:SupplierProducts')
@@ -458,19 +456,16 @@ class SupplierProductsController extends Controller
 		{
 			$code = 404;
 			$result = array('code'=>$code, 'message'=>'No supplier product found for id '.$pid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
+		$supplier_product->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
-		$em->remove($supplier_product);
+		$em->persist($supplier_product);
 		$em->flush();
 	
 		$code = 200;
 		$result = array('code' => $code, 'data' => $pid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	 }
 }

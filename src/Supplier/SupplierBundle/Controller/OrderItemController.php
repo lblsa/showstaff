@@ -40,9 +40,8 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -59,9 +58,7 @@ class OrderItemController extends Controller
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
 					}
@@ -78,9 +75,8 @@ class OrderItemController extends Controller
 						{
 							$code = 403;
 							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-							$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-							$response->sendContent();
-							die();
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+							
 						} else {
 							throw new AccessDeniedHttpException('Forbidden Restaurant');
 						}
@@ -99,9 +95,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -111,22 +105,21 @@ class OrderItemController extends Controller
 		
 		$restaurants = $company->getRestaurants();
 		foreach ($restaurants AS $r) $restaurant = $r;
-		
-		
 
 		$suppler_products = $this->getDoctrine()
 								->getRepository('SupplierBundle:SupplierProducts')
 								->findByCompany($cid);
-		
-		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findByCompany($cid);
+
 		$products_array = array();
 		foreach ($suppler_products as $sp)
 		{
-			$products_array[$sp->getProduct()->getId()] = array(	'id' => $sp->getProduct()->getId(),
-																	'name'=> $sp->getProduct()->getName(), 
-																	'unit' => $sp->getProduct()->getUnit(),
-																	'use' => 0 );
-		
+			if ($sp->getProduct()->getActive() && $sp->getActive() && $sp->getSupplier()->getActive())
+			{
+				$products_array[$sp->getProduct()->getId()] = array(	'id' => $sp->getProduct()->getId(),
+																		'name'=> $sp->getProduct()->getName(), 
+																		'unit' => $sp->getProduct()->getUnit(),
+																		'use' => 0 );
+			}
 		}
 
 		
@@ -140,13 +133,16 @@ class OrderItemController extends Controller
 		{
 			foreach ($bookings AS $p)
 			{
-				$bookings_array[] = array(	'id' => $p->getId(),
-											'amount' => $p->getAmount(),
-											'product' => $p->getProduct()->getId(),
-											'name' => $p->getProduct()->getName(),
-										);
-				if (isset($products_array[$p->getProduct()->getId()]))
-					$products_array[$p->getProduct()->getId()]['use'] = 1;
+				if ($p->getProduct()->getActive() && $p->getSupplier()->getActive())
+				{
+					$bookings_array[] = array(	'id' => $p->getId(),
+												'amount' => $p->getAmount(),
+												'product' => $p->getProduct()->getId(),
+												'name' => $p->getProduct()->getName(),
+											);
+					if (isset($products_array[$p->getProduct()->getId()]))
+						$products_array[$p->getProduct()->getId()]['use'] = 1;
+				}
 			}
 		}
 		
@@ -175,14 +171,12 @@ class OrderItemController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bookings_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 			header("Cache-Control: post-check=0, pre-check=0", false);
 			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		return array(	'restaurant' => $restaurant, 
@@ -202,6 +196,7 @@ class OrderItemController extends Controller
 	public function ajaxcreateAction($cid, $rid, $booking_date, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
+		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -212,9 +207,8 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -234,9 +228,8 @@ class OrderItemController extends Controller
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
 					}
@@ -253,9 +246,8 @@ class OrderItemController extends Controller
 						{
 							$code = 403;
 							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-							$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-							$response->sendContent();
-							die();
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+							
 						} else {
 							throw new AccessDeniedHttpException('Forbidden Restaurant');
 						}
@@ -274,9 +266,8 @@ class OrderItemController extends Controller
 		if (!$restaurant) {
 			$code = 404;
 			$result = array('code' => $code, 'result' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			
 		}
 		
 		$company = $restaurant->getCompany();
@@ -293,9 +284,7 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Order is completed. You can not create order.');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 			}
 		}
@@ -308,9 +297,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'Amount should not be 0');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			
@@ -322,9 +309,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$model['amount'] = str_replace(',', '.', $model['amount']);
@@ -353,9 +338,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for product #'.$product->getId());
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$errors = $validator->validate($booking);
@@ -367,9 +350,7 @@ class OrderItemController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -386,9 +367,7 @@ class OrderItemController extends Controller
 														'restaurant' => $restaurant->getId(),
 														'product' => $product->getId(),		));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 			
@@ -397,9 +376,7 @@ class OrderItemController extends Controller
 	
 		$code = 400;
 		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -423,9 +400,7 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -444,9 +419,7 @@ class OrderItemController extends Controller
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
 					}
@@ -463,9 +436,7 @@ class OrderItemController extends Controller
 						{
 							$code = 403;
 							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-							$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-							$response->sendContent();
-							die();
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 						} else {
 							throw new AccessDeniedHttpException('Forbidden Restaurant');
 						}
@@ -481,9 +452,7 @@ class OrderItemController extends Controller
 		if (!$company) {
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
@@ -497,9 +466,7 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 		}
 		
@@ -511,9 +478,7 @@ class OrderItemController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 	
 		$booking = $this->getDoctrine()
@@ -524,18 +489,14 @@ class OrderItemController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bid, 'message' => 'No oreder item found for id '.$rid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		if ($booking->getDate() < date('Y-m-d') )
 		{
 			$code = 403;
 			$result = array('code' => $code, 'message' => 'You can not remove the old booking');
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		else
 		{
@@ -545,9 +506,7 @@ class OrderItemController extends Controller
 		
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 	}
 
@@ -573,9 +532,7 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -594,9 +551,7 @@ class OrderItemController extends Controller
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
 					}
@@ -613,9 +568,7 @@ class OrderItemController extends Controller
 						{
 							$code = 403;
 							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-							$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-							$response->sendContent();
-							die();
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 						} else {
 							throw new AccessDeniedHttpException('Forbidden Restaurant');
 						}
@@ -638,9 +591,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'Amount should not be 0');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$company = $this->getDoctrine()
@@ -649,9 +600,7 @@ class OrderItemController extends Controller
 			if (!$company) {
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
@@ -665,9 +614,7 @@ class OrderItemController extends Controller
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					}
 			}
 			
@@ -678,9 +625,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		
 
@@ -692,18 +637,14 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No booking found for id '.$rid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			if ($booking->getDate() < date('Y-m-d') )
 			{
 				$code = 403;
 				$result = array('code' => $code, 'message' => 'You can not edit the old booking');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -720,9 +661,7 @@ class OrderItemController extends Controller
 				{
 					$code = 404;
 					$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 								
 				$booking->setAmount($amount);
@@ -743,9 +682,7 @@ class OrderItemController extends Controller
 				{
 					$code = 404;
 					$result = array('code' => $code, 'message' => 'No supplier found for product #'.$product->getId());
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 
 				$errors = $validator->validate($booking);
@@ -757,9 +694,7 @@ class OrderItemController extends Controller
 					
 					$code = 400;
 					$result = array('code'=>$code, 'message'=>$errorMessage);
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					
 				} else {
 					
@@ -774,19 +709,15 @@ class OrderItemController extends Controller
 																'amount' => $booking->getAmount(),
 																'product' => $booking->getProduct()->getId(),
 																'id' => $booking->getId()	));
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 			}
 		}
 			
 		$code = 400;
 		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-		 
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+	 
 	}
 }
 
