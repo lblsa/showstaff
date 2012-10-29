@@ -80,9 +80,7 @@ class UserController extends Controller
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $roles_array);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
     /**
@@ -102,9 +100,7 @@ class UserController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No role found for id '.$role_id);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 		$users = $role->getUsers();
@@ -140,14 +136,12 @@ class UserController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $users_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 			header("Cache-Control: post-check=0, pre-check=0", false);
 			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		return array( 'users_json' => json_encode($users_array) );
@@ -171,9 +165,7 @@ class UserController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -188,9 +180,7 @@ class UserController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 						
 			$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$cid);
@@ -199,9 +189,7 @@ class UserController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No company found for id '.(int)$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -238,9 +226,7 @@ class UserController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				if (isset($model['password']) && strlen($model['password'])>5)
@@ -305,17 +291,13 @@ class UserController extends Controller
 																		'roles' => $roles,
 																	));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		}
 		
 		$code = 400;
 		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -336,9 +318,7 @@ class UserController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			if (isset($model['company']) && (int)$model['company'] > 0)
@@ -349,9 +329,7 @@ class UserController extends Controller
 				{
 					$code = 404;
 					$result = array('code' => $code, 'message' => 'No company found for id '.(int)$model['company']);
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 				
 				$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -392,9 +370,7 @@ class UserController extends Controller
 				
 				$code = 400;
 				$result = array('code'=>$code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			}
 			else
@@ -420,19 +396,14 @@ class UserController extends Controller
 																	'email' => $user->getEmail(),
 																	'company' => $model['company'],
 																));
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 		}
 			
 		$code = 400;
 		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-		 
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));	 
 	 }
 	 
 	/**
@@ -479,9 +450,7 @@ class UserController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				// шифруем и устанавливаем пароль для пользователя,
@@ -518,9 +487,7 @@ class UserController extends Controller
 				{
 					$code = 404;
 					$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 				
 				$permission = new Permission();
@@ -555,17 +522,13 @@ class UserController extends Controller
 																		'roles' => $roles,
 																	));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		}
 		
 		$code = 400;
 		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 
 	/**
@@ -586,9 +549,7 @@ class UserController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No role found for id '.$role_id);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$validator = $this->get('validator');
@@ -607,9 +568,7 @@ class UserController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				// шифруем и устанавливаем пароль для пользователя,
@@ -631,9 +590,7 @@ class UserController extends Controller
 					{
 						$code = 404;
 						$result = array('code' => $code, 'message' => 'No company found for id '.(int)$model['company']);
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					}
 					$permission = new Permission();
 					$permission->setUser($user);
@@ -654,17 +611,13 @@ class UserController extends Controller
 																		'company' => (int)$model['company'],
 																	));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		}
 		
 		$code = 400;
 		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -685,9 +638,7 @@ class UserController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -700,9 +651,7 @@ class UserController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 
@@ -712,9 +661,7 @@ class UserController extends Controller
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $uid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 
 	
@@ -734,9 +681,7 @@ class UserController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 
@@ -746,9 +691,8 @@ class UserController extends Controller
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $uid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
 	}
 	
 	
@@ -778,9 +722,7 @@ class UserController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));					
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
 					throw new AccessDeniedHttpException('Forbidden');
 				}
@@ -821,9 +763,8 @@ class UserController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
 				} else {
 					throw new AccessDeniedHttpException('Forbidden Company');
 				}
@@ -839,9 +780,7 @@ class UserController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
@@ -897,14 +836,12 @@ class UserController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $users_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 			header("Cache-Control: post-check=0, pre-check=0", false);
 			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		return array(	'users_json' => json_encode($users_array),
@@ -1040,17 +977,13 @@ class UserController extends Controller
 
 			$code = 200;
 			$result = array('code' => $code, 'message'=> 'Succes send');
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();	
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
 		} else {
 			
 			$code = 400;
 			$result = array('code' => $code, 'message'=> 'Invalid request');
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
 		}	
 	}
