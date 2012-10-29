@@ -3,6 +3,7 @@ var href = window.location.pathname.split('/');
 var Units, units;
 
 $(document).ready(function(){
+	reloadIfBack();
 	
 	Units = Backbone.Collection.extend({
 		url: '/units',
@@ -84,4 +85,14 @@ function error_fetch(message) {
 	$('.span12').append('<div class="alert"><button type="button" class="close" data-dismiss="alert">×</button>'+message+'</div>');
 	$('#preloader').fadeOut('fast');
 }
-
+// Refrech page after back button
+function reloadIfBack() {
+	console.log('reloadifBack');
+	
+	if ($('#refreshed').val()=="no") {
+		$('#refreshed').val("yes");
+	} else {
+		$('#refreshed').val("no");
+		location.reload();
+	}
+}
