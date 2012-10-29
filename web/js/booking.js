@@ -130,7 +130,7 @@ $(function(){
 			
 			} else {
 			
-				$('.bookings').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
+				$('.bookings').html('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'У данного ресторана нет заказов на текущую дату</div></td></tr>');
 			}
