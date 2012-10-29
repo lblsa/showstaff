@@ -48,7 +48,8 @@ class SupplierProductsController extends Controller
 						->getRepository('SupplierBundle:Company')
 						->findOneCompanyOneSupplier($cid, $sid);
 
-		if (!$company) {
+		if (!$company)
+		{
 			if ($request->isXmlHttpRequest()) 
 			{
 				$code = 404;
@@ -63,7 +64,8 @@ class SupplierProductsController extends Controller
 		
 		$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find($sid);
 		
-		if (!$supplier) {
+		if (!$supplier)
+		{
 			if ($request->isXmlHttpRequest()) 
 			{
 				$code = 404;
@@ -119,7 +121,8 @@ class SupplierProductsController extends Controller
 													'price'					=>	$p->getPrice(),
 													'product'				=>	$p->getProduct()->getId(),
 													'primary_supplier'		=>	$p->getPrime(),
-													'supplier_product_name'	=>	$p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName(),
+													//'supplier_product_name'	=>	$p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName(),
+													'supplier_product_name'	=>	$p->getSupplierName(),
 													);												
 			}
 		}

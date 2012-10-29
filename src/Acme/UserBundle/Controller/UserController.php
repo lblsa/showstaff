@@ -328,7 +328,7 @@ class UserController extends Controller
 				if (!$company) 
 				{
 					$code = 404;
-					$result = array('code' => $code, 'message' => 'No company found for id '.(int)$model['company']);
+					$result = array('code' => $code, 'message' => 'Не найдена компаний c id '.(int)$model['company']);
 					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 				
@@ -402,7 +402,7 @@ class UserController extends Controller
 		}
 			
 		$code = 400;
-		$result = array('code'=> $code, 'message' => 'Invalid request');
+		$result = array('code'=> $code, 'message' => 'Некорректный запрос');
 		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));	 
 	 }
 	 
@@ -640,7 +640,7 @@ class UserController extends Controller
 					$result = array('code' => $code, 'message' => 'Forbidden Company');
 					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
-					throw new AccessDeniedHttpException('Forbidden Company');
+					throw new AccessDeniedHttpException('Нет доступа');
 				}
 			}
 		}
@@ -680,7 +680,7 @@ class UserController extends Controller
 		if (!$user)
 		{
 			$code = 404;
-			$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
+			$result = array('code' => $code, 'message' => 'Не найден пользователь с id '.$uid);
 			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
@@ -724,7 +724,7 @@ class UserController extends Controller
 					$result = array('code' => $code, 'message' => 'Forbidden');
 					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
-					throw new AccessDeniedHttpException('Forbidden');
+					throw new AccessDeniedHttpException('Нет доступа');
 				}
 			} else {
 				$company = $permission->getCompany();
@@ -762,7 +762,7 @@ class UserController extends Controller
 				if ($request->isXmlHttpRequest()) 
 				{
 					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					$result = array('code' => $code, 'message' => 'Нет доступа');
 					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
 				} else {
@@ -976,13 +976,13 @@ class UserController extends Controller
 			$this->get('mailer')->send($message);
 
 			$code = 200;
-			$result = array('code' => $code, 'message'=> 'Succes send');
+			$result = array('code' => $code, 'message'=> 'Успешно отправлено');
 			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
 		} else {
 			
 			$code = 400;
-			$result = array('code' => $code, 'message'=> 'Invalid request');
+			$result = array('code' => $code, 'message'=> 'Некорректный запрос');
 			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
 		}	

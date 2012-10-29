@@ -137,8 +137,7 @@ $(function(){
 				});
 			
 			} else {
-			
-				$('.supplier_products').append('<tr class="alert_row"><td colspan="4"><div class="alert">'+
+				$('.supplier_products').html('<tr class="alert_row"><td colspan="4"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'У данного поставщика еще нет продуктов</div></td></tr>');
 			}
@@ -325,9 +324,9 @@ $(function(){
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
 					   
-					   	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
+					   /*	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
 							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
-						}
+						}*/
 
 						var view = new SupplierProductView({model:model});
 						var content = view.render().el;
