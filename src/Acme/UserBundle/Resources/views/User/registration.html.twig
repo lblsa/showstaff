@@ -1,0 +1,51 @@
+{# src/Acme/UserBundle/Resources/views/User/registr.html.twig #}
+{% extends 'AcmeUserBundle::base.html.twig' %}
+
+{% block body %}
+
+	<legend style="padding-left: 160px;">Регистрация</legend>
+	<!-- {% for message in errorMessage %}<p class="text-error">{{ message }}</p>{% endfor %} -->
+	<p class="text-error">{{ error }}</p>
+	<form action="{{ path('registr') }}" method="post"  class="form-horizontal" {{ form_enctype(form) }}>
+		<p class="text-error">{{ form_errors(form) }}</p>
+		<div class="control-group">
+			{{ form_label(form.email, null, { 'attr': {'class': 'control-label'}}) }}
+			<div class="controls">
+				{{ form_errors(form.email) }}
+				{{ form_widget(form.email) }}
+			</div>
+		</div>
+		
+		<div class="control-group">
+			{{ form_label(form.fullname, null, { 'attr': {'class': 'control-label'}}) }}
+			<div class="controls">
+				{{ form_errors(form.fullname) }}
+				{{ form_widget(form.fullname) }}
+			</div>
+		</div>
+
+		<div class="control-group">
+			{{ form_label(form.username, null, { 'attr': {'class': 'control-label'}}) }}
+			<div class="controls">
+				{{ form_errors(form.username) }}
+				{{ form_widget(form.username) }}
+			</div>
+		</div>
+
+		<div class="control-group">
+			{{ form_label(form.password, null, { 'attr': {'class': 'control-label'}}) }}
+			<div class="controls">
+				{{ form_errors(form.password) }}
+				{{ form_widget(form.password) }}
+			</div>
+		</div>
+		{{ form_rest(form) }}
+	   
+		<div class="control-group">
+			<div class="controls">
+			  <button type="submit" class="btn">Зарегистрироваться</button>
+			</div>
+		</div>
+	</form>
+
+{% endblock %}

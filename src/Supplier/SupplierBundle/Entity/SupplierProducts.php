@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Supplier\SupplierBundle\Entity\SupplierProducts
  *
- * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="uniq_sp", columns={"company_id", "supplier_id", "product_id"})})
+ * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="uniq_sp", columns={"company_id", "supplier_id", "product_id", "active"})})
  * @ORM\Entity(repositoryClass="Supplier\SupplierBundle\Entity\SupplierProductsRepository")
  */
 class SupplierProducts
@@ -21,7 +21,14 @@ class SupplierProducts
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
-
+    
+    /**
+     * @var integer $active
+     *
+     * @ORM\Column(name="active", type="boolean", nullable=true)
+     */
+	private $active = 1;
+	
     /**
      * @var float $price
      *
@@ -52,13 +59,13 @@ class SupplierProducts
 
     /**
      * @ORM\ManyToOne(targetEntity="Product")
-     * @ORM\JoinColumn(name="product_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)
+     * @ORM\JoinColumn(name="product_id", referencedColumnName="id", nullable=false)
      */
     protected $product;
 
     /**
      * @ORM\ManyToOne(targetEntity="Supplier")
-     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)
+     * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", nullable=false)
      */
     protected $supplier;
 
@@ -197,5 +204,25 @@ class SupplierProducts
     public function getCompany()
     {
         return $this->company;
+    }
+
+    /**
+     * Set active
+     *
+     * @param boolean $active
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
+
+    /**
+     * Get active
+     *
+     * @return boolean 
+     */
+    public function getActive()
+    {
+        return $this->active;
     }
 }

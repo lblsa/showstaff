@@ -64,9 +64,7 @@ $(function(){
 			});
 			products._byId[product_id].attributes.use = 1;
 			
-			$('.ps_prime', this.el).prepend('<p>'+
-							'<label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
-							'</p>');
+			$('.ps_prime', this.el).prepend('<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label></p>');
 			if (this.model.get('primary_supplier'))
 				$('.primary_supplier', this.el).attr('checked','checked');
 				
@@ -327,7 +325,7 @@ $(function(){
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
 					   
-					   	if (typeof(resp.data.supplier_product_name) == 'undefined') {
+					   	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
 							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
 						}
 

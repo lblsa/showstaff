@@ -1,0 +1,12 @@
+{# src/Acme/UserBundle/Resources/views/User/confirm.html.twig #}
+{% extends 'AcmeUserBundle::base.html.twig' %}
+
+{% block body %}
+	
+	<legend>Регистрация</legend>
+	{% if success %}
+		<p>Учетная запись активирована, необходима <a href="{{ path('login') }}">авторизация</a></p>
+	{% else %}
+		<p>Ошибка {{ error_message }}</p>
+	{% endif %}
+{% endblock %}

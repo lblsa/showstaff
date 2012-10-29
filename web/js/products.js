@@ -115,6 +115,8 @@ $(function(){
 	  
 	  sync: function(method, model, options) {
 		  
+			console.log(options);
+		  
 			var productOptions = options;
 			
 			if (method == 'delete') {
@@ -147,6 +149,7 @@ $(function(){
 			
 			if (method == 'update') {
 				productOptions.success = function(resp, status, xhr) {
+
 					if (resp != null && typeof(resp.message) != 'undefined') {
 					   $('#preloader').fadeOut('fast'); 
 					   $('.p_unit .alert', model.view.el).remove();
@@ -185,12 +188,19 @@ $(function(){
 				};
 				
 				productOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+					
+					//console.log(resp.data);
+					//console.log(resp, status, xhr);
+					
+					resp.data = resp.responseText
+					return productOptions.success(resp, status, xhr);
 				}
 				
 				productOptions.url = 'product/'+this.attributes.id;
 				
 			}
+			
+			//console.log(productOptions);
 			
 			if (method == 'create') {
 				productOptions.success = function(resp, status, xhr) {

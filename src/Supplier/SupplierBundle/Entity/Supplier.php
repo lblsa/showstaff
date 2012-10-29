@@ -21,7 +21,14 @@ class Supplier
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
-
+    
+    /**
+     * @var integer $active
+     *
+     * @ORM\Column(name="active", type="boolean", nullable=true)
+     */
+	private $active = 1;
+	
     /**
      * @var string $name
      *
@@ -88,5 +95,25 @@ class Supplier
     public function getCompany()
     {
         return $this->company;
+    }
+
+    /**
+     * Set active
+     *
+     * @param boolean $active
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
+
+    /**
+     * Get active
+     *
+     * @return boolean 
+     */
+    public function getActive()
+    {
+        return $this->active;
     }
 }
