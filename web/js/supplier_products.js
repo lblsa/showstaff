@@ -9,13 +9,13 @@ $(function(){
 		tagName: "tr",
 		className: "supplier_product",
 		
-		template: _.template(	'<td class="ps_name">'+
+		template: _.template(	'<td class="ps_product"></td>'+
+								'<td class="ps_name">'+
 									'<input type="text" value="<%= supplier_product_name %>" class="supplier_product_name">'+
 								'</td>'+
 								'<td class="ps_price">'+
 									'<input type="text" value="<%= price %>" class="price span1">'+
 								'</td>'+
-								'<td class="ps_product"></td>'+
 								'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
 									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 								'</td>'),
@@ -137,8 +137,7 @@ $(function(){
 				});
 			
 			} else {
-			
-				$('.supplier_products').append('<tr class="alert_row"><td colspan="4"><div class="alert">'+
+				$('.supplier_products').html('<tr class="alert_row"><td colspan="4"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'У данного поставщика еще нет продуктов</div></td></tr>');
 			}
@@ -325,9 +324,9 @@ $(function(){
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
 					   
-					   	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
+					   /*	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
 							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
-						}
+						}*/
 
 						var view = new SupplierProductView({model:model});
 						var content = view.render().el;
@@ -480,7 +479,6 @@ $(function(){
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
 												'Ошибка на сервере, обновите страницу или обратитесь к администратору</div></td>');
 							
-							console.log('error get products')
 						}
 					});
 
