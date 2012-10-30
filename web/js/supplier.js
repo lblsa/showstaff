@@ -275,7 +275,20 @@ $(function(){
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
 												'Некорректный ответ, обновите страницу или обратитесь к администратору</div></td></tr>');
 								$('#preloader').fadeOut('fast');	
-							}});
+							},
+						success:function(){ }
+						});
+						
+	if ($('#refreshed').val()=="yes") {
+		suppliers.fetch({	error:function(){
+									$('.suppliers').html('<tr class="alert_row"><td colspan="2"><div class="alert">'+
+													'<button type="button" class="close" data-dismiss="alert">×</button>'+
+													'Некорректный ответ, обновите страницу или обратитесь к администратору</div></td></tr>');
+									$('#preloader').fadeOut('fast');	
+								},
+							success:function(){ }
+							});
+	}
 
 	$('#supplier_list').append(view_suppliers.render().el); // add template
 	

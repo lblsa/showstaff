@@ -87,12 +87,10 @@ function error_fetch(message) {
 }
 // Refrech page after back button
 function reloadIfBack() {
-	console.log('reloadifBack');
-	
 	if ($('#refreshed').val()=="no") {
 		$('#refreshed').val("yes");
 	} else {
 		$('#refreshed').val("no");
-		location.reload();
+		//location.reload();
 	}
 }

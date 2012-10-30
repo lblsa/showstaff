@@ -479,7 +479,6 @@ $(function(){
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
 												'Ошибка на сервере, обновите страницу или обратитесь к администратору</div></td>');
 							
-							console.log('error get products')
 						}
 					});
 
