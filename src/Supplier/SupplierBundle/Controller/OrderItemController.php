@@ -23,6 +23,12 @@ class OrderItemController extends Controller
      * 			requirements={	"_method" = "GET",
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0})
+     * @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}/", 
+     * 			name="OrderItem_list_", 
+     * 			requirements={	"_method" = "GET",
+	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0})
+     * @Route(	"company/{cid}/restaurant/{rid}/order/", name="OrderItem_list__", requirements={"_method" = "GET"}, defaults={"booking_date" = 0})
      * @Template()
      * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */

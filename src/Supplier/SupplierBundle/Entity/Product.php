@@ -44,7 +44,7 @@ class Product
 
     /**
      * @ORM\ManyToOne(targetEntity="Unit", inversedBy="products")
-     * @ORM\JoinColumn(name="unit", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="unit", referencedColumnName="id")
      *
 	 * @Assert\NotBlank()
      */

@@ -8,6 +8,7 @@ use Supplier\SupplierBundle\Entity\Company;
 use Supplier\SupplierBundle\Entity\Restaurant;
 use Supplier\SupplierBundle\Entity\Order;
 use Supplier\SupplierBundle\Entity\OrderItem;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -264,10 +265,13 @@ class OrderController extends Controller
 	}
 
     /**
-     * @Route("/company/{cid}/order/export/{booking_date}", 
-     * 			name="export_order", 
+     * @Route("/company/{cid}/order/export/{booking_date}", name="export_order", 
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
+     * @Route("/company/{cid}/order/export/{booking_date}/", name="export_order_", 
+     * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0} )
+     * @Route("/company/{cid}/order/export/", name="export_order__", requirements={"_method" = "GET"}, defaults={"booking_date" = 0} )
      * @Template()
      * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
@@ -285,23 +289,19 @@ class OrderController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			if ($request->isXmlHttpRequest())
+				return new Response('No found company #'.$cid, 404, array('Content-Type' => 'application/json'));
+			else
+				throw $this->createNotFoundException('No found company #'.$cid);
 		}
 		
 		
@@ -341,7 +341,6 @@ class OrderController extends Controller
         $excelService = $this->get('xls.service_xls5');
         // or $this->get('xls.service_pdf');
         // or create your own is easy just modify services.yml
-
 
         // create the object see http://phpexcel.codeplex.com documentation
         $excelService->excelObj->getProperties()->setCreator($user->getUsername())
