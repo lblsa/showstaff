@@ -29,8 +29,8 @@ class Permission
     /**
 	 * @ORM\ManyToMany(targetEntity="\Supplier\SupplierBundle\Entity\Restaurant")
      * @ORM\JoinTable(name="users_restaurants",
-     *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="user_id", onDelete="CASCADE")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="restaurant_id", referencedColumnName="id")}
+     *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="user_id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="restaurant_id", referencedColumnName="id", onDelete="CASCADE")}
      *      )
      */
     protected $restaurants;

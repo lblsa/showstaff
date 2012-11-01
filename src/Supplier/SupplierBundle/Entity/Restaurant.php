@@ -53,8 +53,7 @@ class Restaurant
      * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $company;
-
-
+    
     /**
      * Get id
      *

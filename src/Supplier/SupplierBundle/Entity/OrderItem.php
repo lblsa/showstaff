@@ -38,7 +38,7 @@ class OrderItem
 
     /**
      * @ORM\ManyToOne(targetEntity="Restaurant")
-     * @ORM\JoinColumn(name="restaurant_id", referencedColumnName="id", nullable=false)
+     * @ORM\JoinColumn(name="restaurant_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
      */
     private $restaurant;
 
