@@ -302,11 +302,13 @@ class ProductController extends Controller
 			if (!$unit)
 				return new Response('No unit found for id '.(int)$model['unit'], 404, array('Content-Type' => 'application/json'));
 		
-		
-			$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
-																										'unit'		=> (int)$model['unit'],
-																										'company'	=> $cid  ));
-			
+			if(!isset($model['active']))
+				$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
+																											'unit'		=> (int)$model['unit'],
+																											'company'	=> $cid  ));
+			else
+				$product = false;
+				
 			if (!$product)
 			{
 				$validator = $this->get('validator');

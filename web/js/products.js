@@ -388,11 +388,17 @@ $(function(){
 	$('body').on('click', '.activate_old_product', function(){
 		products.add(	{ id: parseInt($('#dialog_id').val()), name: $('#dialog_name').val(), unit: parseInt($('#dialog_unit').val()), active:1 },
 						{ silent:true}	);
-		
-		//view_products = new ViewProducts({collection: products});
 					
 		products._byId[parseInt($('#dialog_id').val())].save();
-						
+		$('.name_add').val('');
+		$("#myModalDialog").modal('hide');
+	});
+	
+	$('body').on('click', '.create_new_product', function(){
+		products.add(	{ name: $('#dialog_name').val(), unit: parseInt($('#dialog_unit').val()), active:1 });
+					
+		//products._byId[parseInt($('#dialog_id').val())].save();
+		$('.name_add').val('');
 		$("#myModalDialog").modal('hide');
 	});
 })
