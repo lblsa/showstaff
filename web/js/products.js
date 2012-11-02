@@ -3,7 +3,7 @@
  * Products
  ***************************************/ 
 var sort = 'asc';
-var view_products;
+var view_products, products;
 $(function(){
 	// view list products
 	var ViewProducts = Backbone.View.extend({
@@ -114,9 +114,7 @@ $(function(){
 	var ProductModel = Backbone.Model.extend({
 	  
 	  sync: function(method, model, options) {
-		  
-			console.log(options);
-		  
+			
 			var productOptions = options;
 			
 			if (method == 'delete') {
@@ -157,11 +155,10 @@ $(function(){
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка (' + resp.message + '). '+
 														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
 					} else {
 					   if (resp != null && typeof(resp.data) != 'undefined') {
 						   model.set(resp.data,{silent: true});
-						   model.view.render();
+						   //model.view.render();
 						   
 						   var SP = {};
 						   $('#close_all').click();
@@ -173,18 +170,15 @@ $(function(){
 						   view_products = new ViewProducts({collection: products});
 						   $('#product_list').append(view_products.render().el);
 						   view_products.renderAll()
-						   
-						   return;
+
 					   } else {
 						   $('.p_unit .alert', model.view.el).remove();
 						   $('#preloader').fadeOut('fast'); 
 						   $('.p_unit', model.view.el).append('<div class="alert">'+
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   return;
 					   }
 					}
-					return options.success(resp, status, xhr);
 				};
 				
 				productOptions.error = function(resp, status, xhr) {
@@ -200,9 +194,10 @@ $(function(){
 				
 			}
 			
-			//console.log(productOptions);
-			
 			if (method == 'create') {
+				
+				console.log(model);
+				
 				productOptions.success = function(resp, status, xhr) {
 					if (resp != null && typeof(resp.message) != 'undefined' ) {
 						$('#preloader').fadeOut('fast'); 
@@ -210,45 +205,59 @@ $(function(){
 						$(".alert-error").clone().appendTo('.forms');
 						$('.forms .alert-error').fadeIn();
 						products.remove(model, {silent:true});
-						return;
 					   
 					} else {
 						
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-					   
-						   model.set(resp.data, {silent:true});
-						   var view = new ViewProduct({model:model});
-						   var content = view.render().el;
-						   $('.products').prepend(content);
-						   $('.name_add').val('');
-						   $(".alert-success").clone().appendTo('.forms');
-						   $(".forms .alert-success").fadeIn();
+						if (resp != null && typeof(resp.data) != 'undefined') {
+							if (resp.data.active == 1) {
+								model.set(resp.data, {silent:true});
+								var view = new ViewProduct({model:model});
+								var content = view.render().el;
+								$('.products').prepend(content);
+								$('.name_add').val('');
+								$(".alert-success").clone().appendTo('.forms');
+								$(".forms .alert-success").fadeIn();
+
+								var SP = {};
+								$('#close_all').click();
+								//  for sort reload
+								view_products.remove()
+								view_products = new ViewProducts({collection: products});
+								$('#product_list').append(view_products.render().el);
+								view_products.renderAll()
+							} else {								
+								products.remove(model, {silent:true});
 						   
-						   var SP = {};
-						   $('#close_all').click();
-						   
-						   
-						   //  for sort reload
-						   view_products.remove()
-						   view_products = new ViewProducts({collection: products});
-						   $('#product_list').append(view_products.render().el);
-						   view_products.renderAll()
-						   return;
+								$('body').append('<div id="myModalDialog" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'+
+												  '<div class="modal-header">'+
+													'<h3 id="myModalLabel">Такой продукт уже существует</h3>'+
+												  '</div>'+
+												  '<div class="modal-body">'+
+													'<p>Продукт был удален (помечен как не активный, но может использоваться в старых заказах)</p>'+
+													'<input type="hidden" id="dialog_name" name="dialog_name" value="'+resp.data.name+'" />'+
+													'<input type="hidden" id="dialog_unit" name="dialog_unit" value="'+resp.data.unit+'" />'+
+													'<input type="hidden" id="dialog_id" name="dialog_id" value="'+resp.data.id+'" />'+
+												  '</div>'+
+												  '<div class="modal-footer">'+
+													'<button class="btn activate_old_product">Восстановить продукт</button>'+
+													'<button class="btn btn-primary create_new_product">Создать новый</button>'+
+												  '</div>'+
+												'</div>');
+								$('#myModalDialog').modal({'show':true, 'keyboard':false,  'backdrop': 'static'});
+							}
 					   } else {
 						   $('#preloader').fadeOut('fast'); 
 						   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
 						   $(".alert-error").clone().appendTo('.forms');
 						   $('.forms .alert-error').fadeIn();
-						   products.remove(model, {silent:true});   
-						   return;
+						   products.remove(model, {silent:true});
 					   }
-					   
 					}
-					return options.success(resp, status, xhr);
+					//return options.success(resp, status, xhr);
 				};
-				productOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
-				}
+				//productOptions.error = function(resp, status, xhr) {
+					//return options.success(resp, status, xhr);
+				//}
 			}
 			
 			Backbone.sync.call(this, method, model, productOptions);
@@ -290,7 +299,7 @@ $(function(){
 	  
 	});	
 
-	var products = new Products({}, {units:units}); // init collection
+	products = new Products({}, {units:units}); // init collection
 	
 	products.comparator = function(product) {
 	  return product.get("name");
@@ -369,6 +378,27 @@ $(function(){
 	});
 	
 	$(document).keydown(function(e) {
-		if (e.keyCode == 27) view_products.renderAll();
+		if (e.keyCode == 27) {
+			if(!$("#myModalDialog").length) {
+				view_products.renderAll();
+			}
+		}
+	});
+	
+	$('body').on('click', '.activate_old_product', function(){
+		products.add(	{ id: parseInt($('#dialog_id').val()), name: $('#dialog_name').val(), unit: parseInt($('#dialog_unit').val()), active:1 },
+						{ silent:true}	);
+					
+		products._byId[parseInt($('#dialog_id').val())].save();
+		$('.name_add').val('');
+		$("#myModalDialog").modal('hide');
+	});
+	
+	$('body').on('click', '.create_new_product', function(){
+		products.add(	{ name: $('#dialog_name').val(), unit: parseInt($('#dialog_unit').val()), active:1 });
+					
+		//products._byId[parseInt($('#dialog_id').val())].save();
+		$('.name_add').val('');
+		$("#myModalDialog").modal('hide');
 	});
 })
