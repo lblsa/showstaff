@@ -23,68 +23,73 @@ class OrderItemController extends Controller
      * 			requirements={	"_method" = "GET",
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0})
+     * @Route(	"company/{cid}/restaurant/{rid}/order/{booking_date}/", 
+     * 			name="OrderItem_list_", 
+     * 			requirements={	"_method" = "GET",
+	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0})
+     * @Route(	"company/{cid}/restaurant/{rid}/order/", name="OrderItem_list__", requirements={"_method" = "GET"}, defaults={"booking_date" = 0})
      * @Template()
      * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
     public function listAction($cid, $rid, $booking_date, Request $request)
     {
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
-		
-		// check restaurant {rid} for admin restaurant
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-		{
-			$restaurants = $permission->getRestaurants();
-			if (!$restaurants)
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
 				{
 					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					
 				} else {
-					throw new AccessDeniedHttpException('Forbidden Restaurant');
+					throw new AccessDeniedHttpException('Forbidden Company');
 				}
 			}
-			else
+
+		
+			// check restaurant {rid} for admin restaurant
+			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
 			{
-				$available_restaurants = array();
-				foreach ($restaurants AS $r)
-					$available_restaurants[] = $r->getId();
-					
-				if (!in_array($rid, $available_restaurants))
+				$restaurants = $permission->getRestaurants();
+				if (!$restaurants)
 				{
 					if ($request->isXmlHttpRequest()) 
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
 					}
 				}
+				else
+				{
+					$available_restaurants = array();
+					foreach ($restaurants AS $r)
+						$available_restaurants[] = $r->getId();
+						
+					if (!in_array($rid, $available_restaurants))
+					{
+						if ($request->isXmlHttpRequest()) 
+						{
+							$code = 403;
+							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+							
+						} else {
+							throw new AccessDeniedHttpException('Forbidden Restaurant');
+						}
+					}
+				}
 			}
 		}
-		
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -96,9 +101,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -108,22 +111,21 @@ class OrderItemController extends Controller
 		
 		$restaurants = $company->getRestaurants();
 		foreach ($restaurants AS $r) $restaurant = $r;
-		
-		
 
 		$suppler_products = $this->getDoctrine()
 								->getRepository('SupplierBundle:SupplierProducts')
 								->findByCompany($cid);
-		
-		$products = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findByCompany($cid);
+
 		$products_array = array();
 		foreach ($suppler_products as $sp)
 		{
-			$products_array[$sp->getProduct()->getId()] = array(	'id' => $sp->getProduct()->getId(),
-																	'name'=> $sp->getProduct()->getName(), 
-																	'unit' => $sp->getProduct()->getUnit(),
-																	'use' => 0 );
-		
+			if ($sp->getProduct()->getActive() && $sp->getActive() && $sp->getSupplier()->getActive())
+			{
+				$products_array[$sp->getProduct()->getId()] = array(	'id' => $sp->getProduct()->getId(),
+																		'name'=> $sp->getProduct()->getName(), 
+																		'unit' => $sp->getProduct()->getUnit(),
+																		'use' => 0 );
+			}
 		}
 
 		
@@ -137,17 +139,18 @@ class OrderItemController extends Controller
 		{
 			foreach ($bookings AS $p)
 			{
-				$bookings_array[] = array(	'id' => $p->getId(),
-											'amount' => $p->getAmount(),
-											'product' => $p->getProduct()->getId(),
-											'name' => $p->getProduct()->getName(),
-										);
-				if (isset($products_array[$p->getProduct()->getId()]))
-					$products_array[$p->getProduct()->getId()]['use'] = 1;
+				if ($p->getProduct()->getActive() && $p->getSupplier()->getActive())
+				{
+					$bookings_array[] = array(	'id' => $p->getId(),
+												'amount' => $p->getAmount(),
+												'product' => $p->getProduct()->getId(),
+												'name' => $p->getProduct()->getName(),
+											);
+					if (isset($products_array[$p->getProduct()->getId()]))
+						$products_array[$p->getProduct()->getId()]['use'] = 1;
+				}
 			}
 		}
-		
-		//var_dump($bookings); die();
 		
 		$products_array = array_values($products_array); 
 
@@ -170,26 +173,21 @@ class OrderItemController extends Controller
 			
 		}
 		
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+				
 		if ($request->isXmlHttpRequest()) 
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bookings_array);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
-			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
-			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
-			header("Cache-Control: post-check=0, pre-check=0", false);
-			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		return array(	'restaurant' => $restaurant, 
 						'company' => $company,
-						'products' => $products,
-						'bookings' => $bookings,
-						'bookings_json' => json_encode($bookings_array),
-						'products_json' => json_encode($products_array),
 						'booking_date' => $booking_date,
 						'edit_mode' => $edit_mode );
 		
@@ -205,61 +203,61 @@ class OrderItemController extends Controller
 	public function ajaxcreateAction($cid, $rid, $booking_date, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
 		
-		
-		// check restaurant {rid} for admin restaurant
-		if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
-				!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
-				!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
-			)
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$restaurants = $permission->getRestaurants();
-			if (!$restaurants)
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
 				{
 					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+					
 				} else {
-					throw new AccessDeniedHttpException('Forbidden Restaurant');
+					throw new AccessDeniedHttpException('Forbidden Company');
 				}
 			}
-			else
+			
+			
+			// check restaurant {rid} for admin restaurant
+			if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
+					!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
+					!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
+				)
 			{
-				$available_restaurants = array();
-				foreach ($restaurants AS $r)
-					$available_restaurants[] = $r->getId();
-					
-				if (!in_array($rid, $available_restaurants))
+				$restaurants = $permission->getRestaurants();
+				if (!$restaurants)
 				{
 					if ($request->isXmlHttpRequest()) 
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
+					}
+				}
+				else
+				{
+					$available_restaurants = array();
+					foreach ($restaurants AS $r)
+						$available_restaurants[] = $r->getId();
+						
+					if (!in_array($rid, $available_restaurants))
+					{
+						if ($request->isXmlHttpRequest()) 
+						{
+							$code = 403;
+							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+							
+						} else {
+							throw new AccessDeniedHttpException('Forbidden Restaurant');
+						}
 					}
 				}
 			}
@@ -268,18 +266,15 @@ class OrderItemController extends Controller
 		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
 			$booking_date = date('Y-m-d');
 
-		
 		$restaurant = $this->getDoctrine()
 						->getRepository('SupplierBundle:Restaurant')
 						->findOneByIdJoinedToCompany($rid, $cid);
 
-
 		if (!$restaurant) {
 			$code = 404;
 			$result = array('code' => $code, 'result' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			
 		}
 		
 		$company = $restaurant->getCompany();
@@ -296,9 +291,7 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Order is completed. You can not create order.');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 			}
 		}
@@ -311,9 +304,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'Amount should not be 0');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			
@@ -325,9 +316,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$model['amount'] = str_replace(',', '.', $model['amount']);
@@ -356,9 +345,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No supplier found for product #'.$product->getId());
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$errors = $validator->validate($booking);
@@ -370,9 +357,7 @@ class OrderItemController extends Controller
 					
 				$code = 400;
 				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -389,9 +374,7 @@ class OrderItemController extends Controller
 														'restaurant' => $restaurant->getId(),
 														'product' => $product->getId(),		));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 			
@@ -400,9 +383,7 @@ class OrderItemController extends Controller
 	
 		$code = 400;
 		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -415,65 +396,62 @@ class OrderItemController extends Controller
 	 public function ajaxdeleteAction($cid, $rid, $booking_date, $bid)
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
 		
-		// check restaurant {rid} for admin restaurant
-		if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
-				!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
-				!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
-			)
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$restaurants = $permission->getRestaurants();
-			if (!$restaurants)
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
 				{
 					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
-					throw new AccessDeniedHttpException('Forbidden Restaurant');
+					throw new AccessDeniedHttpException('Forbidden Company');
 				}
 			}
-			else
+			
+			// check restaurant {rid} for admin restaurant
+			if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
+					!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
+					!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
+				)
 			{
-				$available_restaurants = array();
-				foreach ($restaurants AS $r)
-					$available_restaurants[] = $r->getId();
-					
-				if (!in_array($rid, $available_restaurants))
+				$restaurants = $permission->getRestaurants();
+				if (!$restaurants)
 				{
 					if ($request->isXmlHttpRequest()) 
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
 					}
 				}
-			}
-		}	
-		 
+				else
+				{
+					$available_restaurants = array();
+					foreach ($restaurants AS $r)
+						$available_restaurants[] = $r->getId();
+						
+					if (!in_array($rid, $available_restaurants))
+					{
+						if ($request->isXmlHttpRequest()) 
+						{
+							$code = 403;
+							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						} else {
+							throw new AccessDeniedHttpException('Forbidden Restaurant');
+						}
+					}
+				}
+			}	
+		}
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
@@ -481,9 +459,7 @@ class OrderItemController extends Controller
 		if (!$company) {
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
@@ -497,9 +473,7 @@ class OrderItemController extends Controller
 				{
 					$code = 403;
 					$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 		}
 		
@@ -511,9 +485,7 @@ class OrderItemController extends Controller
 		{
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 	
 		$booking = $this->getDoctrine()
@@ -524,18 +496,14 @@ class OrderItemController extends Controller
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bid, 'message' => 'No oreder item found for id '.$rid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		if ($booking->getDate() < date('Y-m-d') )
 		{
 			$code = 403;
 			$result = array('code' => $code, 'message' => 'You can not remove the old booking');
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 		else
 		{
@@ -545,9 +513,7 @@ class OrderItemController extends Controller
 		
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 	}
 
@@ -562,70 +528,64 @@ class OrderItemController extends Controller
 	public function ajaxupdateAction($cid, $rid, $booking_date, $bid, Request $request)
 	{ 
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-		{
-			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
 		
-		// check restaurant {rid} for admin restaurant
-		if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
-				!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
-				!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
-			)
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$restaurants = $permission->getRestaurants();
-			if (!$restaurants)
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
 				{
 					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				} else {
-					throw new AccessDeniedHttpException('Forbidden Restaurant');
+					throw new AccessDeniedHttpException('Forbidden Company');
 				}
 			}
-			else
+			
+			// check restaurant {rid} for admin restaurant
+			if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
+					!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
+					!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
+				)
 			{
-				$available_restaurants = array();
-				foreach ($restaurants AS $r)
-					$available_restaurants[] = $r->getId();
-					
-				if (!in_array($rid, $available_restaurants))
+				$restaurants = $permission->getRestaurants();
+				if (!$restaurants)
 				{
 					if ($request->isXmlHttpRequest()) 
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					} else {
 						throw new AccessDeniedHttpException('Forbidden Restaurant');
+					}
+				}
+				else
+				{
+					$available_restaurants = array();
+					foreach ($restaurants AS $r)
+						$available_restaurants[] = $r->getId();
+						
+					if (!in_array($rid, $available_restaurants))
+					{
+						if ($request->isXmlHttpRequest()) 
+						{
+							$code = 403;
+							$result = array('code' => $code, 'message' => 'Forbidden Restaurant');
+							return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+						} else {
+							throw new AccessDeniedHttpException('Forbidden Restaurant');
+						}
 					}
 				}
 			}
 		}
 		
-		
-
-		
 		$model = (array)json_decode($request->getContent());
-		//print_r($model); 	print_r($bid);	die();
+
 		if	(	count($model) > 0 && 
 				isset($model['id']) && 
 				is_numeric($model['id']) && 
@@ -638,9 +598,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'Amount should not be 0');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			$company = $this->getDoctrine()
@@ -649,9 +607,7 @@ class OrderItemController extends Controller
 			if (!$company) {
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
@@ -665,9 +621,7 @@ class OrderItemController extends Controller
 					{
 						$code = 403;
 						$result = array('code' => $code, 'message' => 'Order is completed. You can not edit order.');
-						$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-						$response->sendContent();
-						die();
+						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					}
 			}
 			
@@ -678,9 +632,7 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		
 
@@ -692,18 +644,14 @@ class OrderItemController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No booking found for id '.$rid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			
 			if ($booking->getDate() < date('Y-m-d') )
 			{
 				$code = 403;
 				$result = array('code' => $code, 'message' => 'You can not edit the old booking');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -720,9 +668,7 @@ class OrderItemController extends Controller
 				{
 					$code = 404;
 					$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 								
 				$booking->setAmount($amount);
@@ -743,9 +689,7 @@ class OrderItemController extends Controller
 				{
 					$code = 404;
 					$result = array('code' => $code, 'message' => 'No supplier found for product #'.$product->getId());
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 
 				$errors = $validator->validate($booking);
@@ -757,9 +701,7 @@ class OrderItemController extends Controller
 					
 					$code = 400;
 					$result = array('code'=>$code, 'message'=>$errorMessage);
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 					
 				} else {
 					
@@ -774,19 +716,15 @@ class OrderItemController extends Controller
 																'amount' => $booking->getAmount(),
 																'product' => $booking->getProduct()->getId(),
 																'id' => $booking->getId()	));
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 			}
 		}
 			
 		$code = 400;
 		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-		 
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+	 
 	}
 }
 

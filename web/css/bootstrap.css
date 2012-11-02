@@ -5708,3 +5708,39 @@ select.product {
 .download_excel {
   margin-bottom:10px;
 }
+.ps_name .supplier_product_name, .name_add_sp {
+  width: 370px;
+}
+.ps_product .product, .product_add_sp {
+  width: 384px;
+}
+.controls ul {
+ width: 224px;
+ margin: 0;
+}
+.controls li {
+ line-height: 20px;
+ list-style:none;
+ padding: 8px 35px 8px 14px;
+ margin-bottom: 20px;
+ color: #C09853;
+ text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+ background-color: #FCF8E3;
+ border: 1px solid #FBEED5;
+ -webkit-border-radius: 4px;
+ -moz-border-radius: 4px;
+ border-radius: 4px;
+}
+
+.text-warning {
+  color: #c09853;
+}
+.text-error {
+  color: #b94a48;
+}
+.text-info {
+  color: #3a87ad;
+}
+.text-success {
+  color: #468847;
+}

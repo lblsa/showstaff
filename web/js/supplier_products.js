@@ -9,13 +9,13 @@ $(function(){
 		tagName: "tr",
 		className: "supplier_product",
 		
-		template: _.template(	'<td class="ps_name">'+
+		template: _.template(	'<td class="ps_product"></td>'+
+								'<td class="ps_name">'+
 									'<input type="text" value="<%= supplier_product_name %>" class="supplier_product_name">'+
 								'</td>'+
 								'<td class="ps_price">'+
-									'<input type="text" value="<%= price %>" class="price">'+
+									'<input type="text" value="<%= price %>" class="price span1">'+
 								'</td>'+
-								'<td class="ps_product"></td>'+
 								'<td class="ps_prime"><% if(primary_supplier) print("Да"); else print("Нет"); %>'+
 									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 								'</td>'),
@@ -64,9 +64,7 @@ $(function(){
 			});
 			products._byId[product_id].attributes.use = 1;
 			
-			$('.ps_prime', this.el).prepend('<p>'+
-							'<label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label>'+
-							'</p>');
+			$('.ps_prime', this.el).prepend('<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label></p>');
 			if (this.model.get('primary_supplier'))
 				$('.primary_supplier', this.el).attr('checked','checked');
 				
@@ -139,8 +137,7 @@ $(function(){
 				});
 			
 			} else {
-			
-				$('.supplier_products').append('<tr class="alert_row"><td colspan="4"><div class="alert">'+
+				$('.supplier_products').html('<tr class="alert_row"><td colspan="4"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'У данного поставщика еще нет продуктов</div></td></tr>');
 			}
@@ -150,7 +147,7 @@ $(function(){
 		},
 		
 		close_form: function() {
-			$('.sp_list .form_add_supplier_product').slideUp(function(){
+			$('.sp_list .forms').slideUp(function(){
 				$('.sp_list .add_supplier_product_show').removeClass('close_form');
 				$('.sp_list .add_supplier_product_show i').attr('class', 'icon-plus-sign');
 			});
@@ -323,18 +320,24 @@ $(function(){
 
 						products._byId[resp.data.product].attributes.use = 1;
 						$('.product_add_sp option[value="'+resp.data.product+'"]').remove();
-					   
+				
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
 					   
-					   var view = new SupplierProductView({model:model});
-					   var content = view.render().el;
-					   $('.sp_list .supplier_products').prepend(content);
-					   $("#up .alert-success").clone().appendTo('.sp_list .form_add_supplier_product');
-					   $('.sp_list .form_add_supplier_product .alert-success').fadeIn();
+					   /*	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
+							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
+						}*/
+
+						var view = new SupplierProductView({model:model});
+						var content = view.render().el;
+					   
+						$('.sp_list .supplier_products').prepend(content);
+						$("#up .alert-success").clone().appendTo('.sp_list .forms');
+
+						$('.sp_list .forms .alert-success').fadeIn();
 						
-					   $('.sp_list .name_add_sp').val('');
-					   $('.sp_list .price_add_sp').val('');
+						$('.sp_list .name_add_sp').val('');
+						$('.sp_list .price_add_sp').val('');
 
 						supplier_products.sort({silent: true});
 						VSP.remove()
@@ -351,7 +354,7 @@ $(function(){
 					   if (resp != null && typeof(resp.message) != 'undefined')
 							$('#up .alert-error strong').html(''+resp.message);
 							
-					   $("#up .alert-error").clone().appendTo('.form_add_supplier_product');
+					   $("#up .alert-error").clone().appendTo('.forms');
 					   $('.sp_list .alert-error').fadeIn();
 					   supplier_products.remove(model, {silent:true});
 					   
@@ -383,7 +386,7 @@ $(function(){
 		initialize: function(models, options) {
 			this.bind('add', this.addProduct);
 			
-			this.fetch({	
+			this.fetch({
 							error: function(){
 								$('#preloader').fadeOut('fast');
 								console.log(' error =( ');
@@ -476,7 +479,6 @@ $(function(){
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
 												'Ошибка на сервере, обновите страницу или обратитесь к администратору</div></td>');
 							
-							console.log('error get products')
 						}
 					});
 
@@ -505,14 +507,14 @@ $(function(){
 			}
 		});
 		
-		$('.form_add_supplier_product').slideDown(function(){
+		$('.forms').slideDown(function(){
 			$('.add_supplier_product_show i').attr('class', 'icon-minus-sign');
 		});
 		
 		$('.sp_list .name_add_sp').focus();
 		return false;
 	}, function(){
-		$('.form_add_supplier_product').slideUp(function(){
+		$('.forms').slideUp(function(){
 			$('.add_supplier_product_show i').attr('class', 'icon-plus-sign');
 		});
 		return false;

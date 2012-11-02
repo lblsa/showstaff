@@ -1,31 +1,30 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
 {% block body %}
-
-	<div  class="row">
-		<div class="span12">
-		<h2>Company "{{company.name}}", Products</h2>
-		<table class="table table-bordered table-striped" id="product_list">
-		 <thead>
-		  <tr>
-			<th>Название
-				<a href="#" class="sort"><i class="icon-arrow-up"></i></a>
-			</th>
-			<th>Единица</th>
-		  </tr>
-		  <tr id="add_row">
-			<th colspan="2" class="add">
-				<a href="#" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
-				<p class="form-inline hide forms">
-					<input name="name_add" type="text" class="input name_add">
-					<select class="span2 unit_add" name="unit"></select>
-					<button class="add_product btn btn-mini btn-success">add</button>
-				</p>
-			</th>
-		  </tr>
-		 </thead>
-		</table>
-		<script src="/js/products.js"></script>
-		</div>
+<div  class="row">
+	<div class="span12">
+	<h2>Company "{{company.name}}", Products</h2>
+	<table class="table table-bordered table-striped" id="product_list">
+	 <thead>
+	  <tr>
+		<th>Название
+			<a href="#" class="sort"><i class="icon-arrow-up"></i></a>
+		</th>
+		<th>Единица</th>
+	  </tr>
+	  <tr id="add_row">
+		<th colspan="2" class="add">
+			<a href="#" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
+			<p class="form-inline hide forms">
+				<input name="name_add" type="text" class="input name_add">
+				<select class="span2 unit_add" name="unit"></select>
+				<button class="add_product btn btn-mini btn-success">add</button>
+			</p>
+		</th>
+	  </tr>
+	 </thead>
+	</table>
+	<script src="/js/products.js"></script>
 	</div>
+</div>
 {% endblock %}

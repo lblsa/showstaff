@@ -26,6 +26,13 @@ class User implements UserInterface, \Serializable
     private $id;
     
     /**
+     * @var integer $active
+     *
+     * @ORM\Column(name="active", type="boolean", nullable=true)
+     */
+	private $active = 0;
+	
+    /**
      * @var bigint $username
      *
      * @ORM\Column(name="username", type="bigint", length=14, unique=true)
@@ -39,12 +46,20 @@ class User implements UserInterface, \Serializable
      * @ORM\Column(type="string", length=32)
      */
     protected $salt;
+    
+    /**
+	 * @var string $activationCode
+	 *
+     * @ORM\Column(name="activation_code", type="string", length=32)
+     */
+    protected $activationCode;
 
     /**
      * @var string $email
      *
-     * @ORM\Column(name="email", type="string", length=255)
-	 * @Assert\Email( message = "The email '{{ value }}' is not a valid email.")
+     * @ORM\Column(name="email", type="string", length=255, unique=true)
+	 * @Assert\Email(message="Значение поля эл. почта '{{ value }}' некорректно.")
+	 * @Assert\NotBlank(message="Необходимо указать адрес электронной почты")
      */
     protected $email;
 
@@ -61,6 +76,7 @@ class User implements UserInterface, \Serializable
      *
      * @ORM\Column(name="password", type="string", length=255)
 	 * @Assert\NotBlank(message="Password should not be blank")
+	 * @Assert\MinLength(limit=6, message="Пароль должен содержать как минимум {{ limit }} символов")
      */
     protected $password;
 
@@ -252,5 +268,45 @@ class User implements UserInterface, \Serializable
     public function unserialize($data)
     {
         $this->id = unserialize($data);
+    }
+
+    /**
+     * Set activationCode
+     *
+     * @param string $activationCode
+     */
+    public function setActivationCode($activationCode)
+    {
+        $this->activationCode = $activationCode;
+    }
+
+    /**
+     * Get activation_code
+     *
+     * @return string 
+     */
+    public function getActivationCode()
+    {
+        return $this->activationCode;
+    }
+
+    /**
+     * Set active
+     *
+     * @param boolean $active
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
+
+    /**
+     * Get active
+     *
+     * @return boolean 
+     */
+    public function getActive()
+    {
+        return $this->active;
     }
 }

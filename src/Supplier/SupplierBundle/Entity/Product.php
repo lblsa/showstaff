@@ -25,6 +25,13 @@ class Product
     private $id;
 
     /**
+     * @var integer $active
+     *
+     * @ORM\Column(name="active", type="boolean", nullable=true)
+     */
+	private $active = 1;
+
+    /**
      * @var string $name
      *
      * @ORM\Column(name="name", type="string", length=255)
@@ -37,7 +44,7 @@ class Product
 
     /**
      * @ORM\ManyToOne(targetEntity="Unit", inversedBy="products")
-     * @ORM\JoinColumn(name="unit", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="unit", referencedColumnName="id")
      *
 	 * @Assert\NotBlank()
      */
@@ -117,5 +124,25 @@ class Product
     public function getUnit()
     {
         return $this->unit;
+    }
+
+    /**
+     * Set active
+     *
+     * @param boolean $active
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
+
+    /**
+     * Get active
+     *
+     * @return boolean 
+     */
+    public function getActive()
+    {
+        return $this->active;
     }
 }

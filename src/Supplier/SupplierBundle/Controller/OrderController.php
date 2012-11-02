@@ -8,6 +8,7 @@ use Supplier\SupplierBundle\Entity\Company;
 use Supplier\SupplierBundle\Entity\Restaurant;
 use Supplier\SupplierBundle\Entity\Order;
 use Supplier\SupplierBundle\Entity\OrderItem;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -29,23 +30,23 @@ class OrderController extends Controller
     public function listAction($cid, $booking_date, Request $request)
     {
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
-		
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -57,9 +58,7 @@ class OrderController extends Controller
 			{
 				$code = 404;
 				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -88,26 +87,37 @@ class OrderController extends Controller
 		
 		$products = $company->getProducts();
 		$products_array = array();
+		
 		if ($products)
+		{
 			foreach ($products AS $p)
-				$products_array[] = array(	'id' => $p->getId(),
-											'name'=> $p->getName(), 
-											'unit' => $p->getUnit()->getId(),
-											'use' => 0 );
+			{
+				if ($booking_date < date('Y-m-d') || $p->getActive())
+				{
+					$products_array[] = array(	'id' => $p->getId(),
+												'name'=> $p->getName(), 
+												'unit' => $p->getUnit()->getId(),
+												'use' => 0 );
+				}
+			}
+		}
 											
 		$suppler_products = $this->getDoctrine()
 								->getRepository('SupplierBundle:SupplierProducts')
 								->findByCompany($cid);
 		$suppler_products_array = array();
 		if ($suppler_products)
+		{
 			foreach ($suppler_products AS $p)
-			{		
-				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName();
+			{	
+				if ($booking_date < date('Y-m-d') || $p->getSupplier()->getActive())
+				{
+					$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
+					$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
+				}
 			}
-		
-		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')
-										->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+		}
+		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
 										
 		$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
@@ -124,30 +134,33 @@ class OrderController extends Controller
 		if ($bookings)
 			foreach ($bookings AS $p)
 			{	
-				$bookings_array[] = array(	'id' => $p->getId(),
-											'amount' => $p->getAmount(),
-											'product' => $p->getProduct()->getId(),
-											'restaurant' => $p->getRestaurant()->getId(),
-											'supplier' => $p->getSupplier()->getId(),
-											'name' => $p->getProduct()->getName(),
-											'unit' => $p->getProduct()->getUnit()->getId(),
-											'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
-											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
-			}								
-		
+				if ($booking_date < date('Y-m-d') || ($p->getProduct()->getActive() && $p->getSupplier()->getActive()))
+				{
+					$bookings_array[] = array(	'id' => $p->getId(),
+												'amount' => $p->getAmount(),
+												'product' => $p->getProduct()->getId(),
+												'restaurant' => $p->getRestaurant()->getId(),
+												'supplier' => $p->getSupplier()->getId(),
+												'name' => $p->getProduct()->getName(),
+												'unit' => $p->getProduct()->getUnit()->getId(),
+												'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+												'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+				}
+			}
+										
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0		
 		
 		if ($request->isXmlHttpRequest()) 
 		{
 			$code = 200;
 			$result = array('code' => $code, 'data' => $bookings_array);
 			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
-			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
-			header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
-			header("Cache-Control: post-check=0, pre-check=0", false);
-			header("Pragma: no-cache");// HTTP/1.0
-			$response->sendContent();
-			die(); 
+
+			return $response;
 		}
 		
 		return array(	'company' => $company,
@@ -170,33 +183,43 @@ class OrderController extends Controller
      * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
 	public function saveAction($cid, $booking_date, Request $request)
-	{
+	{		
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+				{
+					$code = 403;
+					$result = array('code' => $code, 'message' => 'Forbidden Company');
+					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
 			}
 		}
+		
+		if ($booking_date != '0' && $booking_date < date('Y-m-d'))
+		{
+			$code = 403;
+			$result = array('code' => $code, 'message'=> 'Нельзя редактировать заказы прошлых дней');
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		}		
+		
+		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
+			$booking_date = date('Y-m-d');
+		
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {
 			$code = 404;
 			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
 		$model = (array)json_decode($request->getContent());
@@ -205,7 +228,7 @@ class OrderController extends Controller
 		{
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 			
 			
 			
@@ -218,14 +241,14 @@ class OrderController extends Controller
 				$order = new Order();
 				$order->setCompany($company);
 				$order->setCompleted((int)$model['completed']);
-				$order->setDate(date('Y-m-d'));
+				$order->setDate($booking_date);
 			}
 			
 			$em = $this->getDoctrine()->getEntityManager();
 			$em->persist($order);
 			$em->flush();
 			
-			$code = 200;
+			$code = 201;
 			
 			$result = array('code'		=> $code,
 							'message'	=> ((int)$model['completed']==1)?'Заказ сформирован и закрыт для редактирования':'Заказ открыт для редактирования',
@@ -233,23 +256,22 @@ class OrderController extends Controller
 													'completed' => $order->getCompleted(),
 													'date' => $order->getDate() ));
 													
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
-		
+
 		$code = 400;
 		$result = array('code'=>$code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 
     /**
-     * @Route("/company/{cid}/order/export/{booking_date}", 
-     * 			name="export_order", 
+     * @Route("/company/{cid}/order/export/{booking_date}", name="export_order", 
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
+     * @Route("/company/{cid}/order/export/{booking_date}/", name="export_order_", 
+     * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={"booking_date" = 0} )
+     * @Route("/company/{cid}/order/export/", name="export_order__", requirements={"_method" = "GET"}, defaults={"booking_date" = 0} )
      * @Template()
      * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
@@ -259,31 +281,27 @@ class OrderController extends Controller
 			$booking_date = date('Y-m-d');
 		
 		$user = $this->get('security.context')->getToken()->getUser();
-				
-		$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-		if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			if ($request->isXmlHttpRequest()) 
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				$code = 403;
-				$result = array('code' => $code, 'message' => 'Forbidden Company');
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			} else {
-				throw new AccessDeniedHttpException('Forbidden Company');
+				if ($request->isXmlHttpRequest()) 
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
+					throw new AccessDeniedHttpException('Forbidden Company');
 			}
 		}
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
+			if ($request->isXmlHttpRequest())
+				return new Response('No found company #'.$cid, 404, array('Content-Type' => 'application/json'));
+			else
+				throw $this->createNotFoundException('No found company #'.$cid);
 		}
 		
 		
@@ -295,7 +313,7 @@ class OrderController extends Controller
 			foreach ($suppler_products AS $p)
 			{		
 				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName();
+				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
 			}
 		
 		
@@ -319,17 +337,14 @@ class OrderController extends Controller
 			}
 		}
 	
-		//var_dump($bookings_array); die();
-	
         // ask the service for a Excel5
         $excelService = $this->get('xls.service_xls5');
         // or $this->get('xls.service_pdf');
         // or create your own is easy just modify services.yml
 
-
         // create the object see http://phpexcel.codeplex.com documentation
-        $excelService->excelObj->getProperties()->setCreator($user->getFullname())
-                            ->setLastModifiedBy($user->getFullname())
+        $excelService->excelObj->getProperties()->setCreator($user->getUsername())
+                            ->setLastModifiedBy($user->getUsername())
                             ->setTitle("Заказ компании \"".$company->getName()."\" на ".$booking_date." число")
                             ->setSubject("Заказ компании \"".$company->getName()."\" на ".$booking_date." число")
                             ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")

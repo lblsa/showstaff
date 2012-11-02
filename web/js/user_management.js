@@ -409,7 +409,12 @@ $(function() {
 							
 							roles.fetch({
 											success: function(collection, response){
-												
+													collection.each(function(role){
+														$('.roles_add').append('<label class="checkbox">'+
+															'<input type="checkbox" class="role_add" name="roles[]" value="'+role.id+'"> '+role.get('name')+'</label><br />');
+														
+													});
+													
 													users.fetch({	success: function(collection, response){
 																		view_users = new ViewUsers({collection: collection});
 																		$('#user_list').append(view_users.render().el);

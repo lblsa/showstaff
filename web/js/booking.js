@@ -1,4 +1,4 @@
-//* update 2012-10-18 16:15:00 *//
+//* update 2012-10-25 08:33:00 *//
 /****************************************
  * Booking Product
  ****************************************/
@@ -37,7 +37,9 @@ $(function(){
 				
 				var select = $('.product_edit', this.el);
 				
-				products._byId[this.model.get('product')].attributes.use = 0;
+				if (typeof(products._byId[this.model.get('product')]) != 'undefined' && typeof(products._byId[this.model.get('product')].attributes) != 'undefined')
+					products._byId[this.model.get('product')].attributes.use = 0;
+					
 				products.each(function(p){
 					if (p.attributes.use == 0) {
 						var view = new OptionProducts({model:p});
@@ -46,7 +48,10 @@ $(function(){
 				});
 				
 				$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
-				products._byId[this.model.get('product')].attributes.use = 1;
+				
+				if (typeof(products._byId[this.model.get('product')]) != 'undefined' && typeof(products._byId[this.model.get('product')].attributes.use) != 'undefined')
+					products._byId[this.model.get('product')].attributes.use = 1;
+					
 			} else {
 				$('.remove', this.$el).remove();
 				$('.ps_name', this.el).html(this.model.get('name')+' ['+units[products._byId[this.model.get('product')].attributes.unit]+']');
@@ -125,7 +130,7 @@ $(function(){
 			
 			} else {
 			
-				$('.bookings').append('<tr class="alert_row"><td colspan="3"><div class="alert">'+
+				$('.bookings').html('<tr class="alert_row"><td colspan="3"><div class="alert">'+
 													'<button type="button" class="close" data-dismiss="alert">×</button>'+
 													'У данного ресторана нет заказов на текущую дату</div></td></tr>');
 			}
@@ -362,8 +367,16 @@ $(function(){
 	var Products = Backbone.Collection.extend({
 		url: '/company/'+parseInt(href[2])+'/product',
 		parse: function(response, xhr){
-			if(response.code && (response.code == 200)){
-				return response.data;
+			if(response.code && (response.code == 200)) {
+				
+				// remove product without supplier				
+				var result = [];
+				_.each(response.data, function(product_data){
+					if (product_data.supplier_product != 0)
+						result.push(product_data);
+				});
+				
+				return result;
 			} else {
 				console.log('bad request');
 			}
@@ -430,7 +443,7 @@ $(function(){
 	products.fetch({	success:function(){
 							
 									bookings.fetch({	success:function(collection, response){
-															console.log('success');
+															//console.log('success');
 															
 														},
 														error:function(){
