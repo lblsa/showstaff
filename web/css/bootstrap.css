@@ -5744,3 +5744,7 @@ select.product {
 .text-success {
   color: #468847;
 }
+.controls-group {
+ width:100%;
+ float:left;
+}

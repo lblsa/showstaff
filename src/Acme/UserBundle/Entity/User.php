@@ -50,7 +50,7 @@ class User implements UserInterface, \Serializable
     /**
 	 * @var string $activationCode
 	 *
-     * @ORM\Column(name="activation_code", type="string", length=32)
+     * @ORM\Column(name="activation_code", type="string", length=32, nullable=true)
      */
     protected $activationCode;
 

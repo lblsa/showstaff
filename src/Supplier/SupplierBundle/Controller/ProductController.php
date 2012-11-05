@@ -145,13 +145,9 @@ class ProductController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -225,13 +221,9 @@ class ProductController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -240,11 +232,7 @@ class ProductController extends Controller
 					->find($pid);
 					
 		if (!$product)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No product found for id '.$pid, 404, array('Content-Type' => 'application/json'));
 		
 		$product->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				

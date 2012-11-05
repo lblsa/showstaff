@@ -31,13 +31,9 @@ class SupplierController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -47,15 +43,9 @@ class SupplierController extends Controller
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 			else
-			{
 				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
 		}
 		
 		$suppliers = $company->getSuppliers();
@@ -107,14 +97,10 @@ class SupplierController extends Controller
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+				if ($request->isXmlHttpRequest())
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 			 
@@ -127,11 +113,7 @@ class SupplierController extends Controller
 							->find($model['id']);
 			
 			if (!$supplier)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No supplier found for id '.$sid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No supplier found for id '.$sid, 404, array('Content-Type' => 'application/json'));
 			
 			$validator = $this->get('validator');
 
@@ -143,10 +125,8 @@ class SupplierController extends Controller
 				
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
-				
-				$code = 400;
-				$result = array('code'=>$code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 								
 			} else {
 				
@@ -160,17 +140,12 @@ class SupplierController extends Controller
 			
 			}
 		}
-			
-		$code = 400;
-		$result = array('code'=> $code, 'message' => 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		 
+
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	 }
 	 
 	/**
-	 * @Route(	"company/{cid}/supplier/{sid}", 
-	 * 			name="supplier_ajax_delete", 
-	 * 			requirements={"_method" = "DELETE"})
+	 * @Route(	"company/{cid}/supplier/{sid}", name="supplier_ajax_delete", requirements={"_method" = "DELETE"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxdeleteAction($cid, $sid, Request $request)
@@ -183,15 +158,10 @@ class SupplierController extends Controller
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-
-				} else {
+				if ($request->isXmlHttpRequest())
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -200,11 +170,7 @@ class SupplierController extends Controller
 					->find($sid);
 					
 		if (!$supplier)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No supplier found for id '.$sid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No supplier found for id '.$sid, 404, array('Content-Type' => 'application/json'));
 		
 		$supplier->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -243,14 +209,9 @@ class SupplierController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -259,11 +220,7 @@ class SupplierController extends Controller
 						->find($cid);
 						
 		if (!$company)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 
@@ -280,10 +237,8 @@ class SupplierController extends Controller
 				
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
-					
-				$code = 400;
-				$result = array('code' => $code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
+				return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -293,17 +248,15 @@ class SupplierController extends Controller
 				$em->flush();
 				
 				$code = 200;
-				$result = array(	'code' => $code, 'data' => array(	'id' => $supplier->getId(),
-																		'name' => $supplier->getName()
-																	));
+				$result = array('code' => $code, 'data' => array(	'id' => $supplier->getId(),
+																	'name' => $supplier->getName()
+																));
 				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			
 			}
 		}
-		
-		$code = 400;
-		$result = array('code' => $code, 'message'=> 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	 
 	}
 }

@@ -38,13 +38,9 @@ class OrderController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -55,15 +51,9 @@ class OrderController extends Controller
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 			else
-			{
 				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
 		}
 		
 		$suppliers = $this->getDoctrine()
@@ -193,22 +183,14 @@ class OrderController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
 		if ($booking_date != '0' && $booking_date < date('Y-m-d'))
-		{
-			$code = 403;
-			$result = array('code' => $code, 'message'=> 'Нельзя редактировать заказы прошлых дней');
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}		
+			return new Response('Нельзя редактировать заказы прошлых дней', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
 			$booking_date = date('Y-m-d');
@@ -216,11 +198,8 @@ class OrderController extends Controller
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
-		if (!$company) {
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+		if (!$company)
+			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 
 		$model = (array)json_decode($request->getContent());
 		
@@ -259,9 +238,7 @@ class OrderController extends Controller
 			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
-		$code = 400;
-		$result = array('code'=>$code, 'message'=> 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 
     /**

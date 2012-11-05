@@ -253,11 +253,7 @@ $(function(){
 						   products.remove(model, {silent:true});
 					   }
 					}
-					//return options.success(resp, status, xhr);
 				};
-				//productOptions.error = function(resp, status, xhr) {
-					//return options.success(resp, status, xhr);
-				//}
 			}
 			
 			Backbone.sync.call(this, method, model, productOptions);
