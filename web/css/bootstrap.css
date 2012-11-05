@@ -5748,3 +5748,11 @@ select.product {
  width:100%;
  float:left;
 }
+#up .alert {
+  overflow: scroll;
+  position: absolute;
+  opacity: 0.9;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+}

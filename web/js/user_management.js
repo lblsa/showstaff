@@ -149,61 +149,55 @@ $(function() {
 			
 			if (method == 'create') {
 				userOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined' ) {
+				   if (resp != null && typeof(resp.data) != 'undefined') {
+					   model.set(resp.data, {silent:true});
+					   var view = new ViewUser({model:model});
+					   var content = view.render().el;
+					   $('.users').prepend(content);
+					   $('.user').tooltip();
+					   $('.username_add').val('');
+					   $('.fullname_add').val('');
+					   $('.email_add').val('');
+					   $('.pass_add').val('');
+						$(".forms input[name='roles[]']:checked").each(function() {
+							$(this).removeAttr('checked');
+						});
+						
+						$(".forms input[name='restaurants[]']:checked").each(function() {
+							$(this).removeAttr('checked');
+						});
+					   
+					   $(".alert-success").clone().appendTo('.forms');
+					   $(".forms .alert-success strong").html('Пользователь добавлен');
+					   $(".forms .alert-success").fadeIn()
 
+					   //  for sort reload
+					   view_users.remove()
+					   view_users = new ViewUsers({collection: users});
+					   $('#user_list').append(view_users.render().el);
+					   view_users.renderAll();
+				   } else {
+					   
 					   $('#preloader').fadeOut('fast'); 
-					   $('.alert-error strong').html(' (' + resp.message + '). ');
+					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
 					   $(".alert-error").clone().appendTo('.forms');
 					   $('.forms .alert-error').fadeIn();
 					   users.remove(model, {silent:true});
-					   return;
-					   
-					} else {
-						
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-					   
-						   model.set(resp.data, {silent:true});
-						   var view = new ViewUser({model:model});
-						   var content = view.render().el;
-						   $('.users').prepend(content);
-						   $('.user').tooltip();
-						   $('.username_add').val('');
-						   $('.fullname_add').val('');
-						   $('.email_add').val('');
-						   $('.pass_add').val('');
-							$(".forms input[name='roles[]']:checked").each(function() {
-								$(this).removeAttr('checked');
-							});
-							
-							$(".forms input[name='restaurants[]']:checked").each(function() {
-								$(this).removeAttr('checked');
-							});
-						   
-						   $(".alert-success").clone().appendTo('.forms');
-						   $(".forms .alert-success strong").html('Пользователь добавлен');
-						   $(".forms .alert-success").fadeIn()
-
-						   //  for sort reload
-						   view_users.remove()
-						   view_users = new ViewUsers({collection: users});
-						   $('#user_list').append(view_users.render().el);
-						   view_users.renderAll();
-						   return;
-					   } else {
-						   
-						   $('#preloader').fadeOut('fast'); 
-						   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-						   $(".alert-error").clone().appendTo('.forms');
-						   $('.forms .alert-error').fadeIn();
-						   users.remove(model, {silent:true});   
-						   return;
-					   }
-					   
-					}
-					return options.success(resp, status, xhr);
+				   }
 				};
-				userOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				userOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast');
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('#up .alert-error strong').html(' ('+jqXHR.responseText+'). ');
+					else
+						$('#up .alert-error strong').html(' (Некорректный ответ сервера). ');
+											
+					$("#up .alert-error").width($('.forms').width()-49);
+					$("#up .alert-error").height($('.forms').height()-14);
+					var p = $('.forms').position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top});
+					$('#up .alert-error').fadeIn();
+					users.remove(model, {silent:true});
 				}
 			}
 			
@@ -214,62 +208,43 @@ $(function() {
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
 					   
-						return;
 					} else {
-						
-					   $('.u_role', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
+						$('#up .alert-error strong').html('');
+						$("#up .alert-error").width(model.view.$el.width()-50);
+						$("#up .alert-error").height(model.view.$el.height()-14);
+						var p = model.view.$el.position();
+						$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+						$('#up .alert-error').fadeIn();
 					}
-					return options.success(resp, status, xhr);
 				};
-				
-				userOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
-				}
-				
-				userOptions.url = 'user/'+this.attributes.id;
 			}
 			
 			if (method == 'update') {
 				userOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined') {
-						
-						model.set(model.previousAttributes(), {silent: true});
-						model.view.render();
-						$('#preloader').fadeOut('fast'); 
-						$('.u_role .alert', model.view.el).remove();
-						$('.u_role', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка (' + resp.message + '). '+
-														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
-					} else {
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-						   model.set(resp.data,{silent: true});
-						   model.view.render();
-						   return;
-					   } else {
-						   model.set(model.previousAttributes(), {silent: true});
-						   model.view.render();
-						   $('.u_role .alert', model.view.el).remove();
-						   $('#preloader').fadeOut('fast'); 
-						   $('.u_role', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   return;
-					   }
-					}
-					return options.success(resp, status, xhr);
+					model.set(resp.data, {silent: true});
+					model.view.render();
+					$('#preloader').fadeOut('fast');
 				};
-				
-				userOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+			}
+			
+			if (method == 'delete' || method == 'update') {
+				userOptions.error = function(jqXHR, textStatus, errorThrown) {
+					
+					$('#preloader').fadeOut('fast');
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
+					else
+						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+						
+					$("#up .alert-error").width(model.view.$el.width()-50);
+					$("#up .alert-error").height(model.view.$el.height()-14);
+					var p = model.view.$el.position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+					$('#up .alert-error').fadeIn();
+					model.view.render();
 				}
 				
 				userOptions.url = 'user/'+this.attributes.id;
-				
 			}
 			
 			Backbone.sync.call(this, method, model, userOptions);

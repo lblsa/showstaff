@@ -65,6 +65,9 @@ $(document).ready(function(){
 			$('.controls-pass .help-block a').slideUp();
 	});
 	
+	$(document).on("click", '.alert .close', function() {
+		$(this).closest(".alert").fadeOut();
+	});
 	
 	$('.showpass').toggle(function(){
 		var pass = $('.pass_add').val();

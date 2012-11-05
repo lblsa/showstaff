@@ -190,13 +190,13 @@ class UserController extends Controller
 			//* User
 			$validator = $this->get('validator');
 
-			if (isset($model['fullname']) && strlen($model['fullname']))
+			if (isset($model['fullname']))
 				$user->setFullname($model['fullname']);
 			
-			if (isset($model['username']) && strlen($model['username']))
+			if (isset($model['username']))
 				$user->setUsername($model['username']);
 				
-			if (isset($model['email']) && strlen($model['email']))
+			if (isset($model['email']))
 				$user->setEmail($model['email']);
 			
 			if (isset($model['password']) && strlen($model['password']))
