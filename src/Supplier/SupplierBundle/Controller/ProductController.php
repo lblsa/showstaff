@@ -172,6 +172,13 @@ class ProductController extends Controller
 			if (!$unit)
 				return new Response('No unit found for id '.(int)$model['unit'], 404, array('Content-Type' => 'application/json'));
 			
+			$other_product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
+																												'unit'		=> (int)$model['unit'],
+																												'company'	=> $cid  ));
+			
+			if ($other_product && $other_product->getName() == $model['name'] && (int)$model['unit'] == $other_product->getUnit()->getId() && $other_product->getActive())
+				return new Response('Такой продукт у вас уже существует', 400, array('Content-Type' => 'application/json'));
+				
 			$product->setName($model['name']);
 			$product->setUnit($unit);
 			$product->setActive(1);
@@ -290,12 +297,9 @@ class ProductController extends Controller
 			if (!$unit)
 				return new Response('No unit found for id '.(int)$model['unit'], 404, array('Content-Type' => 'application/json'));
 		
-			if(!isset($model['active']))
-				$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
-																											'unit'		=> (int)$model['unit'],
-																											'company'	=> $cid  ));
-			else
-				$product = false;
+			$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
+																										'unit'		=> (int)$model['unit'],
+																										'company'	=> $cid  ));
 				
 			if (!$product)
 			{
@@ -332,15 +336,18 @@ class ProductController extends Controller
 			}
 			else
 			{
-				if ($product->getActive())
-					return Response('У вас уже есть такой продукт', 400, array('Content-Type' => 'application/json'));
-				else
-					return new Response(json_encode(array(	'code'=>200,
-															'data'=> array( 'id'=>$product->getId(),
-																			'name' => $product->getName(), 
-																			'unit' => $product->getUnit()->getId(),
-																			'active' => 0
-																			) 
+				$product->setActive(1);
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($product);
+				$em->flush();
+				
+				return new Response(json_encode(array(	'code'=>200,
+														'data'=> array( 'id'=>$product->getId(),
+																		'name' => $product->getName(), 
+																		'unit' => $product->getUnit()->getId(),
+																		'active' => 1
+																		) 
 														)), 200, array('Content-Type' => 'application/json'));
 			}
 		}
