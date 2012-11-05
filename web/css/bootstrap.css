@@ -5749,7 +5749,7 @@ select.product {
  float:left;
 }
 #up .alert {
-  overflow: scroll;
+  overflow: auto;
   position: absolute;
   opacity: 0.9;
   -webkit-border-radius: 0;

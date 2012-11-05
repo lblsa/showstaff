@@ -317,8 +317,7 @@ class ProductController extends Controller
 						
 					return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
 					
-				} else {
-					
+				} else {						
 					$product->setCompany($company);
 					$em = $this->getDoctrine()->getEntityManager();
 					$em->persist($product);
@@ -336,6 +335,9 @@ class ProductController extends Controller
 			}
 			else
 			{
+				if ($product->getActive())
+					return new Response('Такой продукт у вас уже существует', 400, array('Content-Type' => 'application/json'));
+				
 				$product->setActive(1);
 				
 				$em = $this->getDoctrine()->getEntityManager();
