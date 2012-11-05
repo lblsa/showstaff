@@ -116,24 +116,7 @@ $(function(){
 	  sync: function(method, model, options) {
 			
 			var productOptions = options;
-			
-			if (method == 'delete' || method == 'update') {
-				productOptions.error = function(jqXHR, textStatus, errorThrown) {	
-					$('#preloader').fadeOut('fast');
-					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-						$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
-					else
-						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
-						
-					$("#up .alert-error").width(model.view.$el.width()-50);
-					$("#up .alert-error").height(model.view.$el.height()-14);
-					var p = model.view.$el.position();
-					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
-					$('#up .alert-error').fadeIn();
-					model.view.render();
-				}
-			}
-			
+				
 			if (method == 'delete') {
 				productOptions.success = function(resp, status, xhr) {
 					$('#preloader').fadeOut('fast');
@@ -141,7 +124,7 @@ $(function(){
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
 					   
-					   var SP = {};
+						var SP = {};
 					   
 					} else {
 						
@@ -199,7 +182,7 @@ $(function(){
 						view_products.renderAll();
 					}
 				};
-				productOptions.error = function(jqXHR, textStatus, errorThrown) {	
+				productOptions.error = function(jqXHR, textStatus, errorThrown) {
 					$('#preloader').fadeOut('fast');
 					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
 						$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');

@@ -209,23 +209,13 @@ $(function(){
 						
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
-						return;
 					} else {
 						
 						$('.ps_unit', model.view.el).append('<div class="alert">'+
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-														
-						if (resp != null && typeof(resp.message) != 'undefined')
-							$('.ps_unit .alert').append('<br>('+resp.message+')');
-						
-						return;
 					}
-					return options.success(resp, status, xhr);
 				};
-				BookingOptions.error = function(resp, status, xhr) {			
-					return options.success(resp, status, xhr);
-				}
 			}
 
 			if (method == 'update') {
@@ -233,55 +223,29 @@ $(function(){
 									
 					$('#bookin_list .alert').remove();
 					$('#preloader').fadeOut('fast');
-					
-					if (resp != null && typeof(resp.message) != 'undefined') {
 						
-					   $('#preloader').fadeOut('fast'); 
-					   $('.ps_unit', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка (' + resp.message + '). '+
-														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
-					} else {
-						if (resp != null && typeof(resp.data) != 'undefined') {
-							
-							if (resp.data.product != model.attributes.product ) {
-								
-								products._byId[model.attributes.product].attributes.use = 0;
-								products._byId[resp.data.product].attributes.use = 1;
-								$('.product_add').html('');
-								products.each(function(p){
-									if (p.attributes.use == 0) {
-										var view = new OptionProducts({model:p});
-										$('.product_add').append(view.render().el);
-									}
-								});
+					if (resp.data.product != model.attributes.product ) {
+						
+						products._byId[model.attributes.product].attributes.use = 0;
+						products._byId[resp.data.product].attributes.use = 1;
+						$('.product_add').html('');
+						products.each(function(p){
+							if (p.attributes.use == 0) {
+								var view = new OptionProducts({model:p});
+								$('.product_add').append(view.render().el);
 							}
-							
-							model.set(resp.data,{silent: true});
-							model.view.render();
-
-							bookings.sort({silent: true});
-							view_content.remove()
-							view_content = new ViewBookings({collection: bookings});
-							$('#bookin_list').append(view_content.render().el);
-							view_content.renderAll().el
-						
-							return;
-					   } else {
-						   $('#preloader').fadeOut('fast'); 
-						   $('.ps_unit', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   model.set(model.previousAttributes(),{silent: true});
-						   return;
-					   }
+						});
 					}
-					return options.success(resp, status, xhr);
+					
+					model.set(resp.data,{silent: true});
+					model.view.render();
+
+					bookings.sort({silent: true});
+					view_content.remove()
+					view_content = new ViewBookings({collection: bookings});
+					$('#bookin_list').append(view_content.render().el);
+					view_content.renderAll().el
 				};
-				BookingOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
-				}
 			}
 
 			if (method == 'create') {
@@ -317,9 +281,7 @@ $(function(){
 						view_content.remove()
 						view_content = new ViewBookings({collection: bookings});
 						$('#bookin_list').append(view_content.render().el);
-						view_content.renderAll().el
-					   
-					   return;
+						view_content.renderAll().el;
 					   
 					} else {
 						
@@ -330,13 +292,18 @@ $(function(){
 						$("#up .alert-error").clone().appendTo('.forms');
 						$('#bookin_list .alert-error').fadeIn();
 						bookings.remove(model, {silent:true});
-					
-					   return;
+
 					}
-					return options.success(resp, status, xhr);
 				};
-				BookingOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				BookingOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast'); 
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+					   $('.alert-error strong').html(' (' + jqXHR.responseText + '). ');
+					else   
+					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
+					$(".alert-error").clone().appendTo('.forms');
+					$('.forms .alert-error').fadeIn();
+					bookings.remove(model, {silent:true});
 				}
 			}
 			

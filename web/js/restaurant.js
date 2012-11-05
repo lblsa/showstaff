@@ -178,26 +178,6 @@ $(function(){
 	  sync: function(method, model, options) {
 			var restaurantOptions = options;
 			
-			if (method == 'delete' || method == 'update') {
-				restaurantOptions.error = function(jqXHR, textStatus, errorThrown) {
-					$('#preloader').fadeOut('fast');
-					model.view.render();
-					
-					$('.p_director .alert', model.view.el).remove();
-					
-					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-						$('.p_director', model.view.el).append('<div class="alert">'+
-													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'Ошибка (' + jqXHR.responseText + '). '+
-													'Попробуйте еще раз или обратитесь к администратору.</div>');
-					else
-						$('.p_director', model.view.el).append('<div class="alert">'+
-													'<button type="button" class="close" data-dismiss="alert">×</button>'+
-													'Ошибка (Некорректный ответ сервера). '+
-													'Попробуйте еще раз или обратитесь к администратору.</div>');
-				}
-			}
-			
 			if (method == 'delete') {
 				restaurantOptions.success = function(resp, status, xhr) {
 					
@@ -220,26 +200,15 @@ $(function(){
 			
 			if (method == 'update') {
 				restaurantOptions.success = function(resp, status, xhr) {
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-						   model.set(resp.data,{silent: true});
-						   model.view.render();
-						   
-						   restaurants.sort({silent: true});
-						   
-						   view_restaurants.remove()
-						   view_restaurants = new ViewRestaurants({collection: restaurants});
-						   $('#restaurants_list').append(view_restaurants.render().el);
-						   view_restaurants.renderAll()
-						   
-						   
-					   } else {
-						   $('.p_director .alert', model.view.el).remove();
-						   $('#preloader').fadeOut('fast'); 
-						   $('.p_director', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   
-					   }
+				   model.set(resp.data,{silent: true});
+				   model.view.render();
+				   
+				   restaurants.sort({silent: true});
+				   
+				   view_restaurants.remove()
+				   view_restaurants = new ViewRestaurants({collection: restaurants});
+				   $('#restaurants_list').append(view_restaurants.render().el);
+				   view_restaurants.renderAll();
 				};
 				
 				restaurantOptions.url = 'restaurant/'+this.attributes.id;
@@ -248,49 +217,40 @@ $(function(){
 			
 			if (method == 'create') {
 				restaurantOptions.success = function(resp, status, xhr) {
-		
-				   if (resp != null && typeof(resp.data) != 'undefined') {
+				   model.set(resp.data, {silent:true});
 				   
-					   model.set(resp.data, {silent:true});
-					   
-					   var view = new ViewRestaurant({model:model});
-					   var content = view.render().el;
-					   
-					   $('.restaurants').prepend(content);
-					   
-					   $('.name_add').val('');
-					   $('.address_add').val('');
-					   $('.director_add').val('');
-					   
-					   $(".alert-success").clone().appendTo('.forms');
-					   $(".forms .alert-success strong").html('Ресторан добавлен')
-					   $(".forms .alert-success").fadeIn();
+				   var view = new ViewRestaurant({model:model});
+				   var content = view.render().el;
+				   
+				   $('.restaurants').prepend(content);
+				   
+				   $('.name_add').val('');
+				   $('.address_add').val('');
+				   $('.director_add').val('');
+				   
+				   $(".alert-success").clone().appendTo('.forms');
+				   $(".forms .alert-success strong").html('Ресторан добавлен')
+				   $(".forms .alert-success").fadeIn();
 
-					   //  for sort reload
-					   view_restaurants.remove()
-					   view_restaurants = new ViewRestaurants({collection: restaurants});
-					   $('#restaurants_list').append(view_restaurants.render().el);
-					   view_restaurants.renderAll()
-					   
-				   } else {
-					   
-					   $('#preloader').fadeOut('fast'); 
-					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-					   $(".alert-error").clone().appendTo('.forms');
-					   $('.forms .alert-error').fadeIn();
-					   restaurants.remove(model, {silent:true});   
-					   
-				   }
-					
+				   //  for sort reload
+				   view_restaurants.remove()
+				   view_restaurants = new ViewRestaurants({collection: restaurants});
+				   $('#restaurants_list').append(view_restaurants.render().el);
+				   view_restaurants.renderAll();
 				};
+				
 				restaurantOptions.error = function(jqXHR, textStatus, errorThrown) {
 					$('#preloader').fadeOut('fast'); 
 					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-					   $('.alert-error strong').html(' (' + jqXHR.responseText + '). ');
+						$('#up .alert-error strong').html(' (' + jqXHR.responseText + '). ');
 					else   
-					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-					$(".alert-error").clone().appendTo('.forms');
-					$('.forms .alert-error').fadeIn();
+						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+						
+					$("#up .alert-error").width($('.forms').width()-49);
+					$("#up .alert-error").height($('.forms').height()-14);
+					var p = $('.forms').position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+					$('#up .alert-error').fadeIn();
 					restaurants.remove(model, {silent:true});
 				}
 			}

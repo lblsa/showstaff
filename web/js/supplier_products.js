@@ -243,71 +243,43 @@ $(function(){
 						
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
-						VSP.renderAll().el
-						return;
+						VSP.renderAll().el;
 					} else {
-					   $('.ps_prime', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
+						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+						$("#up .alert-error").width($('.forms').width()-49);
+						$("#up .alert-error").height($('.forms').height()-14);
+						var p = $('.forms').position();
+						$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+						$('#up .alert-error').fadeIn();
 					}
-					return options.success(resp, status, xhr);
 				};
-				SProductOptions.error = function(resp, status, xhr) {			
-					return options.success(resp, status, xhr);
-				}
 			}
 
 			if (method == 'update') {
 				SProductOptions.success = function(resp, status, xhr) {
-					
-					if (resp != null && typeof(resp.message) != 'undefined') {
 						
-					   $('#preloader').fadeOut('fast'); 
-					   $('.ps_prime', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка (' + resp.errors + '). '+
-														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
-					} else {
-					   if (resp != null && typeof(resp.data) != 'undefined') {
+					if (resp.data.product != model.attributes.product ) {
 						
-							if (resp.data.product != model.attributes.product ) {
-								
-								products._byId[model.attributes.product].attributes.use = 0;
-								products._byId[resp.data.product].attributes.use = 1;
-								$('.product_add_sp').html('');
-								products.each(function(p){
-									if (p.attributes.use == 0) {
-										var view = new OptionProducts({model:p});
-										$('.product_add_sp').append(view.render().el);
-									}
-								});
+						products._byId[model.attributes.product].attributes.use = 0;
+						products._byId[resp.data.product].attributes.use = 1;
+						$('.product_add_sp').html('');
+						products.each(function(p){
+							if (p.attributes.use == 0) {
+								var view = new OptionProducts({model:p});
+								$('.product_add_sp').append(view.render().el);
 							}
-						
-						   model.set(resp.data,{silent: true});
-						   model.view.render();
-						   supplier_products.sort({silent: true});
-						   VSP.remove()
-						   VSP = new ViewSupplierProducts({collection: supplier_products});
-						   
-							$('.sproducts').append(VSP.render().el);
-							VSP.renderAll().el
-							return;
-					   } else {
-						   $('#preloader').fadeOut('fast'); 
-						   $('.ps_prime', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   model.set(model.previousAttributes(),{silent: true});
-						   return;
-					   }
+						});
 					}
-					return options.success(resp, status, xhr);
+				
+					model.set(resp.data,{silent: true});
+					model.view.render();
+					supplier_products.sort({silent: true});
+					VSP.remove()
+					VSP = new ViewSupplierProducts({collection: supplier_products});
+				   
+					$('.sproducts').append(VSP.render().el);
+					VSP.renderAll().el;
 				};
-				SProductOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
-				}
 			}
 
 			if (method == 'create') {
@@ -323,10 +295,6 @@ $(function(){
 				
 						if ($('.product_add_sp option').length == 0)
 							$('.create, .forms').fadeOut();
-					   
-					   /*	if (typeof(resp.data.supplier_product_name) == 'undefined' || resp.data.supplier_product_name == '') {
-							model.attributes.supplier_product_name = products._byId[resp.data.product].attributes.name;
-						}*/
 
 						var view = new SupplierProductView({model:model});
 						var content = view.render().el;
@@ -343,27 +311,35 @@ $(function(){
 						VSP.remove()
 						VSP = new ViewSupplierProducts({collection: supplier_products});
 						$('.sproducts').append(VSP.render().el);
-						VSP.renderAll().el
-					   
-					   return;
+						VSP.renderAll().el;
 					   
 					} else {
 						
 					   $('#preloader').fadeOut('fast'); 
 					   
-					   if (resp != null && typeof(resp.message) != 'undefined')
-							$('#up .alert-error strong').html(''+resp.message);
-							
-					   $("#up .alert-error").clone().appendTo('.forms');
-					   $('.sp_list .alert-error').fadeIn();
+						$('#up .alert-error strong').html('');
+						$("#up .alert-error").width($('.forms').width()-49);
+						$("#up .alert-error").height($('.forms').height()-14);
+						var p = $('.forms').position();
+						$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+						$('#up .alert-error').fadeIn();
 					   supplier_products.remove(model, {silent:true});
 					   
-					   return;
 					}
-					return options.success(resp, status, xhr);
 				};
-				SProductOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				SProductOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast'); 
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('#up .alert-error strong').html(' (' + jqXHR.responseText + '). ');
+					else   
+						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+						
+					$("#up .alert-error").width($('.forms').width()-49);
+					$("#up .alert-error").height($('.forms').height()-14);
+					var p = $('.forms').position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+					$('#up .alert-error').fadeIn();
+					supplier_products.remove(model, {silent:true});
 				}
 			}
 			

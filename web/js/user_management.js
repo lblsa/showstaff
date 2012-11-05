@@ -227,23 +227,7 @@ $(function() {
 				};
 			}
 			
-			if (method == 'delete' || method == 'update') {
-				userOptions.error = function(jqXHR, textStatus, errorThrown) {
-					
-					$('#preloader').fadeOut('fast');
-					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-						$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
-					else
-						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
-						
-					$("#up .alert-error").width(model.view.$el.width()-50);
-					$("#up .alert-error").height(model.view.$el.height()-14);
-					var p = model.view.$el.position();
-					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
-					$('#up .alert-error').fadeIn();
-					model.view.render();
-				}
-				
+			if (method == 'delete' || method == 'update') {			
 				userOptions.url = 'user/'+this.attributes.id;
 			}
 			
