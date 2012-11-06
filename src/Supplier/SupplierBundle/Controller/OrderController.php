@@ -58,7 +58,7 @@ class OrderController extends Controller
 		
 		$suppliers = $this->getDoctrine()
 						->getRepository('SupplierBundle:Supplier')
-						->findByCompany($cid);
+						->findBy(array('company'=>(int)$cid, 'active' =>1));
 
 		
 		$suppliers_array = array();
@@ -69,11 +69,12 @@ class OrderController extends Controller
 		
 		$restaurants = $company->getRestaurants();
 		$restaurants_array = array();
-				if ($restaurants)
-					foreach ($restaurants AS $p)
-							$restaurants_array[] = array(	'id'	=> $p->getId(),
-															'name'	=> $p->getName(),
-															'company'		=> (int)$cid	);
+		
+		if ($restaurants)
+			foreach ($restaurants AS $p)
+					$restaurants_array[] = array(	'id'	=> $p->getId(),
+													'name'	=> $p->getName(),
+													'company'		=> (int)$cid	);
 		
 		$products = $company->getProducts();
 		$products_array = array();
@@ -243,7 +244,6 @@ class OrderController extends Controller
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
 						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-
 			
 			if ($order)
 			{
@@ -319,6 +319,7 @@ class OrderController extends Controller
 		$supplier_products = $this->getDoctrine()
 								->getRepository('SupplierBundle:SupplierProducts')
 								->findByCompany($cid);
+								
 		$supplier_products_array = array();
 		if ($supplier_products)
 			foreach ($supplier_products AS $p)
@@ -336,15 +337,18 @@ class OrderController extends Controller
 		{
 			foreach ($bookings AS $p)
 			{
-				$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
-											'amount' => $p->getAmount(),
-											'product' => $p->getProduct()->getName(),
-											'restaurant' => $p->getRestaurant()->getName(),
-											'supplier' => $p->getSupplier()->getName(),
-											'name' => $p->getProduct()->getName(),
-											'unit' => $p->getProduct()->getUnit()->getName(),
-											'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
-											'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+				if ($p->getProduct()->getActive() && $p->getSupplier()->getActive())
+				{
+					$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
+												'amount' => $p->getAmount(),
+												'product' => $p->getProduct()->getName(),
+												'restaurant' => $p->getRestaurant()->getName(),
+												'supplier' => $p->getSupplier()->getName(),
+												'name' => $p->getProduct()->getName(),
+												'unit' => $p->getProduct()->getUnit()->getName(),
+												'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+												'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+				}
 			}
 		}
 	
