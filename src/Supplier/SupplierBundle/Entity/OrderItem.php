@@ -66,10 +66,10 @@ class OrderItem
      * @var float $price
      *
      * @ORM\Column(name="price", type="float")
-	 * @Assert\NotBlank(message="<br>Цена не может быть пустым полем")
-	 * @Assert\Type(type="numeric", message="<br>Price '{{ value }}' is not a valid {{ type }}")
-     * @Assert\Min(limit=0, message="<br>Price should have {{ limit }} characters or more")
-     * @Assert\Max(limit=100000, message="<br>Price should have {{ limit }} characters or less")
+	 * @Assert\NotBlank(message="Цена не может быть пустым полем")
+	 * @Assert\Type(type="numeric", message="Price '{{ value }}' is not a valid {{ type }}")
+     * @Assert\Min(limit=0, message="Price should have {{ limit }} characters or more")
+     * @Assert\Max(limit=100000, message="Price should have {{ limit }} characters or less")
      */
     private $price;
     

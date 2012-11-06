@@ -2,8 +2,9 @@
 /****************************************
  * Booking Product
  ****************************************/
+var sort = 'asc';
+var products, bookings, view_content;
 $(function(){
-	var sort = 'asc';
 
 	var ViewBooking = Backbone.View.extend({
 		tagName: "tr",
@@ -380,11 +381,9 @@ $(function(){
 	  
 	});
 		
-	var products = new Products;
+	products = new Products;
 		
-	var edit_mode = true;
-	var bookings, view_content;
-	
+	var edit_mode = true;	
 	bookings = new ContentBooking({}, {units:units}); // init collection
 
 	view_content = new ViewBookings({collection: bookings}); // initialize view

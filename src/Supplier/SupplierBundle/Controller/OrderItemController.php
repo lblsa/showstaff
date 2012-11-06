@@ -108,6 +108,8 @@ class OrderItemController extends Controller
 			}
 		}
 
+
+		//var_dump($products_array); die;
 		
 		$bookings = $this->getDoctrine()
 						->getRepository('SupplierBundle:OrderItem')
@@ -147,10 +149,7 @@ class OrderItemController extends Controller
 			if(!$order || $this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
 				$edit_mode = true;
 			else
-			{
 				$edit_mode = !(boolean)$order->getCompleted();
-			}
-			
 		}
 		
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
@@ -277,15 +276,21 @@ class OrderItemController extends Controller
 			$booking->setCompany($company);
 			$booking->setRestaurant($restaurant);
 			
-			$supplier_products = $this->getDoctrine()
-									->getRepository('SupplierBundle:SupplierProducts')
-									->findBy(
-										array('company'=>$company->getId(), 'product'=>$product->getId()), 
-										array('prime'=>'DESC','price' => 'ASC'),
-										1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+			$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findBy(array('company'=>(int)$cid, 'active' =>1));
+								
+			$suppliers_array = array();
+			foreach($suppliers AS $supplier)
+				$suppliers_array[] = $supplier->getId();
 			
-			if ($supplier_products)
-				$booking->setSupplier($supplier_products[0]->getSupplier());
+			$best_supplier_offer = $this->getDoctrine()
+										->getRepository('SupplierBundle:SupplierProducts')
+										->getBestOffer((int)$cid, (int)$product->getId(), $suppliers_array);
+			
+			if ($best_supplier_offer)
+			{
+				$booking->setSupplier($best_supplier_offer->getSupplier());
+				$booking->setPrice($best_supplier_offer->getPrice());
+			}
 			else
 				return new Response('No supplier found for product #'.$product->getId(), 404, array('Content-Type' => 'application/json'));
 			
@@ -548,15 +553,21 @@ class OrderItemController extends Controller
 				$booking->setAmount($amount);
 				$booking->setProduct($product);
 				
-				$supplier_products = $this->getDoctrine()
-									->getRepository('SupplierBundle:SupplierProducts')
-									->findBy(
-										array('company'=>$company->getId(), 'product'=>$product->getId()), 
-										array('prime'=>'DESC','price' => 'ASC'),
-										1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+				$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findBy(array('company'=>(int)$cid, 'active' =>1));
+									
+				$suppliers_array = array();
+				foreach($suppliers AS $supplier)
+					$suppliers_array[] = $supplier->getId();
+				
+				$best_supplier_offer = $this->getDoctrine()
+											->getRepository('SupplierBundle:SupplierProducts')
+											->getBestOffer((int)$cid, (int)$product->getId(), $suppliers_array);
 			
-				if ($supplier_products)
-					$booking->setSupplier($supplier_products[0]->getSupplier());
+				if ($best_supplier_offer)
+				{
+					$booking->setSupplier($best_supplier_offer->getSupplier());
+					$booking->setPrice($best_supplier_offer->getPrice());
+				}
 				else
 					return new Response('No supplier found for product #'.$product->getId(), 404, array('Content-Type' => 'application/json'));
 
@@ -578,10 +589,10 @@ class OrderItemController extends Controller
 					$code = 200;
 					
 					$result = array('code'=> $code, 
-											'data' => array(	'name' => $booking->getProduct()->getName(),
-																'amount' => $booking->getAmount(),
-																'product' => $booking->getProduct()->getId(),
-																'id' => $booking->getId()	));
+									'data' => array(	'name' => $booking->getProduct()->getName(),
+														'amount' => $booking->getAmount(),
+														'product' => $booking->getProduct()->getId(),
+														'id' => $booking->getId()	));
 					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 				}
 			}

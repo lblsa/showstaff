@@ -204,12 +204,46 @@ class OrderController extends Controller
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['completed']) && is_numeric($model['completed']))
-		{
+		{						
+			if (0)  //перепроверка перед сформированием заказа, пока не нужно
+			{
+				$order_items = $this->getDoctrine()
+							->getRepository('SupplierBundle:OrderItem')
+							->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+				$suppliers = $this->getDoctrine()
+						->getRepository('SupplierBundle:Supplier')
+						->findBy(array('company'=>(int)$cid, 'active' =>1));
+				$suppliers_array = array();
+				foreach($suppliers AS $supplier)
+					$suppliers_array[] = $supplier->getId();
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				foreach ($order_items AS $p)
+					if ($p->getProduct()->getActive())
+					{
+						$best_supplier_offer = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->getBestOffer((int)$cid, (int)$p->getProduct()->getId(), $suppliers_array);
+				
+						if ($best_supplier_offer) // заново выставим цены и поставщика
+						{
+							$p->setPrice($best_supplier_offer->getPrice());
+							$p->setSupplier($best_supplier_offer);
+							
+							$em->persist($p);
+							$em->flush();
+						} else {
+							$em->remove($p);
+							$em->flush();
+						}
+					} else {
+						$em->remove($p);
+						$em->flush();
+					}
+			}
+			
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
 						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-			
-			
+
 			
 			if ($order)
 			{
@@ -282,15 +316,15 @@ class OrderController extends Controller
 		}
 		
 		
-		$suppler_products = $this->getDoctrine()
+		$supplier_products = $this->getDoctrine()
 								->getRepository('SupplierBundle:SupplierProducts')
 								->findByCompany($cid);
-		$suppler_products_array = array();
-		if ($suppler_products)
-			foreach ($suppler_products AS $p)
+		$supplier_products_array = array();
+		if ($supplier_products)
+			foreach ($supplier_products AS $p)
 			{		
-				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
+				$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
+				$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
 			}
 		
 		
@@ -301,7 +335,7 @@ class OrderController extends Controller
 		if ($bookings)
 		{
 			foreach ($bookings AS $p)
-			{	
+			{
 				$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
 											'amount' => $p->getAmount(),
 											'product' => $p->getProduct()->getName(),
@@ -309,8 +343,8 @@ class OrderController extends Controller
 											'supplier' => $p->getSupplier()->getName(),
 											'name' => $p->getProduct()->getName(),
 											'unit' => $p->getProduct()->getUnit()->getName(),
-											'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
-											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+											'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+											'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
 			}
 		}
 	

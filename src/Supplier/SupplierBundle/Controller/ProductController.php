@@ -16,7 +16,7 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class ProductController extends Controller
 {
 	/**
-	 * @Route(	"units", name="units", requirements={"_method" = "GET"})
+	 * @Route("units", name="units", requirements={"_method" = "GET"})
 	 * @Template()
 	 */
 	public function unitsAction()
@@ -78,29 +78,36 @@ class ProductController extends Controller
 			
 		$products_array = array();
 		
+		$suppliers = $this->getDoctrine()
+							->getRepository('SupplierBundle:Supplier')
+							->findBy(array('company'=>(int)$cid, 'active' =>1));
+							
+		$suppliers_array = array();
+		foreach($suppliers AS $supplier)
+			$suppliers_array[] = $supplier->getId();
+						
 		if ($products)
 		{
 			foreach ($products AS $p)
 			{
 				if ($p->getActive())
 				{
-					$supplier_products = $this->getDoctrine()
-										->getRepository('SupplierBundle:SupplierProducts')
-										->findBy(
-											array('company'=>$cid, 'product'=>$p->getId()), 
-											array('prime'=>'DESC','price' => 'ASC'),
-											1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+
+					// if((int)$p->getId() == 112)	var_dump((int)$cid, (int)$p->getId(), $suppliers_array);
+			
+					$best_supplier_offer = $this->getDoctrine()
+											->getRepository('SupplierBundle:SupplierProducts')
+											->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
+					
+
 					$price = 0;
 					$supplier_product = 0;
-					if ($supplier_products)
+					if ($best_supplier_offer)
 					{
-						foreach ($supplier_products AS $sp)
+						if ($best_supplier_offer->getActive() && $best_supplier_offer->getSupplier()->getActive())
 						{
-							if ($sp->getActive())
-							{
-								$price = $sp->getPrice();
-								$supplier_product = $sp->getId();
-							}
+							$price = $best_supplier_offer->getPrice();
+							$supplier_product = $best_supplier_offer->getId();
 						}
 					}
 				

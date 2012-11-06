@@ -5711,7 +5711,7 @@ select.product {
 .ps_name .supplier_product_name, .name_add_sp {
   width: 370px;
 }
-.ps_product .product, .product_add_sp {
+.ps_product .product, .product_add_sp, .product .product_edit, select.product_add {
   width: 384px;
 }
 .controls ul {
