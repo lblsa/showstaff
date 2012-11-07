@@ -196,6 +196,7 @@ $(function(){
 					$('#up .alert-error').fadeIn();
 					products.remove(model, {silent:true});
 				}
+				productOptions.url = '/company/'+href[2]+'/product';
 			}
 			
 			Backbone.sync.call(this, method, model, productOptions);
