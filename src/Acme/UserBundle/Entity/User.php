@@ -36,7 +36,7 @@ class User implements UserInterface, \Serializable
      * @var bigint $username
      *
      * @ORM\Column(name="username", type="bigint", length=14, unique=true)
-	 * @Assert\NotBlank(message="Phonenumber(Username) should not be blank")
+	 * @Assert\NotBlank(message="Номер телефона не может быть пустым")
      */
     protected $username;
 
@@ -50,7 +50,7 @@ class User implements UserInterface, \Serializable
     /**
 	 * @var string $activationCode
 	 *
-     * @ORM\Column(name="activation_code", type="string", length=32)
+     * @ORM\Column(name="activation_code", type="string", length=32, nullable=true)
      */
     protected $activationCode;
 
@@ -67,7 +67,8 @@ class User implements UserInterface, \Serializable
      * @var string $fullname
      *
      * @ORM\Column(name="fullname", type="string", length=255)
-	 * @Assert\NotBlank(message="Full Name should not be blank")
+	 * @Assert\NotBlank(message="ФИО не может быть пустым")
+	 
      */
     protected $fullname;
 
@@ -75,7 +76,7 @@ class User implements UserInterface, \Serializable
      * @var string $password
      *
      * @ORM\Column(name="password", type="string", length=255)
-	 * @Assert\NotBlank(message="Password should not be blank")
+	 * @Assert\NotBlank(message="Пароль не может быть пустым")
 	 * @Assert\MinLength(limit=6, message="Пароль должен содержать как минимум {{ limit }} символов")
      */
     protected $password;

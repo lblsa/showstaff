@@ -64,7 +64,7 @@ class SupplierProducts
     protected $product;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Supplier")
+     * @ORM\ManyToOne(targetEntity="Supplier", inversedBy="suppliers")
      * @ORM\JoinColumn(name="supplier_id", referencedColumnName="id", nullable=false)
      */
     protected $supplier;

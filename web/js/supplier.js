@@ -113,113 +113,65 @@ $(function(){
 					if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
-					   
-						return;
 					} else {
 						
 					   $('.p_unit', model.view.el).append('<div class="alert">'+
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
 					}
-					return options.success(resp, status, xhr);
 				};
-				
-				supplierOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
-				}
 				
 				supplierOptions.url = 'supplier/'+this.attributes.id;
 			}
 			
 			if (method == 'update') {
 				supplierOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined') {
-					   $('#preloader').fadeOut('fast'); 
-					   $('.p_unit .alert', model.view.el).remove();
-					   $('.p_unit', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка (' + resp.message + '). '+
-														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
-					} else {
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-						   model.set(resp.data,{silent: true});
-						   model.view.render();			   
-						   //  for sort reload
-						   suppliers.sort({silent: true});
-						   
-						   view_suppliers.remove()
-						   view_suppliers = new ViewSuppliers({collection: suppliers});
-						   $('#supplier_list').append(view_suppliers.render().el);
-						   view_suppliers.renderAll()
-						   
-						   return;
-					   } else {
-						   $('.p_unit .alert', model.view.el).remove();
-						   $('#preloader').fadeOut('fast'); 
-						   $('.p_unit', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   return;
-					   }
-					}
-					return options.success(resp, status, xhr);
+				   model.set(resp.data,{silent: true});
+				   model.view.render();			   
+				   //  for sort reload
+				   suppliers.sort({silent: true});
+				   
+				   view_suppliers.remove()
+				   view_suppliers = new ViewSuppliers({collection: suppliers});
+				   $('#supplier_list').append(view_suppliers.render().el);
+				   view_suppliers.renderAll();
 				};
 				
-				supplierOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
-				}
-				
 				supplierOptions.url = 'supplier/'+this.attributes.id;
-				
 			}
 			
 			if (method == 'create') {
+				
 				supplierOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined' ) {
+				   model.set(resp.data, {silent:true});
+				   var view = new ViewSupplier({model:model});
+				   var content = view.render().el;
+				   $('.suppliers').prepend(content); 
+				   $('.name_add').val('');
+				   $(".alert-success").clone().appendTo('.forms');
+				   $(".forms .alert-success strong").html('Поставщик успешно создан');
+				   $(".forms .alert-success").fadeIn();
 
-					   $('#preloader').fadeOut('fast'); 
-					   $('.alert-error strong').html(' (' + resp.message + '). ');
-					   $(".alert-error").clone().appendTo('.forms');
-					   $('.forms .alert-error').fadeIn();
-					   suppliers.remove(model, {silent:true});
-					   return;
-					   
-					} else {
-						
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-					   
-						   model.set(resp.data, {silent:true});
-						   var view = new ViewSupplier({model:model});
-						   var content = view.render().el;
-						   $('.suppliers').prepend(content); 
-						   $('.name_add').val('');
-						   $(".alert-success").clone().appendTo('.forms');
-						   $(".forms .alert-success strong").html('Поставщик успешно создан');
-						   $(".forms .alert-success").fadeIn();
-
-						   //  for sort reload
-						   view_suppliers.remove();
-						   view_suppliers = new ViewSuppliers({collection: suppliers});
-						   $('#supplier_list').append(view_suppliers.render().el);
-						   view_suppliers.renderAll()
-						   return;
-					   } else {
-						   
-						   $('#preloader').fadeOut('fast'); 
-						   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-						   $(".alert-error").clone().appendTo('.forms');
-						   $('.forms .alert-error').fadeIn();
-						   suppliers.remove(model, {silent:true});   
-						   return;
-					   }
-					   
-					}
-					return options.success(resp, status, xhr);
+				   //  for sort reload
+				   view_suppliers.remove();
+				   view_suppliers = new ViewSuppliers({collection: suppliers});
+				   $('#supplier_list').append(view_suppliers.render().el);
+				   view_suppliers.renderAll();
 				};
-				supplierOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				
+				supplierOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast');
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
+					else
+						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+						
+					$("#up .alert-error").width($('.forms').width()-49);
+					$("#up .alert-error").height($('.forms').height()-14);
+					var p = $('.forms').position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+					$('#up .alert-error').fadeIn();
+					suppliers.remove(model, {silent:true});
 				}
 			}
 			

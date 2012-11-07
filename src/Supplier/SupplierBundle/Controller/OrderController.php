@@ -38,13 +38,9 @@ class OrderController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -55,20 +51,14 @@ class OrderController extends Controller
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 			else
-			{
 				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
 		}
 		
 		$suppliers = $this->getDoctrine()
 						->getRepository('SupplierBundle:Supplier')
-						->findByCompany($cid);
+						->findBy(array('company'=>(int)$cid, 'active' =>1));
 
 		
 		$suppliers_array = array();
@@ -79,11 +69,12 @@ class OrderController extends Controller
 		
 		$restaurants = $company->getRestaurants();
 		$restaurants_array = array();
-				if ($restaurants)
-					foreach ($restaurants AS $p)
-							$restaurants_array[] = array(	'id'	=> $p->getId(),
-															'name'	=> $p->getName(),
-															'company'		=> (int)$cid	);
+		
+		if ($restaurants)
+			foreach ($restaurants AS $p)
+					$restaurants_array[] = array(	'id'	=> $p->getId(),
+													'name'	=> $p->getName(),
+													'company'		=> (int)$cid	);
 		
 		$products = $company->getProducts();
 		$products_array = array();
@@ -193,22 +184,14 @@ class OrderController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
 		if ($booking_date != '0' && $booking_date < date('Y-m-d'))
-		{
-			$code = 403;
-			$result = array('code' => $code, 'message'=> 'Нельзя редактировать заказы прошлых дней');
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}		
+			return new Response('Нельзя редактировать заказы прошлых дней', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
 			$booking_date = date('Y-m-d');
@@ -216,21 +199,51 @@ class OrderController extends Controller
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
-		if (!$company) {
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid.' in company #'.$cid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+		if (!$company)
+			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['completed']) && is_numeric($model['completed']))
-		{
+		{						
+			if (0)  //перепроверка перед сформированием заказа, пока не нужно
+			{
+				$order_items = $this->getDoctrine()
+							->getRepository('SupplierBundle:OrderItem')
+							->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+				$suppliers = $this->getDoctrine()
+						->getRepository('SupplierBundle:Supplier')
+						->findBy(array('company'=>(int)$cid, 'active' =>1));
+				$suppliers_array = array();
+				foreach($suppliers AS $supplier)
+					$suppliers_array[] = $supplier->getId();
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				foreach ($order_items AS $p)
+					if ($p->getProduct()->getActive())
+					{
+						$best_supplier_offer = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->getBestOffer((int)$cid, (int)$p->getProduct()->getId(), $suppliers_array);
+				
+						if ($best_supplier_offer) // заново выставим цены и поставщика
+						{
+							$p->setPrice($best_supplier_offer->getPrice());
+							$p->setSupplier($best_supplier_offer);
+							
+							$em->persist($p);
+							$em->flush();
+						} else {
+							$em->remove($p);
+							$em->flush();
+						}
+					} else {
+						$em->remove($p);
+						$em->flush();
+					}
+			}
+			
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
 						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-			
-			
 			
 			if ($order)
 			{
@@ -259,9 +272,7 @@ class OrderController extends Controller
 			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 		}
 
-		$code = 400;
-		$result = array('code'=>$code, 'message'=> 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 
     /**
@@ -305,15 +316,16 @@ class OrderController extends Controller
 		}
 		
 		
-		$suppler_products = $this->getDoctrine()
+		$supplier_products = $this->getDoctrine()
 								->getRepository('SupplierBundle:SupplierProducts')
 								->findByCompany($cid);
-		$suppler_products_array = array();
-		if ($suppler_products)
-			foreach ($suppler_products AS $p)
+								
+		$supplier_products_array = array();
+		if ($supplier_products)
+			foreach ($supplier_products AS $p)
 			{		
-				$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-				$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
+				$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
+				$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
 			}
 		
 		
@@ -324,16 +336,19 @@ class OrderController extends Controller
 		if ($bookings)
 		{
 			foreach ($bookings AS $p)
-			{	
-				$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
-											'amount' => $p->getAmount(),
-											'product' => $p->getProduct()->getName(),
-											'restaurant' => $p->getRestaurant()->getName(),
-											'supplier' => $p->getSupplier()->getName(),
-											'name' => $p->getProduct()->getName(),
-											'unit' => $p->getProduct()->getUnit()->getName(),
-											'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
-											'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+			{
+				if ($p->getProduct()->getActive() && $p->getSupplier()->getActive())
+				{
+					$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
+												'amount' => $p->getAmount(),
+												'product' => $p->getProduct()->getName(),
+												'restaurant' => $p->getRestaurant()->getName(),
+												'supplier' => $p->getSupplier()->getName(),
+												'name' => $p->getProduct()->getName(),
+												'unit' => $p->getProduct()->getUnit()->getName(),
+												'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+												'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+				}
 			}
 		}
 	

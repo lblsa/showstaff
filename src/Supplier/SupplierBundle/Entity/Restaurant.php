@@ -27,6 +27,7 @@ class Restaurant
      *
      * @ORM\Column(name="name", type="string", length=255)
 	 * @Assert\Type(type="string", message="Name '{{ value }}' is not a valid {{ type }}.")
+	 * @Assert\NotBlank(message="Название ресторана не может быть пустым")
      * @Assert\MinLength(3)
      * @Assert\MaxLength(255)
      */

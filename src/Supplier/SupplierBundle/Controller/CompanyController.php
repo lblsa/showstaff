@@ -22,9 +22,7 @@ class CompanyController extends Controller
 {
 	
 	/**
-	 * @Route(	"", 
-	 * 			name="company",
-	 * 			requirements={"_method" = "GET"})
+	 * @Route(	"", name="company",	requirements={"_method" = "GET"})
 	 * @Template()
      * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
@@ -61,9 +59,7 @@ class CompanyController extends Controller
 	}	
 	
 	/**
-	 * @Route(	"/{cid}", 
-	 * 			name="company_ajax_update", 
-	 * 			requirements={"_method" = "PUT"})
+	 * @Route(	"/{cid}", name="company_ajax_update", requirements={"_method" = "PUT"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	 public function ajaxupdateAction($cid, Request $request)
@@ -77,13 +73,7 @@ class CompanyController extends Controller
 							->find($model['id']);
 			
 			if (!$company)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			}
+				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 			
 			$validator = $this->get('validator');
 
@@ -97,13 +87,8 @@ class CompanyController extends Controller
 				
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
-				
-				$code = 400;
-				$result = array('code'=>$code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-				
+		
+				return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
 			} else {
 				
 				$em = $this->getDoctrine()->getEntityManager();
@@ -111,31 +96,20 @@ class CompanyController extends Controller
 				$em->flush();
 				
 				$code = 200;
-				
 				$result = array('code'=> $code, 'data' => array(	'name' => $company->getName(),
 																	'extended_name' => $company->getExtendedName(), 
 																	'inn' => $company->getInn()
 																));
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));		
 			}
 		}
-			
-		$code = 400;
-		$result = array('code'=> $code, 'message' => 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-		 
+
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));		 
 	 }
 	 
 
 	/**
-	 * @Route(	"", 
-	 * 			name="company_ajax_create", 
-	 * 			requirements={"_method" = "POST"})
+	 * @Route(	"", name="company_ajax_create", requirements={"_method" = "POST"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function ajaxcreateAction(Request $request)
@@ -157,11 +131,7 @@ class CompanyController extends Controller
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
 					
-				$code = 400;
-				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -176,19 +146,11 @@ class CompanyController extends Controller
 																		'inn' => $company->getINN()
 																	));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 			}
 		}
 		
-		$code = 400;
-		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-	 
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 	
 	
@@ -205,23 +167,14 @@ class CompanyController extends Controller
 					->find($cid);
 					
 		if (!$company)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
-
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($company);
 		$em->flush();
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $cid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 }

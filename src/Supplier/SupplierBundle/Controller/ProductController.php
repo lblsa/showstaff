@@ -16,7 +16,7 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class ProductController extends Controller
 {
 	/**
-	 * @Route(	"units", name="units", requirements={"_method" = "GET"})
+	 * @Route("units", name="units", requirements={"_method" = "GET"})
 	 * @Template()
 	 */
 	public function unitsAction()
@@ -78,29 +78,36 @@ class ProductController extends Controller
 			
 		$products_array = array();
 		
+		$suppliers = $this->getDoctrine()
+							->getRepository('SupplierBundle:Supplier')
+							->findBy(array('company'=>(int)$cid, 'active' =>1));
+							
+		$suppliers_array = array();
+		foreach($suppliers AS $supplier)
+			$suppliers_array[] = $supplier->getId();
+						
 		if ($products)
 		{
 			foreach ($products AS $p)
 			{
 				if ($p->getActive())
 				{
-					$supplier_products = $this->getDoctrine()
-										->getRepository('SupplierBundle:SupplierProducts')
-										->findBy(
-											array('company'=>$cid, 'product'=>$p->getId()), 
-											array('prime'=>'DESC','price' => 'ASC'),
-											1 ); // Сортируем по первичным, потом по цене с лимитом 1. Первый и будет тем, что надо.
+
+					// if((int)$p->getId() == 112)	var_dump((int)$cid, (int)$p->getId(), $suppliers_array);
+			
+					$best_supplier_offer = $this->getDoctrine()
+											->getRepository('SupplierBundle:SupplierProducts')
+											->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
+					
+
 					$price = 0;
 					$supplier_product = 0;
-					if ($supplier_products)
+					if ($best_supplier_offer)
 					{
-						foreach ($supplier_products AS $sp)
+						if ($best_supplier_offer->getActive() && $best_supplier_offer->getSupplier()->getActive())
 						{
-							if ($sp->getActive())
-							{
-								$price = $sp->getPrice();
-								$supplier_product = $sp->getId();
-							}
+							$price = $best_supplier_offer->getPrice();
+							$supplier_product = $best_supplier_offer->getId();
 						}
 					}
 				
@@ -145,13 +152,9 @@ class ProductController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -176,6 +179,13 @@ class ProductController extends Controller
 			if (!$unit)
 				return new Response('No unit found for id '.(int)$model['unit'], 404, array('Content-Type' => 'application/json'));
 			
+			$other_product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
+																												'unit'		=> (int)$model['unit'],
+																												'company'	=> $cid  ));
+			
+			if ($other_product && $other_product->getName() == $model['name'] && (int)$model['unit'] == $other_product->getUnit()->getId() && $other_product->getActive())
+				return new Response('Такой продукт у вас уже существует', 400, array('Content-Type' => 'application/json'));
+				
 			$product->setName($model['name']);
 			$product->setUnit($unit);
 			$product->setActive(1);
@@ -225,13 +235,9 @@ class ProductController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -240,11 +246,7 @@ class ProductController extends Controller
 					->find($pid);
 					
 		if (!$product)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No product found for id '.$pid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No product found for id '.$pid, 404, array('Content-Type' => 'application/json'));
 		
 		$product->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -302,12 +304,9 @@ class ProductController extends Controller
 			if (!$unit)
 				return new Response('No unit found for id '.(int)$model['unit'], 404, array('Content-Type' => 'application/json'));
 		
-			if(!isset($model['active']))
-				$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
-																											'unit'		=> (int)$model['unit'],
-																											'company'	=> $cid  ));
-			else
-				$product = false;
+			$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->findOneBy(array(	'name'		=> $model['name'],
+																										'unit'		=> (int)$model['unit'],
+																										'company'	=> $cid  ));
 				
 			if (!$product)
 			{
@@ -325,8 +324,7 @@ class ProductController extends Controller
 						
 					return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
 					
-				} else {
-					
+				} else {						
 					$product->setCompany($company);
 					$em = $this->getDoctrine()->getEntityManager();
 					$em->persist($product);
@@ -345,14 +343,20 @@ class ProductController extends Controller
 			else
 			{
 				if ($product->getActive())
-					return Response('У вас уже есть такой продукт', 400, array('Content-Type' => 'application/json'));
-				else
-					return new Response(json_encode(array(	'code'=>200,
-															'data'=> array( 'id'=>$product->getId(),
-																			'name' => $product->getName(), 
-																			'unit' => $product->getUnit()->getId(),
-																			'active' => 0
-																			) 
+					return new Response('Такой продукт у вас уже существует', 400, array('Content-Type' => 'application/json'));
+				
+				$product->setActive(1);
+				
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($product);
+				$em->flush();
+				
+				return new Response(json_encode(array(	'code'=>200,
+														'data'=> array( 'id'=>$product->getId(),
+																		'name' => $product->getName(), 
+																		'unit' => $product->getUnit()->getId(),
+																		'active' => 1
+																		) 
 														)), 200, array('Content-Type' => 'application/json'));
 			}
 		}

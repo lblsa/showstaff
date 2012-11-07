@@ -62,7 +62,17 @@ class OrderItem
      */
     private $amount;
 
-
+    /**
+     * @var float $price
+     *
+     * @ORM\Column(name="price", type="float")
+	 * @Assert\NotBlank(message="Цена не может быть пустым полем")
+	 * @Assert\Type(type="numeric", message="Price '{{ value }}' is not a valid {{ type }}")
+     * @Assert\Min(limit=0, message="Price should have {{ limit }} characters or more")
+     * @Assert\Max(limit=100000, message="Price should have {{ limit }} characters or less")
+     */
+    private $price;
+    
     /**
      * Get id
      *
@@ -192,5 +202,25 @@ class OrderItem
     public function getProduct()
     {
         return $this->product;
+    }
+
+    /**
+     * Set price
+     *
+     * @param float $price
+     */
+    public function setPrice($price)
+    {
+        $this->price = $price;
+    }
+
+    /**
+     * Get price
+     *
+     * @return float 
+     */
+    public function getPrice()
+    {
+        return $this->price;
     }
 }

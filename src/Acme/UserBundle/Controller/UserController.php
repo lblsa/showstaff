@@ -97,11 +97,7 @@ class UserController extends Controller
 		$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
 		
 		if (!$role)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No role found for id '.$role_id);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No role found for id '.$role_id, 404, array('Content-Type' => 'application/json'));
 		
 		$users = $role->getUsers();
 		
@@ -163,13 +159,9 @@ class UserController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			} 
 		}
 		
@@ -178,20 +170,12 @@ class UserController extends Controller
 		{
 			$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($model['id']);
 			if (!$user)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No user found for id '.$uid, 404, array('Content-Type' => 'application/json'));
 						
 			$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$cid);
 						
-			if (!$company) 
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.(int)$cid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+			if (!$company)
+				return new Response('No company found for id '.(int)$cid, 404, array('Content-Type' => 'application/json'));
 			
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 			if (!$permission) // Если еще не существаволо то создадим
@@ -206,13 +190,13 @@ class UserController extends Controller
 			//* User
 			$validator = $this->get('validator');
 
-			if (isset($model['fullname']) && strlen($model['fullname']))
+			if (isset($model['fullname']))
 				$user->setFullname($model['fullname']);
 			
-			if (isset($model['username']) && strlen($model['username']))
+			if (isset($model['username']))
 				$user->setUsername($model['username']);
 				
-			if (isset($model['email']) && strlen($model['email']))
+			if (isset($model['email']))
 				$user->setEmail($model['email']);
 			
 			if (isset($model['password']) && strlen($model['password']))
@@ -224,10 +208,8 @@ class UserController extends Controller
 				
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
-					
-				$code = 400;
-				$result = array('code' => $code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				if (isset($model['password']) && strlen($model['password'])>5)
@@ -296,9 +278,7 @@ class UserController extends Controller
 			}
 		}
 		
-		$code = 400;
-		$result = array('code'=> $code, 'message' => 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -316,22 +296,15 @@ class UserController extends Controller
 							->find($model['id']);
 			
 			if (!$user)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No user found for id '.$uid, 404, array('Content-Type' => 'application/json'));
+
 			
 			if (isset($model['company']) && (int)$model['company'] > 0)
 			{
 				$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$model['company']);
 							
-				if (!$company) 
-				{
-					$code = 404;
-					$result = array('code' => $code, 'message' => 'Не найдена компаний c id '.(int)$model['company']);
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				}
+				if (!$company)
+					return new Response('Не найдена компаний c id '.(int)$model['company'], 404, array('Content-Type' => 'application/json'));
 				
 				$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 				if (!$permission) // Если еще не существаволо то создадим
@@ -352,13 +325,13 @@ class UserController extends Controller
 			
 			$validator = $this->get('validator');
 			
-			if (isset($model['fullname']) && strlen($model['fullname']) > 0)
+			if (isset($model['fullname']) )
 				$user->setFullname($model['fullname']);
 			
-			if (isset($model['username']) && strlen($model['username']) > 0)
+			if (isset($model['username']))
 				$user->setUsername($model['username']);
 			
-			if (isset($model['email']) && strlen($model['email']) > 0)
+			if (isset($model['email']))
 				$user->setEmail($model['email']);
 			
 			$errors = $validator->validate($user);
@@ -369,10 +342,7 @@ class UserController extends Controller
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
 				
-				$code = 400;
-				$result = array('code'=>$code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 			}
 			else
 			{
@@ -401,10 +371,8 @@ class UserController extends Controller
 			
 			}
 		}
-			
-		$code = 400;
-		$result = array('code'=> $code, 'message' => 'Некорректный запрос');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));	 
+		
+		return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));	 
 	 }
 	 
 	/**
@@ -421,14 +389,10 @@ class UserController extends Controller
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
-				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+				if ($request->isXmlHttpRequest())
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -449,9 +413,7 @@ class UserController extends Controller
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
 					
-				$code = 400;
-				$result = array('code' => $code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				// шифруем и устанавливаем пароль для пользователя,
@@ -485,11 +447,7 @@ class UserController extends Controller
 				$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 								
 				if (!$company)
-				{
-					$code = 404;
-					$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				}
+					return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 				
 				$permission = new Permission();
 				$permission->setUser($new_user);
@@ -527,9 +485,7 @@ class UserController extends Controller
 			}
 		}
 		
-		$code = 400;
-		$result = array('code' => $code, 'message'=> 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 
 	/**
@@ -547,11 +503,7 @@ class UserController extends Controller
 			$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
 			
 			if (!$role)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No role found for id '.$role_id);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No role found for id '.$role_id, 404, array('Content-Type' => 'application/json'));
 			
 			$validator = $this->get('validator');
 			$user = new User();
@@ -567,9 +519,7 @@ class UserController extends Controller
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
 					
-				$code = 400;
-				$result = array('code' => $code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				// шифруем и устанавливаем пароль для пользователя,
@@ -588,11 +538,8 @@ class UserController extends Controller
 					$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$model['company']);
 								
 					if (!$company) 
-					{
-						$code = 404;
-						$result = array('code' => $code, 'message' => 'No company found for id '.(int)$model['company']);
-						return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					}
+						return new Response('No company found for id '.(int)$model['company'], 404, array('Content-Type' => 'application/json'));
+					
 					$permission = new Permission();
 					$permission->setUser($user);
 					$permission->setCompany($company);
@@ -616,9 +563,7 @@ class UserController extends Controller
 			}
 		}
 		
-		$code = 400;
-		$result = array('code' => $code, 'message'=> 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -636,24 +581,16 @@ class UserController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Нет доступа');
-				}
 			}
 		}
 		
 		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($uid);
 					
 		if (!$user)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No user found for id '.$uid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No user found for id '.$uid, 404, array('Content-Type' => 'application/json'));
 		
 
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -677,13 +614,9 @@ class UserController extends Controller
 		$user = $this->getDoctrine()
 					->getRepository('AcmeUserBundle:User')
 					->find($uid);
-					
+				
 		if (!$user)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'Не найден пользователь с id '.$uid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('Не найден пользователь с id '.$uid, 404, array('Content-Type' => 'application/json'));
 		
 
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -720,13 +653,9 @@ class UserController extends Controller
 			if (!$permission)
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Нет доступа');
-				}
 			} else {
 				$company = $permission->getCompany();
 				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN);
@@ -761,14 +690,9 @@ class UserController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Нет доступа');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-
-				} else {
+					return new Response('Нет доступа', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 
@@ -778,11 +702,7 @@ class UserController extends Controller
 						->find($cid);
 		
 		if (!$company)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
 		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
 
@@ -980,13 +900,8 @@ class UserController extends Controller
 			$result = array('code' => $code, 'message'=> 'Успешно отправлено');
 			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 
-		} else {
-			
-			$code = 400;
-			$result = array('code' => $code, 'message'=> 'Некорректный запрос');
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-
-		}	
+		} else
+			return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));
 	}
 
 }

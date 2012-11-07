@@ -30,13 +30,9 @@ class RestaurantController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -44,15 +40,9 @@ class RestaurantController extends Controller
 		
 		if (!$company) {
 			if ($request->isXmlHttpRequest()) 
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 			else
-			{
 				throw $this->createNotFoundException('No company found for id '.$cid);
-			}
 		}
 		
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
@@ -78,7 +68,6 @@ class RestaurantController extends Controller
 		{
 			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
 																							'company' => $company 	));
-			die();
 		}
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
@@ -112,13 +101,9 @@ class RestaurantController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -131,11 +116,7 @@ class RestaurantController extends Controller
 							->find($model['id']);
 			
 			if (!$restaurant)
-			{
-				$code = 404;
-				$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			}
+				return new Response('No restaurant found for id '.$rid, 404, array('Content-Type' => 'application/json'));
 			
 			$validator = $this->get('validator');
 
@@ -150,9 +131,7 @@ class RestaurantController extends Controller
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
 				
-				$code = 400;
-				$result = array('code'=>$code, 'message'=>$errorMessage);
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -169,10 +148,8 @@ class RestaurantController extends Controller
 				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));			
 			}
 		}
-			
-		$code = 400;
-		$result = array('code'=> $code, 'message' => 'Invalid request');
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	 }
 	 
 	/**
@@ -190,15 +167,9 @@ class RestaurantController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -207,13 +178,7 @@ class RestaurantController extends Controller
 					->find($rid);
 					
 		if (!$restaurant)
-		{
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No restaurant found for id '.$rid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
+			return new Response('No restaurant found for id '.$rid, 404, array('Content-Type' => 'application/json'));
 		
 
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -222,15 +187,11 @@ class RestaurantController extends Controller
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $rid);
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/restaurant", 
-	 * 			name="restaurant_ajax_create", 
-	 * 			requirements={"_method" = "POST"})
+	 * @Route(	"company/{cid}/restaurant", name="restaurant_ajax_create", requirements={"_method" = "POST"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
@@ -244,15 +205,9 @@ class RestaurantController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 			{
 				if ($request->isXmlHttpRequest()) 
-				{
-					$code = 403;
-					$result = array('code' => $code, 'message' => 'Forbidden Company');
-					$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-					$response->sendContent();
-					die();
-				} else {
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
 					throw new AccessDeniedHttpException('Forbidden Company');
-				}
 			}
 		}
 		
@@ -260,13 +215,8 @@ class RestaurantController extends Controller
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
 						
-		if (!$company) {
-			$code = 404;
-			$result = array('code' => $code, 'message' => 'No company found for id '.$cid);
-			$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			$response->sendContent();
-			die();
-		}
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 
@@ -286,11 +236,7 @@ class RestaurantController extends Controller
 				foreach($errors AS $error)
 					$errorMessage[] = $error->getMessage();
 					
-				$code = 400;
-				$result = array('code' => $code, 'message'=>$errorMessage);
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
+				return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
 				
 			} else {
 				
@@ -306,18 +252,10 @@ class RestaurantController extends Controller
 																		'director' => $restaurant->getDirector(),
 																	));
 				
-				$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-				$response->sendContent();
-				die();
-			
+				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));		
 			}
 		}
 		
-		$code = 400;
-		$result = array('code' => $code, 'message'=> 'Invalid request');
-		$response = new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		$response->sendContent();
-		die();
-	 
+		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));	 
 	}
 }

@@ -5,6 +5,32 @@ var Units, units;
 $(document).ready(function(){
 	reloadIfBack();
 	
+	var OldSync = Backbone.sync; 
+	
+	Backbone.sync = function(method, model, options) {
+		
+		if (method == 'update' || method == 'delete') {
+			options.error = function(jqXHR, textStatus, errorThrown) {
+				$('#preloader').fadeOut('fast');
+				if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+					$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
+				else
+					$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+					
+				$("#up .alert-error").width(model.view.$el.width()-50);
+				$("#up .alert-error").height(model.view.$el.height()-14);
+				var p = model.view.$el.position();
+				$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+				$('#up .alert-error').fadeIn();
+				model.view.render();
+			}
+		}
+		
+		OldSync.call(this, method, model, options);
+		
+	}
+	
+	
 	Units = Backbone.Collection.extend({
 		url: '/units',
 		initialize: function(){
@@ -65,6 +91,9 @@ $(document).ready(function(){
 			$('.controls-pass .help-block a').slideUp();
 	});
 	
+	$(document).on("click", '.alert .close', function() {
+		$(this).closest(".alert").fadeOut();
+	});
 	
 	$('.showpass').toggle(function(){
 		var pass = $('.pass_add').val();

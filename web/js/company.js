@@ -187,20 +187,30 @@ $(function(){
 					if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
-					   
-						return;
 					} else {
 						
-					   $('.p_unit', model.view.el).append('<div class="alert">'+
+					   $('.p_inn', model.view.el).append('<div class="alert">'+
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
 					}
-					return options.success(resp, status, xhr);
 				};
 				
-				companyOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				companyOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast');
+					
+					
+					$('.p_inn .alert', model.view.el).remove();
+					
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('.p_inn', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка (' + jqXHR.responseText + '). '+
+														'Попробуйте еще раз или обратитесь к администратору.</div>');
+					else
+						$('.p_inn', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка (Некорректный ответ сервера). '+
+														'Попробуйте еще раз или обратитесь к администратору.</div>');
 				}
 				
 				companyOptions.url = 'company/'+this.attributes.id;
@@ -210,12 +220,7 @@ $(function(){
 				companyOptions.success = function(resp, status, xhr) {
 					if (resp != null && typeof(resp.message) != 'undefined') {
 					   $('#preloader').fadeOut('fast'); 
-					   $('.p_inn .alert', model.view.el).remove();
-					   $('.p_inn', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка (' + resp.message + '). '+
-														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   return;
+					   
 					} else {
 					   if (resp != null && typeof(resp.data) != 'undefined') {
 						   model.set(resp.data,{silent: true});
@@ -228,21 +233,35 @@ $(function(){
 						   $('#companies_list').append(view_companies.render().el);
 						   view_companies.renderAll()
 						   
-						   return;
 					   } else {
 						   $('.p_inn .alert', model.view.el).remove();
 						   $('#preloader').fadeOut('fast'); 
 						   $('.p_inn', model.view.el).append('<div class="alert">'+
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						   return;
 					   }
 					}
-					return options.success(resp, status, xhr);
 				};
 				
-				companyOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				companyOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast');
+					model.view.render();
+					
+					$('.p_inn .alert', model.view.el).remove();
+					
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('.p_inn', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка (' + jqXHR.responseText + '). '+
+														'Попробуйте еще раз или обратитесь к администратору.</div>');
+					else
+						$('.p_inn', model.view.el).append('<div class="alert">'+
+														'<button type="button" class="close" data-dismiss="alert">×</button>'+
+														'Ошибка (Некорректный ответ сервера). '+
+														'Попробуйте еще раз или обратитесь к администратору.</div>');
+						
+					$('.forms .alert-error').fadeIn();
+					
 				}
 				
 				companyOptions.url = 'company/'+this.attributes.id;
@@ -250,52 +269,45 @@ $(function(){
 			}
 			
 			if (method == 'create') {
-				companyOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined' ) {
+				companyOptions.success = function(resp, status, xhr) {		
+				   if (resp != null && typeof(resp.data) != 'undefined') {
+				   
+					   model.set(resp.data, {silent:true});
+					   var view = new ViewCompany({model:model});
+					   var content = view.render().el;
+					   $('.companies').prepend(content);
+					   $('.name_add').val('');
+					   $('.extended_name_add').val('');
+					   $('.inn_add').val('');
+					   $(".alert-success").clone().appendTo('.forms');
+					   $(".forms .alert-success strong").html('Компания успешно создана');
+					   $(".forms .alert-success").fadeIn()
 
+					   //  for sort reload
+					   view_companies.remove()
+					   view_companies = new ViewCompanies({collection: companies});
+					   $('#companies_list').append(view_companies.render().el);
+					   view_companies.renderAll()
+				   } else {
+					   
 					   $('#preloader').fadeOut('fast'); 
-					   $('.alert-error strong').html(' (' + resp.message + '). ');
+					   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
 					   $(".alert-error").clone().appendTo('.forms');
 					   $('.forms .alert-error').fadeIn();
 					   companies.remove(model, {silent:true});
-					   return;
-					   
-					} else {
-						
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-					   
-						   model.set(resp.data, {silent:true});
-						   var view = new ViewCompany({model:model});
-						   var content = view.render().el;
-						   $('.companies').prepend(content);
-						   $('.name_add').val('');
-						   $('.extended_name_add').val('');
-						   $('.inn_add').val('');
-						   $(".alert-success").clone().appendTo('.forms');
-						   $(".forms .alert-success strong").html('Компания успешно создана');
-						   $(".forms .alert-success").fadeIn()
-
-						   //  for sort reload
-						   view_companies.remove()
-						   view_companies = new ViewCompanies({collection: companies});
-						   $('#companies_list').append(view_companies.render().el);
-						   view_companies.renderAll()
-						   return;
-					   } else {
-						   
-						   $('#preloader').fadeOut('fast'); 
-						   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-						   $(".alert-error").clone().appendTo('.forms');
-						   $('.forms .alert-error').fadeIn();
-						   companies.remove(model, {silent:true});   
-						   return;
-					   }
-					   
-					}
-					return options.success(resp, status, xhr);
+				   
+				   }
 				};
-				companyOptions.error = function(resp, status, xhr) {
-					return options.success(resp, status, xhr);
+				companyOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast'); 
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('.alert-error strong').html(' (' + jqXHR.responseText + '). ');
+					else
+						$('.alert-error strong').html(' (Некорректный ответ сервера). ');
+						
+					$(".alert-error").clone().appendTo('.forms');
+					$('.forms .alert-error').fadeIn();
+					companies.remove(model, {silent:true});
 				}
 			}
 			

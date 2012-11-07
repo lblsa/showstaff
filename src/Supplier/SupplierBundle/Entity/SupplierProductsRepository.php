@@ -32,6 +32,28 @@ class SupplierProductsRepository extends EntityRepository
 		return $query->getResult();
 	}
 	
+	
+	public function getBestOffer($cid, $pid, $suppliers)
+	{
+
+		$query = $this->getEntityManager()
+			->createQueryBuilder()
+			->from('SupplierBundle:SupplierProducts', 'p')
+			->select('p')
+			->where('p.company = :cid AND p.active = 1 AND p.product = :pid AND p.supplier IN (:suppliers) ')
+			->add('orderBy', 'p.prime DESC')
+			->add('orderBy', 'p.price ASC')
+			->setParameters(array('cid'=> $cid, 'pid'=>$pid, 'suppliers'=>$suppliers))
+			->setMaxResults(1)
+			->getQuery();
+		
+		try {
+			return $query->getSingleResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			return null;
+		}
+	}
+	
 	public function findAllOrderedBySupplier()
 	{
 		$query = $this->getEntityManager()
