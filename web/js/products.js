@@ -206,7 +206,7 @@ $(function(){
 	  
 		model: ProductModel,
 	  
-		url: '/company/'+href[2]+'/product',
+		url: '/api/company/'+href[2]+'/product',
 		  
 		initialize: function(models, units){
 			

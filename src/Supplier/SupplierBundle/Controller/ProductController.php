@@ -73,6 +73,53 @@ class ProductController extends Controller
 			else
 				throw $this->createNotFoundException('No company found for id '.$cid);
 		}
+		
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+				
+		return array('company' => $company);
+	}
+	
+	/**
+	 * @Route(	"api/company/{cid}/product.{_format}", 
+				name="API_product", 
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"})	 
+	 * @Template()
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN")
+	 */
+	public function API_listAction($cid, Request $request)
+	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+			{
+				if ($request->isXmlHttpRequest()) 
+				{
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				} else {
+					throw new AccessDeniedHttpException('Forbidden Company');
+				}
+			}
+		}
+		
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findAllProductsByCompany($cid);
+		
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			else
+				throw $this->createNotFoundException('No company found for id '.$cid);
+		}
 
 		$products = $company->getProducts();
 			
@@ -91,10 +138,7 @@ class ProductController extends Controller
 			foreach ($products AS $p)
 			{
 				if ($p->getActive())
-				{
-
-					// if((int)$p->getId() == 112)	var_dump((int)$cid, (int)$p->getId(), $suppliers_array);
-			
+				{			
 					$best_supplier_offer = $this->getDoctrine()
 											->getRepository('SupplierBundle:SupplierProducts')
 											->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
@@ -126,15 +170,12 @@ class ProductController extends Controller
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
-			
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'data' => $products_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
 		
-		return array('company' => $company);
+		// var_dump($format); die;$format = $this->getRequest()->getRequestFormat();
+		
+		$code = 200;
+		$result = array('code' => $code, 'data' => $products_array);
+		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
 	}
 	
 	/**

@@ -784,49 +784,68 @@ class UserController extends Controller
 		{
 			$validator = $this->get('validator');
 			$form->bindRequest($request);
-			$user = $form->getData();
+			
+			if ($form->isValid()) {
+			
+				$user = $form->getData();
 
-			$check_username = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->findByUsername($user->getUsername());
-			if ($check_username)
-				$error = 'Номер телефона уже используется.';
+				$check_username = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->findByUsername($user->getUsername());
+				if ($check_username)
+					$error = 'Номер телефона уже используется.';
 
-			$check_email = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->findByEmail($user->getEmail());
-			if ($check_email)
-				$error .= 'Email уже используется.';
+				$check_email = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->findByEmail($user->getEmail());
+				if ($check_email)
+					$error .= 'Email уже используется.';
+					
+				if (strlen($error) == 0)
+				{
+					$errors = $validator->validate($user);			
+
+					if (count($errors) > 0)
+					{
+						foreach($errors AS $error)
+							$errorMessage[] = $error->getMessage();
+					}
+					else
+					{
+						
+						$user->setSalt(md5(time()));
+						$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
+						$password = $encoder->encodePassword($user->getPassword(), $user->getSalt());
+						$user->setPassword($password);
+						$user->setActivationCode(md5($password));
+						
+						$em = $this->getDoctrine()->getEntityManager();
+						$em->persist($user);
+						$em->flush();
+						
+						$activation_code = $user->getActivationCode();
+						$message = \Swift_Message::newInstance()
+								->setSubject('Подтверждение регистрации')
+								->setFrom('showstaff.auth@gmail.com')
+								->setTo($user->getEmail())
+								->setBody('Для подтверждение регистрации пройдите по этой ссылке '.$_SERVER['HTTP_ORIGIN'].'/confirmation/'.$activation_code);
 				
-			if (strlen($error) == 0)
-			{
+						$this->get('mailer')->send($message);
+						
+						return $this->redirect($this->generateUrl('success_registration'));
+					}
+				}
+			}
+			else
+			{	
 				$errors = $validator->validate($user);			
+
+				$errorMessage = array();
 
 				if (count($errors) > 0)
 				{
 					foreach($errors AS $error)
 						$errorMessage[] = $error->getMessage();
+						
 				}
-				else
-				{
-					
-					$user->setSalt(md5(time()));
-					$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
-					$password = $encoder->encodePassword($user->getPassword(), $user->getSalt());
-					$user->setPassword($password);
-					$user->setActivationCode(md5($password));
-					
-					$em = $this->getDoctrine()->getEntityManager();
-					$em->persist($user);
-					$em->flush();
-					
-					$activation_code = $user->getActivationCode();
-					$message = \Swift_Message::newInstance()
-							->setSubject('Подтверждение регистрации')
-							->setFrom('showstaff.auth@gmail.com')
-							->setTo($user->getEmail())
-							->setBody('Для подтверждение регистрации пройдите по этой ссылке '.$_SERVER['HTTP_ORIGIN'].'/confirmation/'.$activation_code);
-			
-					$this->get('mailer')->send($message);
-					
-					return $this->redirect($this->generateUrl('success_registration'));
-				}
+				
+				//die('test');
 			}
 		}
 		
