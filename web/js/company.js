@@ -181,6 +181,8 @@ $(function(){
 	  sync: function(method, model, options) {
 			var companyOptions = options;
 			
+			companyOptions.url = '/api/company/'+this.attributes.id;
+			
 			if (method == 'delete') {
 				companyOptions.success = function(resp, status, xhr) {
 					$('#preloader').fadeOut('fast');
@@ -212,8 +214,6 @@ $(function(){
 														'Ошибка (Некорректный ответ сервера). '+
 														'Попробуйте еще раз или обратитесь к администратору.</div>');
 				}
-				
-				companyOptions.url = 'company/'+this.attributes.id;
 			}
 			
 			if (method == 'update') {
@@ -262,10 +262,7 @@ $(function(){
 						
 					$('.forms .alert-error').fadeIn();
 					
-				}
-				
-				companyOptions.url = 'company/'+this.attributes.id;
-				
+				}				
 			}
 			
 			if (method == 'create') {
@@ -309,6 +306,7 @@ $(function(){
 					$('.forms .alert-error').fadeIn();
 					companies.remove(model, {silent:true});
 				}
+				companyOptions.url = '/api/company';
 			}
 			
 			Backbone.sync.call(this, method, model, companyOptions);

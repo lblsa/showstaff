@@ -359,7 +359,7 @@ $(function(){
 	})
 	
 	var Companies = Backbone.Collection.extend({
-		url: '/company',
+		url: '/api/company',
 		parse: function(response, xhr){
 			if(response.code && (response.code == 200)){
 				return response.data;
