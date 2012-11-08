@@ -317,7 +317,7 @@ $(function() {
 	 ***************************************/
 	var Restaurants = Backbone.Collection.extend({
 
-		url: '/company/'+href[2]+'/restaurant',
+		url: '/api/company/'+href[2]+'/restaurant',
 
 		initialize: function(){},
 	  
