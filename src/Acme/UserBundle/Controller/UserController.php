@@ -200,7 +200,7 @@ class UserController extends Controller
 
 	/**
 	 * @Route(	"api/company/{cid}/user/{uid}.{_format}",
-				name="user_ajax_update_manag",
+				name="API_user_update_manag",
 				requirements={"_method" = "PUT", "_format" = "json|xml"},
 				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
@@ -737,7 +737,7 @@ class UserController extends Controller
 	
 	
     /**
-     * @Route(	"api/company/{cid}/user",
+     * @Route(	"api/company/{cid}/user.{_format}",
 				name="API_user_management",
 				requirements={"_method" = "GET", "_format" = "json|xml"},
 				defaults={"_format" = "json"} )

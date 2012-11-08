@@ -16,7 +16,7 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class SupplierController extends Controller
 {
 	/**
-	 * @Route(	"api/company/{cid}/supplier",
+	 * @Route(	"api/company/{cid}/supplier.{_format}",
 				name="API_supplier",
 				requirements={"_method" = "GET", "_format" = "json|xml"},
 				defaults={"_format" = "json"})

@@ -224,6 +224,8 @@ $(function(){
 	  sync: function(method, model, options) {
 		   var SProductOptions = options;
 		   
+		   SProductOptions.url = '/api/company/'+href[2]+'/supplier/'+href[4]+'/product/'+this.attributes.id;
+		   
 			if (method == 'delete') {
 				SProductOptions.success = function(resp, status, xhr) {
 					$('#preloader').fadeOut('fast');
@@ -283,6 +285,9 @@ $(function(){
 			}
 
 			if (method == 'create') {
+				
+				SProductOptions.url = '/api/company/'+href[2]+'/supplier/'+href[4]+'/product';
+				
 				SProductOptions.success = function(resp, status, xhr) {
 					
 					$('.sp_list .alert').remove();
@@ -343,11 +348,6 @@ $(function(){
 				}
 			}
 			
-		   if (model.methodUrl && model.methodUrl(method.toLowerCase())) {
-			   options = options || {};
-			   options.url = model.methodUrl(method.toLowerCase());
-			}
-			
 			Backbone.sync.call(this, method, model, SProductOptions);
 	  },
 	});
@@ -357,7 +357,7 @@ $(function(){
 		
 		model: SupplierProductsModel,
 	
-		url: '/company/'+parseInt(href[2])+'/supplier/'+parseInt(href[4])+'/product',
+		url: '/api/company/'+parseInt(href[2])+'/supplier/'+parseInt(href[4])+'/product',
 	 
 		initialize: function(models, options) {
 			this.bind('add', this.addProduct);

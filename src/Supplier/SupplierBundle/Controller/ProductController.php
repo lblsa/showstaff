@@ -32,14 +32,11 @@ class ProductController extends Controller
 			foreach ($units AS $p)
 				$units_array[] = array('id' => $p->getId(), 'name'=> $p->getName());
 				
-			$code = 200;
-			$result = array('code' => $code, 'data' => $units_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$result = array('code' => 200, 'data' => $units_array);
+			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 		}
 		else
-		{
 			return new Response('Not found units', 404, array('Content-Type' => 'application/json'));
-		}
 	}	
 	
 	/**
@@ -56,26 +53,15 @@ class ProductController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-				{
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				} else {
-					throw new AccessDeniedHttpException('Forbidden Company');
-				}
-			}
+				throw new AccessDeniedHttpException('Forbidden Company');
 		}
 		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findAllProductsByCompany($cid);
 		
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No company found for id '.$cid);
-		}
+		if (!$company)
+			throw $this->createNotFoundException('No company found for id '.$cid);
 		
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
@@ -102,26 +88,15 @@ class ProductController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-				{
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				} else {
-					throw new AccessDeniedHttpException('Forbidden Company');
-				}
-			}
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findAllProductsByCompany($cid);
 		
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No company found for id '.$cid);
-		}
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 
 		$products = $company->getProducts();
 			
@@ -173,8 +148,7 @@ class ProductController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 		
-		$code = 200;
-		$result = array('data' => $products_array, 'code' => $code);
+		$result = array('data' => $products_array, 'code' => 200);
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
@@ -194,12 +168,7 @@ class ProductController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$model = (array)json_decode($request->getContent());
@@ -249,13 +218,11 @@ class ProductController extends Controller
 				$em->persist($product);
 				$em->flush();
 				
-				$code = 200;
-				
-				$result = array('code'=> $code, 'data' => array(
+				$result = array('code'=> 200, 'data' => array(
 																'name' => $product->getName(), 
 																'unit' => $product->getUnit()->getId()
 															));
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			
 			}
 		}
@@ -280,12 +247,7 @@ class ProductController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$product = $this->getDoctrine()
@@ -310,9 +272,8 @@ class ProductController extends Controller
 				->getQuery()
 				->execute();
 		
-		$code = 200;
-		$result = array('code' => $code, 'data' => $pid);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$result = array('code' => 200, 'data' => $pid);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
 
@@ -332,12 +293,7 @@ class ProductController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
@@ -380,14 +336,13 @@ class ProductController extends Controller
 					$em->persist($product);
 					$em->flush();
 					
-					$code = 200;
-					$result = array(	'code' => $code, 'data' => array(	'id' => $product->getId(),
+					$result = array(	'code' => 200, 'data' => array(	'id' => $product->getId(),
 																			'name' => $product->getName(), 
 																			'unit' => $product->getUnit()->getId(),
 																			'active' => 1
 																		));
 					
-					return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));			
+					return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));		
 				}
 			}
 			else
@@ -412,6 +367,5 @@ class ProductController extends Controller
 		}
 		
 		return Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));
-
 	}
 }
