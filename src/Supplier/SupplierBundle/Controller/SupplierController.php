@@ -16,6 +16,66 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class SupplierController extends Controller
 {
 	/**
+	 * @Route(	"api/company/{cid}/supplier",
+				name="API_supplier",
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
+	 * @Template()
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
+	 */
+	public function API_listAction($cid, Request $request)
+	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+			{
+				if ($request->isXmlHttpRequest()) 
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
+					throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->findAllSupplierByCompany($cid);
+		
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			else
+				throw $this->createNotFoundException('No company found for id '.$cid);
+		}
+		
+		$suppliers = $company->getSuppliers();
+		$suppliers_array = array();
+		
+		if ($suppliers)
+		{
+			foreach ($suppliers AS $p)
+			{
+				if($p->getActive())
+				{
+					$suppliers_array[] = array( 'id' => $p->getId(),
+												'name'=> $p->getName());
+				}
+			}
+		}
+			
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+
+		$result = array('code' => 200, 'data' => $suppliers_array);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
+	/**
 	 * @Route("company/{cid}/supplier", name="supplier", requirements={"_method" = "GET"})
 	 * @Template()
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
@@ -69,25 +129,17 @@ class SupplierController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 		
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'data' => $suppliers_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
-		
-		return array(	'company' => $company,
-						'suppliers' => $suppliers,
-						'suppliers_json' => json_encode($suppliers_array)	);
+		return array(	'company' => $company	);
 	}
 
 	/**
-	 * @Route(	"company/{cid}/supplier/{sid}", 
-	 * 			name="supplier_ajax_update", 
-	 * 			requirements={"_method" = "PUT"})
+	 * @Route(	"api/company/{cid}/supplier/{sid}.{_format}", 
+	 * 			name="API_supplier_update", 
+	 * 			requirements={"_method" = "PUT", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxupdateAction($cid, $sid, Request $request)
+	 public function API_updateAction($cid, $sid, Request $request)
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -134,9 +186,8 @@ class SupplierController extends Controller
 				$em->persist($supplier);
 				$em->flush();
 				
-				$code = 200;
-				$result = array('code'=> $code, 'data' => array('name' => $supplier->getName()));
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				$result = array('code'=> 200, 'data' => array('name' => $supplier->getName()));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			
 			}
 		}
@@ -145,10 +196,13 @@ class SupplierController extends Controller
 	 }
 	 
 	/**
-	 * @Route(	"company/{cid}/supplier/{sid}", name="supplier_ajax_delete", requirements={"_method" = "DELETE"})
+	 * @Route(	"api/company/{cid}/supplier/{sid}.{_format}",
+				name="API_supplier_delete",
+				requirements={"_method" = "DELETE", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxdeleteAction($cid, $sid, Request $request)
+	public function API_deleteAction($cid, $sid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -187,15 +241,15 @@ class SupplierController extends Controller
 				->getQuery()
 				->execute();
 		
-		$code = 200;
-		$result = array('code' => $code, 'data' => $sid);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$result = array('code' => 200, 'data' => $sid);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/supplier", 
-	 * 			name="supplier_ajax_create", 
-	 * 			requirements={"_method" = "POST"})
+	 * @Route(	"api/company/{cid}/supplier.{_format}", 
+	 * 			name="API_supplier_create", 
+	 * 			requirements={"_method" = "POST", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function ajaxcreateAction($cid, Request $request)
@@ -247,16 +301,13 @@ class SupplierController extends Controller
 				$em->persist($supplier);
 				$em->flush();
 				
-				$code = 200;
-				$result = array('code' => $code, 'data' => array(	'id' => $supplier->getId(),
+				$result = array('code' => 200, 'data' => array(	'id' => $supplier->getId(),
 																	'name' => $supplier->getName()
 																));
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			
 			}
 		}
-
 		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
-	 
 	}
 }
