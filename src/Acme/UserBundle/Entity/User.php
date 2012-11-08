@@ -37,6 +37,8 @@ class User implements UserInterface, \Serializable
      *
      * @ORM\Column(name="username", type="bigint", length=14, unique=true)
 	 * @Assert\NotBlank(message="Номер телефона не может быть пустым")
+	 * @Assert\MinLength(limit=4, message="Номер телефона должен содержать как минимум {{ limit }} символов")
+	 * @Assert\MaxLength(limit=14, message="Номер телефона должен содержать как минимум {{ limit }} символов")
      */
     protected $username;
 

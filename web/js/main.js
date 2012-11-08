@@ -32,7 +32,7 @@ $(document).ready(function(){
 	
 	
 	Units = Backbone.Collection.extend({
-		url: '/units',
+		url: '/api/units',
 		initialize: function(){
 			this.fetch({
 							error: function(){
