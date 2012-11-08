@@ -1,5 +1,5 @@
 //* update 2012-10-18 16:15:00 *//
-var companies, view_users;
+var companies, view_users, users;
 var sort = 'asc';
 $(function(){
 	// view list users
@@ -168,60 +168,46 @@ $(function(){
 	  sync: function(method, model, options) {
 			var userOptions = options;
 			
+			userOptions.url = '/api/user/'+this.attributes.id;
+			
 			if (method == 'create') {
+				
+				userOptions.url = '/api/user';
+				
 				userOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined' ) {
+				   
+					   model.set(resp.data, {silent:true});
+					   var view = new ViewUser({model:model});
+					   var content = view.render().el;
+					   $('.users').prepend(content);
+					   $('.username_add').val('');
+					   $('.fullname_add').val('');
+					   $('.email_add').val('');
+					   $('.pass_add').val('');
+					   $('.company_add option:first').attr('selected', 'selected');
+					   $(".alert-success").clone().appendTo('.forms');
+					   $(".forms .alert-success strong").html('Пользователь добавлен');
+					   $(".forms .alert-success").fadeIn()
 
-					   $('#preloader').fadeOut('fast'); 
-					   $('.alert-error strong').html(' (' + resp.message + '). ');
-					   $(".alert-error").clone().appendTo('.forms');
-					   $('.forms .alert-error').fadeIn();
-					   users.remove(model, {silent:true});
-					   
-					} else {
-						
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-					   
-						   model.set(resp.data, {silent:true});
-						   var view = new ViewUser({model:model});
-						   var content = view.render().el;
-						   $('.users').prepend(content);
-						   $('.username_add').val('');
-						   $('.fullname_add').val('');
-						   $('.email_add').val('');
-						   $('.pass_add').val('');
-						   $('.company_add option:first').attr('selected', 'selected');
-						   $(".alert-success").clone().appendTo('.forms');
-						   $(".forms .alert-success strong").html('Пользователь добавлен');
-						   $(".forms .alert-success").fadeIn()
-
-						   //  for sort reload
-						   view_users.remove()
-						   view_users = new ViewUsers({collection: users});
-						   $('#user_list').append(view_users.render().el);
-						   view_users.renderAll();
-						   
-					   } else {
-						   
-						   $('#preloader').fadeOut('fast'); 
-						   $('.alert-error strong').html(' (Некорректный ответ сервера). ');
-						   $(".alert-error").clone().appendTo('.forms');
-						   $('.forms .alert-error').fadeIn();
-						   users.remove(model, {silent:true});
-					   }
-					   
-					}
-					
+					   //  for sort reload
+					   view_users.remove()
+					   view_users = new ViewUsers({collection: users});
+					   $('#user_list').append(view_users.render().el);
+					   view_users.renderAll();
 				};
+				
 				userOptions.error = function(jqXHR, textStatus, errorThrown) {
 					$('#preloader').fadeOut('fast');
 					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-						$('.alert-error strong').html(' ('+jqXHR.responseText+'). ');
+						$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
 					else
-						$('.alert-error strong').html(' (Некорректный ответ сервера). ');
+						$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
 						
-					$(".alert-error").clone().appendTo('.forms');
-					$('.forms .alert-error').fadeIn();
+					$("#up .alert-error").width($('.forms').width()-49);
+					$("#up .alert-error").height($('.forms').height()-14);
+					var p = $('.forms').position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+					$('#up .alert-error').fadeIn();
 					users.remove(model, {silent:true});
 				}
 			}
@@ -229,88 +215,39 @@ $(function(){
 			if (method == 'delete') {
 				userOptions.success = function(resp, status, xhr) {
 					$('#preloader').fadeOut('fast');
-					if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
+					if (resp.data == model.id) {
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
-					   
 					
 					} else {
 						
-					   $('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
+						$('#preloader').fadeOut('fast');
+						if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+							$('#up .alert-error strong').html('('+jqXHR.responseText+'). ');
+						else
+							$('#up .alert-error strong').html('(Некорректный ответ сервера). ');
+							
+						$("#up .alert-error").width($('.forms').width()-49);
+						$("#up .alert-error").height($('.forms').height()-14);
+						var p = $('.forms').position();
+						$('#up .alert-error').css({'left':p.left, 'top': p.top-10});
+						$('#up .alert-error').fadeIn();
 					
 					}
-					
 				};
-				
-				userOptions.error = function(jqXHR, textStatus, errorThrown) {
-					$('#preloader').fadeOut('fast');
-					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-						$('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! ('+jqXHR.responseText+') Попробуйте еще раз или обратитесь к администратору.</div>');
-					else
-						$('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-				}
-				
-				userOptions.url = 'user/'+this.attributes.id;
 			}
 			
 			if (method == 'update') {
 				userOptions.success = function(resp, status, xhr) {
-					if (resp != null && typeof(resp.message) != 'undefined') {
-					   $('#preloader').fadeOut('fast'); 
-					   $('.u_email .alert', model.view.el).remove();
-					   $('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка (' + resp.message + '). '+
-														'Попробуйте еще раз или обратитесь к администратору.</div>');
-					   
-					} else {
-					   if (resp != null && typeof(resp.data) != 'undefined') {
-						   model.set(resp.data,{silent: true});
-						   model.view.render();			   
-						   //  for sort reload
-						   //users.sort({silent: true});
-						   
-						   view_users.remove()
-						   view_users = new ViewUsers({collection: users});
-						   $('#user_list').append(view_users.render().el);
-						   view_users.renderAll()
-						   
-						 
-					   } else {
-						   $('.u_email .alert', model.view.el).remove();
-						   $('#preloader').fadeOut('fast'); 
-						   $('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка. Попробуйте еще раз или обратитесь к администратору.</div>');
-						  
-					   }
-					}
-				
-				};
-				
-				userOptions.error = function(jqXHR, textStatus, errorThrown) {
-					$('#preloader').fadeOut('fast');
-					model.view.render();
-					
-					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
-						$('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! ('+jqXHR.responseText+') Попробуйте еще раз или обратитесь к администратору.</div>');
-					else
-						$('.u_email', model.view.el).append('<div class="alert">'+
-														'<button type="button" class="close" data-dismiss="alert">×</button>'+
-														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
-					
-				}
-				
-				userOptions.url = 'user/'+this.attributes.id;
-				
+					model.set(resp.data,{silent: true});
+					model.view.render();			   
+				   //  for sort reload
+				   
+					view_users.remove()
+					view_users = new ViewUsers({collection: users});
+					$('#user_list').append(view_users.render().el);
+					view_users.renderAll();				
+				};			
 			}
 			
 			Backbone.sync.call(this, method, model, userOptions);
@@ -323,7 +260,7 @@ $(function(){
 	  
 		model: UserModel,
 
-		url: '/user',
+		url: '/api/user',
 
 		initialize: function(){
 			this.bind('add', this.addUser);
@@ -371,7 +308,7 @@ $(function(){
 	
 	companies = new Companies;
 	
-	var users = new Users; 	
+	users = new Users; 	
 	companies.fetch({	success:function(collection, response) {
 		
 									collection.each(function(company){

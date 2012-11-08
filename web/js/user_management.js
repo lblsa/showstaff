@@ -24,9 +24,6 @@ $(function() {
 				this.collection.each(function(model){
 					var view = new ViewUser({model:model});
 					var content = view.render().el;
-					/*if (sort == 'desc')
-						this.$('.users').prepend(content);
-					else*/
 					this.$('.users').append(content);
 				});
 				
@@ -147,7 +144,10 @@ $(function() {
 	  sync: function(method, model, options) {
 			var userOptions = options;
 			
+			userOptions.url = '/api/company/'+href[2]+'/user/'+this.attributes.id;
+			
 			if (method == 'create') {
+				userOptions.url = '/api/company/'+href[2]+'/user';
 				userOptions.success = function(resp, status, xhr) {
 				   if (resp != null && typeof(resp.data) != 'undefined') {
 					   model.set(resp.data, {silent:true});
@@ -227,10 +227,6 @@ $(function() {
 				};
 			}
 			
-			if (method == 'delete' || method == 'update') {			
-				userOptions.url = 'user/'+this.attributes.id;
-			}
-			
 			Backbone.sync.call(this, method, model, userOptions);
 	   }
 	})
@@ -278,7 +274,7 @@ $(function() {
 	 ***************************************/
 	var Roles = Backbone.Collection.extend({
 
-		url: '/role',
+		url: '/api/role',
 
 		initialize: function(){},
 	  
@@ -296,7 +292,7 @@ $(function() {
 	  
 		model: UserModel,
 	  
-		url: '/company/'+href[2]+'/user',
+		url: '/api/company/'+href[2]+'/user',
 		
 		parse: function(response) {
 			if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
