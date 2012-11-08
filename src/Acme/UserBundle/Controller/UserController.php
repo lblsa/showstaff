@@ -376,10 +376,10 @@ class UserController extends Controller
 	 }
 	 
 	/**
-	 * @Route(	"/company/{cid}/user", name="user_ajax_create_manag", requirements={"_method" = "POST"})
+	 * @Route(	"api/company/{cid}/user", name="API_user_create_manag", requirements={"_method" = "POST", "_format" = "json|xml"}, defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxcreateManagerAction($cid, Request $request) // create company manager
+	public function API_createManagerAction($cid, Request $request) // create company manager
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -489,10 +489,10 @@ class UserController extends Controller
 	}
 
 	/**
-	 * @Route(	"user", name="user_ajax_create", requirements={"_method" = "POST"})
+	 * @Route(	"api/user.{_format}", name="API_user_create", requirements={"_method" = "POST", "_format" = "json|xml"}, defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	public function ajaxcreateAction(Request $request) // create company admin
+	public function API_createAction(Request $request) // create company admin
 	{
 		$model = (array)json_decode($request->getContent());
 		

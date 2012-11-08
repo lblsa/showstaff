@@ -16,10 +16,13 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class ProductController extends Controller
 {
 	/**
-	 * @Route("units", name="units", requirements={"_method" = "GET"})
+	 * @Route(	"api/units.{_format}",
+				name="API_units", 
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"})	 
 	 * @Template()
 	 */
-	public function unitsAction()
+	public function API_unitsAction()
 	{
 		$units = $this->getDoctrine()
 						->getRepository('SupplierBundle:Unit')
@@ -78,8 +81,7 @@ class ProductController extends Controller
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
-		header("Pragma: no-cache");// HTTP/1.0
-				
+		header("Pragma: no-cache");// HTTP/1.0	
 		return array('company' => $company);
 	}
 	
@@ -171,18 +173,19 @@ class ProductController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 		
-		// var_dump($format); die;$format = $this->getRequest()->getRequestFormat();
-		
 		$code = 200;
-		$result = array('code' => $code, 'data' => $products_array);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$result = array('data' => $products_array, 'code' => $code);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/product/{pid}", name="product_ajax_update", requirements={"_method" = "PUT"})
+	 * @Route(	"api/company/{cid}/product/{pid}.{_format}", 
+				name="API_product_update", 
+				requirements={"_method" = "PUT", "_format" = "json|xml"},
+				defaults={"_format" = "json"})	 
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxupdateAction($cid, $pid, Request $request)
+	 public function API_updateAction($cid, $pid, Request $request)
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -262,10 +265,13 @@ class ProductController extends Controller
 	 
 	
 	/**
-	 * @Route(	"company/{cid}/product/{pid}", name="product_ajax_delete", requirements={"_method" = "DELETE"})
+	 * @Route(	"api/company/{cid}/product/{pid}.{_format}", 
+				name="API_product_delete", 
+				requirements={"_method" = "DELETE", "_format" = "json|xml"},
+				defaults={"_format" = "json"})	 
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxdeleteAction($cid, $pid, Request $request)
+	public function API_deleteAction($cid, $pid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -311,10 +317,13 @@ class ProductController extends Controller
 	
 
 	/**
-	 * @Route(	"company/{cid}/product", name="product_ajax_create", requirements={"_method" = "POST"})
+	 * @Route(	"api/company/{cid}/product.{_format}", 
+				name="API_product_create", 
+				requirements={"_method" = "POST", "_format" = "json|xml"},
+				defaults={"_format" = "json"})	 
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxcreateAction($cid, Request $request)
+	public function API_createAction($cid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -392,13 +401,13 @@ class ProductController extends Controller
 				$em->persist($product);
 				$em->flush();
 				
-				return new Response(json_encode(array(	'code'=>200,
-														'data'=> array( 'id'=>$product->getId(),
-																		'name' => $product->getName(), 
-																		'unit' => $product->getUnit()->getId(),
-																		'active' => 1
-																		) 
-														)), 200, array('Content-Type' => 'application/json'));
+				$result = array(	'code'=>200,
+									'data'=> array( 'id'=>$product->getId(),
+													'name' => $product->getName(), 
+													'unit' => $product->getUnit()->getId(),
+													'active' => 1 ) );
+					
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		
