@@ -7,6 +7,7 @@
 	<!-- {% for message in errorMessage %}<p class="text-error">{{ message }}</p>{% endfor %} -->
 	<form action="{{ path('registr') }}" method="post"  class="form-horizontal" {{ form_enctype(form) }}>
 		<p class="text-error">{{ form_errors(form) }}</p>
+		<p class="text-error">{{ error }}</p>
 		<div class="control-group">
 			{{ form_label(form.email, null, { 'attr': {'class': 'control-label'}}) }}
 			<div class="controls">

@@ -13,16 +13,11 @@ use Supplier\SupplierBundle\Form\Type\CompanyType;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 
 
-/**
- * Permission controller.
- *
- * @Route("/company")
- */
 class CompanyController extends Controller
 {
 	
 	/**
-	 * @Route(	"", name="company",	requirements={"_method" = "GET"})
+	 * @Route(	"company", name="company",	requirements={"_method" = "GET"})
 	 * @Template()
      * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
@@ -47,22 +42,52 @@ class CompanyController extends Controller
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
-		
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'data' => $companies_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
 
 		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array) );
+	}
+	
+	/**
+	 * @Route(	"api/company.{_format}", 
+				name="API_company", 
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"})	 
+	 * @Template()
+     * @Secure(roles="ROLE_SUPER_ADMIN")
+	 */
+	public function API_listAction(Request $request)
+	{
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+
+		$companies_array = array();
+		
+		if ($companies)
+		{
+			foreach ($companies AS $p)
+				$companies_array[] = array( 	'id' => $p->getId(),
+												'name'=> $p->getName(), 
+												'extended_name' => $p->getExtendedName(),
+												'inn' => $p->getInn() );
+		}
+		
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+
+		$code = 200;
+		$result = array('code' => $code, 'data' => $companies_array);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}	
 	
 	/**
-	 * @Route(	"/{cid}", name="company_ajax_update", requirements={"_method" = "PUT"})
+	 * @Route(	"api/company/{cid}.{_format}",
+				name="API_company_update",
+				requirements={"_method" = "PUT", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	 public function ajaxupdateAction($cid, Request $request)
+	 public function API_updateAction($cid, Request $request)
 	 {		 
 		$model = (array)json_decode($request->getContent());
 		
@@ -109,10 +134,13 @@ class CompanyController extends Controller
 	 
 
 	/**
-	 * @Route(	"", name="company_ajax_create", requirements={"_method" = "POST"})
+	 * @Route(	"api/company.{_format}", 
+				name="API_company_create", 
+				requirements={"_method" = "POST", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	public function ajaxcreateAction(Request $request)
+	public function API_createAction(Request $request)
 	{
 		$model = (array)json_decode($request->getContent());
 		
@@ -146,7 +174,7 @@ class CompanyController extends Controller
 																		'inn' => $company->getINN()
 																	));
 				
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		
@@ -155,12 +183,13 @@ class CompanyController extends Controller
 	
 	
 	/**
-	 * @Route(	"/{cid}", 
-	 * 			name="company_ajax_delete", 
-	 * 			requirements={"_method" = "DELETE"})
+	 * @Route(	"api/company/{cid}.{_format}", 
+	 * 			name="API_company_delete", 
+	 * 			requirements={"_method" = "DELETE", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	public function ajaxdeleteAction($cid, Request $request)
+	public function API_deleteAction($cid, Request $request)
 	{
 		$company = $this->getDoctrine()
 					->getRepository('SupplierBundle:Company')
@@ -175,6 +204,6 @@ class CompanyController extends Controller
 		
 		$code = 200;
 		$result = array('code' => $code, 'data' => $cid);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 }
