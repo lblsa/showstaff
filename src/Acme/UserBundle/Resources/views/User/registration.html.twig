@@ -5,7 +5,6 @@
 
 	<legend style="padding-left: 160px;">Регистрация</legend>
 	<!-- {% for message in errorMessage %}<p class="text-error">{{ message }}</p>{% endfor %} -->
-	<p class="text-error">{{ error }}</p>
 	<form action="{{ path('registr') }}" method="post"  class="form-horizontal" {{ form_enctype(form) }}>
 		<p class="text-error">{{ form_errors(form) }}</p>
 		<div class="control-group">

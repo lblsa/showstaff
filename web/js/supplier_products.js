@@ -421,7 +421,7 @@ $(function(){
 	})
 
 	var Products = Backbone.Collection.extend({
-		url: '/company/'+parseInt(href[2])+'/product',
+		url: '/api/company/'+parseInt(href[2])+'/product',
 		parse: function(response, xhr){
 			if(response.code && (response.code == 200)){
 				return response.data;
