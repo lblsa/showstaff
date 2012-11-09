@@ -189,6 +189,8 @@ $(function(){
 	  sync: function(method, model, options) {
 		   var BookingOptions = options;
 		   
+		   console.log(BookingOptions.url);
+		   
 			if (method == 'delete') {
 				BookingOptions.success = function(resp, status, xhr) {
 					$('#bookin_list .alert').remove();
@@ -358,9 +360,9 @@ $(function(){
 	  
 		url: function(){
 			if (typeof(href[6])!='undefined')
-				return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
+				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
 			else
-				return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
+				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
 		},
 	  
 		parse: function(response){
@@ -400,8 +402,6 @@ $(function(){
 	$('#preloader').height($('#bookin_list').height());
 	var p = $('#bookin_list').position();
 	
-	//console.log($('#bookin_list').width(), p);
-	
 	$('#preloader').css({'left':p.left, 'top': p.top});
 	$('#preloader').fadeIn('fast');
 
@@ -420,7 +420,7 @@ $(function(){
 						}, error:function(){
 							$('#preloader').fadeOut('fast');
 							
-							$('#add_row').html('<td colspan="4"><div class="alert">'+
+							$('.bookings').html('<td colspan="4"><div class="alert">'+
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
 												'Ошибка на сервере, обновите страницу или обратитесь к администратору</div></td>');
 							
@@ -428,9 +428,7 @@ $(function(){
 						}
 					});
 
-	if (!edit_mode) {
-		$('#bookin_list .remove').remove();
-	}
+	if (!edit_mode) $('#bookin_list .remove').remove();
 
 
     $('.create').click(function(){
@@ -451,11 +449,7 @@ $(function(){
 			var view = new OptionProducts({model:p});
 			$('.product_add').append(view.render().el);
 		}
-    });
-    
-   // if ($('.product_add option').length == 0)
-   // 	$('.create, .forms').fadeOut();
-    
+    });    
     
 	$('.add_booking').click(function(){
 		

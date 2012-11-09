@@ -131,11 +131,10 @@ $(function(){
 	var BookingModel = Backbone.Model.extend({	});
 
 	var Products = Backbone.Collection.extend({
-		url: '/company/'+parseInt(href[2])+'/product',
+		url: '/api/company/'+parseInt(href[2])+'/product',
 		parse: function(response, xhr){
 			if(response.code && (response.code == 200)) {
-				
-				// remove product without supplier				
+						
 				var result = [];
 				_.each(response.data, function(product_data){
 					if (product_data.supplier_product != 0)
@@ -144,7 +143,7 @@ $(function(){
 				
 				return result;
 			} else {
-				console.log('bad request');
+				error_fetch('Ошибка парсинга. Обновите страницу или обратитесь к администратору');
 			}
 		}
 	});
@@ -156,9 +155,9 @@ $(function(){
 	  
 		url: function(){
 			if (typeof(href[6])!='undefined')
-				return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
+				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
 			else
-				return '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
+				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
 		},
 	  
 		parse: function(response){
@@ -200,8 +199,6 @@ $(function(){
 	$('#preloader').height($('#bookin_list').height());
 	var p = $('#bookin_list').position();
 	
-	//console.log($('#bookin_list').width(), p);
-	
 	$('#preloader').css({'left':p.left, 'top': p.top});
 	$('#preloader').fadeIn('fast');
 
@@ -220,7 +217,7 @@ $(function(){
 						}, error:function(){
 							$('#preloader').fadeOut('fast');
 							
-							$('#add_row').html('<td colspan="4"><div class="alert">'+
+							$('.bookings').html('<td colspan="4"><div class="alert">'+
 												'<button type="button" class="close" data-dismiss="alert">×</button>'+
 												'Ошибка на сервере, обновите страницу или обратитесь к администратору</div></td>');
 							
