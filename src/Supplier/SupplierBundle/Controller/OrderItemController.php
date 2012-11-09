@@ -117,7 +117,7 @@ class OrderItemController extends Controller
 		{
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 			
 			if(!$order || $this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
 				$edit_mode = true;
@@ -243,14 +243,12 @@ class OrderItemController extends Controller
 		$products_array = array_values($products_array); 
 
 		if ($booking_date<date('Y-m-d'))
-		{
 			$edit_mode = false;
-		}
 		else
 		{
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 			
 			if(!$order || $this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
 				$edit_mode = true;
@@ -450,6 +448,9 @@ class OrderItemController extends Controller
 			}	
 		}
 		
+		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
+			$booking_date = date('Y-m-d');
+		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
@@ -461,7 +462,7 @@ class OrderItemController extends Controller
 		{
 			$order = $this->getDoctrine()
 						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 			
 			if($order)
 				if($order->getCompleted())
@@ -541,6 +542,9 @@ class OrderItemController extends Controller
 			}
 		}
 		
+		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
+			$booking_date = date('Y-m-d');
+		
 		$model = (array)json_decode($request->getContent());
 
 		if	(	count($model) > 0 && 
@@ -566,7 +570,7 @@ class OrderItemController extends Controller
 			{
 				$order = $this->getDoctrine()
 							->getRepository('SupplierBundle:Order')
-							->findOneBy( array(	'company'=>$cid, 'date' => date('Y-m-d')) );
+							->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 							
 				if($order)
 					if($order->getCompleted())
