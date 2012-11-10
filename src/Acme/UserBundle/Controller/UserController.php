@@ -1048,7 +1048,11 @@ class UserController extends Controller
 	}
 	
 	/**
-	 * @Route(	"/feedback", name="feedback", requirements={"_method" = "PUT"})
+	 * @Route(	"api/feedback.{_format}",
+				name="API_feedback",
+				requirements={	"_method" = "PUT",
+								"_format" = "json|xml"},
+				defaults={"_format"="json"})
 	 */
 	public function feedbackAction(Request $request)
 	{
@@ -1069,9 +1073,8 @@ class UserController extends Controller
 			
 			$this->get('mailer')->send($message);
 
-			$code = 200;
-			$result = array('code' => $code, 'message'=> 'Успешно отправлено');
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$result = array('code' => 200, 'message'=> 'Успешно отправлено');
+			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 
 		} else
 			return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));

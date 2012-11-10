@@ -1,4 +1,4 @@
-//* update 2012-10-18 16:15:00 *//
+//* update 2012-11-10 16:15:00 *//
 $(function(){
 	$('body').append('<div class="modal hide" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'+
 						 '<div class="modal-header">'+
@@ -55,7 +55,7 @@ function send_feedback() {
 		feedback_message = feedback_message.replace(/(['])/g, "#039;").replace(/\0/g, "\\0");
 		//feedback_message = escape(feedback_message);
 		$.ajax({
-		  url: "/feedback",
+		  url: "/api/feedback",
 		  type: "PUT",
 		  data: '{ "feedback_message": "'+feedback_message+'", "url": "'+window.location.pathname+'"}',
 		  success: function(data) {
