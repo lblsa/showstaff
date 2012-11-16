@@ -307,7 +307,7 @@ $(function() {
 		},
 
 		addUser: function(user){
-		user.save({wait: true});
+			user.save({wait: true});
 		},
 	  
 	});

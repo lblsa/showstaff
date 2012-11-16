@@ -189,7 +189,7 @@ $(function(){
 	  sync: function(method, model, options) {
 		   var BookingOptions = options;
 		   
-		   console.log(BookingOptions.url);
+		   //console.log(BookingOptions.url);
 		   
 			if (method == 'delete') {
 				BookingOptions.success = function(resp, status, xhr) {
