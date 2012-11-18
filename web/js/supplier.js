@@ -107,6 +107,8 @@ $(function(){
 	  sync: function(method, model, options) {
 			var supplierOptions = options;
 			
+			supplierOptions.url = '/api/company/'+href[2]+'/supplier/'+this.attributes.id;
+			
 			if (method == 'delete') {
 				supplierOptions.success = function(resp, status, xhr) {
 					$('#preloader').fadeOut('fast');
@@ -119,9 +121,7 @@ $(function(){
 														'<button type="button" class="close" data-dismiss="alert">×</button>'+
 														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');
 					}
-				};
-				
-				supplierOptions.url = 'supplier/'+this.attributes.id;
+				};				
 			}
 			
 			if (method == 'update') {
@@ -136,11 +136,11 @@ $(function(){
 				   $('#supplier_list').append(view_suppliers.render().el);
 				   view_suppliers.renderAll();
 				};
-				
-				supplierOptions.url = 'supplier/'+this.attributes.id;
 			}
 			
 			if (method == 'create') {
+				
+				supplierOptions.url = '/api/company/'+href[2]+'/supplier';
 				
 				supplierOptions.success = function(resp, status, xhr) {
 				   model.set(resp.data, {silent:true});
@@ -184,7 +184,7 @@ $(function(){
 	  
 		model: SupplierModel,
 
-		url: '/company/'+href[2]+'/supplier',
+		url: '/api/company/'+href[2]+'/supplier',
 
 		initialize: function(){
 			this.bind('add', this.addSupplier);

@@ -120,6 +120,5 @@ function reloadIfBack() {
 		$('#refreshed').val("yes");
 	} else {
 		$('#refreshed').val("no");
-		//location.reload();
 	}
 }

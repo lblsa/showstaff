@@ -1,0 +1,54 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+<div class="row-fluid">
+	<div class="span9">
+		<h1>Компания "{{ company.name }}"</h1>
+		<h2>Смена для ресторана "{{ restaurant.name }}" на {{ booking_date }}</h2>
+	</div>
+	<div class="span3">
+		<form class=" pull-right form-inline">
+			<input type="text" value="{{ booking_date }}" class="wh_datepicker input-small">
+			<a href="" class="btn" id="link_to_date">Открыть</a>
+		</form>
+	</div>
+</div>
+
+<table class="table table-bordered table-striped" id="shift_list">
+	<thead>
+		<tr>
+			<th>Пользователь</th>
+			<th>Должность</th>
+			<th>Запланировано часов</th>
+			<th>Фактических часов</th>
+			<th>Утвержден</th>
+			<th></th>
+		</tr>
+		<tr id="add_row">
+			<th colspan="6" class="add">
+				<a href="#" class="create btn btn-small">Add new Product <i class="icon-plus-sign"></i></a>
+				<div class="form-inline hide forms">
+					<div class="controls-group">
+						<div class="controls">
+							<select name="user_add" class="user_add"></select>
+						</div>
+						<div class="controls">
+							<select name="duty_add" class="duty_add"></select>
+						</div>
+						<div class="controls">
+							<input type="number" placeholder="Запланировано часов" class="planhours_add" name="planhours_add" />
+						</div>
+						<div class="controls">
+							<input type="number" placeholder="Фактических часов" class="facthours_add" name="planhours_add" />
+						</div>
+						<div class="controls">
+							<button class="add_employee btn btn-mini btn-success">add</button>
+						</div>
+					</div>
+				</div>
+			</th>
+		</tr>
+	</thead>
+</table>
+<script src="/js/workinghours.js"></script>
+{% endblock %}

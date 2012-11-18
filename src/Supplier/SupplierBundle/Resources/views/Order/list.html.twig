@@ -55,7 +55,7 @@ $(function(){
 								  
 								  model: OrderModel,
 								  
-								  url: '/company/{{ company.id }}/order',
+								  url: 'api/company/{{ company.id }}/order',
 								  
 								  initialize: function(){  },			  
 								});
@@ -67,9 +67,7 @@ $(function(){
 							}
 	});
 	
-	if (!edit_mode) {
-		$('.restaurant .edit_order').remove();
-	}
+	if (!edit_mode) $('.restaurant .edit_order').remove();
 });</script>
 {% endblock %}
 

@@ -16,6 +16,71 @@ use JMS\SecurityExtraBundle\Annotation\Secure;
 class RestaurantController extends Controller
 {
 	/**
+	 * @Route(	"api/company/{cid}/restaurant.{_format}",
+				name="API_restaurant",
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
+	 * @Template()
+	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER")
+	 */
+	public function API_listAction($cid, Request $request)
+	{
+		$user = $this->get('security.context')->getToken()->getUser();
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+			{
+				if ($request->isXmlHttpRequest()) 
+					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+				else
+					throw new AccessDeniedHttpException('Forbidden Company');
+			}
+		}
+		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
+		
+		if (!$company) {
+			if ($request->isXmlHttpRequest()) 
+				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			else
+				throw $this->createNotFoundException('No company found for id '.$cid);
+		}
+		
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+			$restaurants = $permission->getRestaurants();
+			
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+			$restaurants = $company->getRestaurants();
+			
+		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+			$restaurants = $company->getRestaurants();
+
+			
+		$restaurants_array = array();
+		
+		if ($restaurants)
+			foreach ($restaurants AS $p)
+				$restaurants_array[] = array(	'id' => $p->getId(),
+												'name'=> $p->getName(),
+												'address'=> $p->getAddress(),
+												'director'=> $p->getDirector(), );
+												
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))	
+			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
+																							'company' => $company 	));
+
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+
+		$result = array('code' => 200, 'data' => $restaurants_array);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
+	/**
 	 * @Route(	"/company/{cid}/restaurant", name="restaurant",	requirements={"_method" = "GET"})
 	 * @Template()
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER")
@@ -65,32 +130,26 @@ class RestaurantController extends Controller
 												'director'=> $p->getDirector(), );
 												
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))	
-		{
 			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
 																							'company' => $company 	));
-		}
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
-			
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'data' => $restaurants_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
 		
-		return array(	'company' => $company		);
+		return array(	'company' => $company	);
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}", name="restaurant_ajax_update", requirements={"_method" = "PUT"})
+	 * @Route(	"api/company/{cid}/restaurant/{rid}.{_format}",
+				name="API_restaurant_update",
+				requirements={"_method" = "PUT", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxupdateAction($cid, $rid, Request $request)
+	 public function API_updateAction($cid, $rid, Request $request)
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -139,13 +198,11 @@ class RestaurantController extends Controller
 				$em->persist($restaurant);
 				$em->flush();
 				
-				$code = 200;
-				
-				$result = array('code'=> $code, 'data' => array(	'name' => $restaurant->getName(),
+				$result = array('code'=> 200, 'data' => array(	'name' => $restaurant->getName(),
 																	'address' => $restaurant->getAddress(),
 																	'director' => $restaurant->getDirector(),
 																));
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));			
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));		
 			}
 		}
 
@@ -153,10 +210,13 @@ class RestaurantController extends Controller
 	 }
 	 
 	/**
-	 * @Route(	"company/{cid}/restaurant/{rid}", name="restaurant_ajax_delete", requirements={"_method" = "DELETE"})
+	 * @Route(	"api/company/{cid}/restaurant/{rid}.{_format}",
+				name="API_restaurant_delete",
+				requirements={"_method" = "DELETE", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxdeleteAction($cid, $rid, Request $request)
+	public function API_deleteAction($cid, $rid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -185,16 +245,18 @@ class RestaurantController extends Controller
 		$em->remove($restaurant);
 		$em->flush();
 		
-		$code = 200;
-		$result = array('code' => $code, 'data' => $rid);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$result = array('code' => 200, 'data' => $rid);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
 	/**
-	 * @Route(	"company/{cid}/restaurant", name="restaurant_ajax_create", requirements={"_method" = "POST"})
+	 * @Route(	"api/company/{cid}/restaurant.{_format}",
+				name="API_restaurant_create",
+				requirements={"_method" = "POST", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxcreateAction($cid, Request $request)
+	public function API_createAction($cid, Request $request)
 	{	
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -245,14 +307,13 @@ class RestaurantController extends Controller
 				$em->persist($restaurant);
 				$em->flush();
 				
-				$code = 200;
-				$result = array(	'code' => $code, 'data' => array(	'id' => $restaurant->getId(),
+				$result = array(	'code	' => 200, 'data' => array(	'id' => $restaurant->getId(),
 																		'name' => $restaurant->getName(),
 																		'address' => $restaurant->getAddress(),
 																		'director' => $restaurant->getDirector(),
 																	));
 				
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));		
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		

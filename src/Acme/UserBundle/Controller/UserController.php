@@ -56,11 +56,14 @@ class UserController extends Controller
 	}
 
     /**
-     * @Route("/role", name="roles", requirements={"_method" = "GET"})
+     * @Route(	"api/role.{_format}",
+				name="API_roles",
+				requirements={"_method" = "GET", "format" = "json|xml"},
+				defaults={"_format" = "json"})
      * @Template()
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
      */
-    public function listRolesAction(Request $request)  // only COMPANY_ADMIN
+    public function API_listRolesAction(Request $request)  // only COMPANY_ADMIN
     {
 		$available_roles = $this->getDoctrine()
 							->getRepository('AcmeUserBundle:Role')
@@ -78,11 +81,69 @@ class UserController extends Controller
 				
 		}
 		
-		$code = 200;
-		$result = array('code' => $code, 'data' => $roles_array);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$result = array('code' => 200, 'data' => $roles_array);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
-	
+
+    /**
+     * @Route(	"api/user.{_format}",
+				name="API_user",
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"} )
+     * @Template()
+	 * @Secure(roles="ROLE_SUPER_ADMIN")
+     */
+    public function API_listAction(Request $request)  // only COMPANY_ADMIN
+    {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$role_id = 'ROLE_COMPANY_ADMIN';
+		
+		$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
+		
+		if (!$role)
+			return new Response('No role found for id '.$role_id, 404, array('Content-Type' => 'application/json'));
+		
+		$users = $role->getUsers();
+		
+		$users_array = array();
+		
+		if ($users)
+		{
+			foreach ($users AS $p)
+			{
+				$roles = array();
+				foreach ($p->getRoles() AS $r)
+					$roles[] = array(	'id'	=>	$r->getId(),
+										'name'	=>	$r->getName(),
+										'role'	=>	$r->getRole()	);
+				
+				$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($p->getId());
+				
+				$company = 0;
+				if ($permission != null && $permission->getCompany() != null)
+					$company = $permission->getCompany()->getId();
+					
+				$users_array[] = array( 	'id'		=> $p->getId(),
+											'username'	=> $p->getUsername(), 
+											'email'		=> $p->getEmail(),
+											'fullname'	=> $p->getFullname(),
+											'roles'		=> $roles,
+											'company'	=> $company );
+			}
+		}
+		
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+			
+		$result = array('code' => 200, 'data' => $users_array);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
+
+
     /**
      * @Route("/user", name="user",	requirements={"_method" = "GET"})
      * @Template()
@@ -133,22 +194,18 @@ class UserController extends Controller
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
-			
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'data' => $users_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
 
 		return array( 'users_json' => json_encode($users_array) );
 	}
 
 	/**
-	 * @Route(	"/company/{cid}/user/{uid}", name="user_ajax_update_manag", requirements={"_method" = "PUT"})
+	 * @Route(	"api/company/{cid}/user/{uid}.{_format}",
+				name="API_user_update_manag",
+				requirements={"_method" = "PUT", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
-	 public function ajaxupdateManagerAction($cid, $uid, Request $request)
+	 public function API_updateManagerAction($cid, $uid, Request $request)
 	 {
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
@@ -274,7 +331,7 @@ class UserController extends Controller
 																		'roles' => $roles,
 																	));
 				
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		
@@ -282,10 +339,13 @@ class UserController extends Controller
 	}
 	
 	/**
-	 * @Route(	"user/{uid}", name="user_ajax_update", requirements={"_method" = "PUT"})
+	 * @Route(	"api/user/{uid}",
+				name="user_ajax_update",
+				requirements={"_method" = "PUT", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	 public function ajaxupdateAction($uid, Request $request)
+	 public function API_updateAction($uid, Request $request)
 	 {
 		$model = (array)json_decode($request->getContent());
 		
@@ -360,15 +420,12 @@ class UserController extends Controller
 				$em->persist($user);
 				$em->flush();
 				
-				$code = 200;
-				
-				$result = array('code'=> $code, 'data' => array(	'fullname' => $user->getFullname(),
+				$result = array('code'=> 200, 'data' => array(	'fullname' => $user->getFullname(),
 																	'username' => $user->getUsername(), 
 																	'email' => $user->getEmail(),
 																	'company' => $model['company'],
 																));
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-			
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		
@@ -376,7 +433,10 @@ class UserController extends Controller
 	 }
 	 
 	/**
-	 * @Route(	"api/company/{cid}/user", name="API_user_create_manag", requirements={"_method" = "POST", "_format" = "json|xml"}, defaults={"_format" = "json"})
+	 * @Route(	"api/company/{cid}/user.{_format}",
+				name="API_user_create_manag",
+				requirements={"_method" = "POST", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function API_createManagerAction($cid, Request $request) // create company manager
@@ -472,8 +532,7 @@ class UserController extends Controller
 				$em->persist($permission);
 				$em->flush();
 				
-				$code = 200;
-				$result = array(	'code' => $code, 'data' => array(	'id' => $new_user->getId(),
+				$result = array(	'code' => 200, 'data' => array(	'id' => $new_user->getId(),
 																		'fullname' => $new_user->getFullname(), 
 																		'username' => $new_user->getUsername(), 
 																		'email' => $new_user->getEmail(),
@@ -481,7 +540,7 @@ class UserController extends Controller
 																		'roles' => $roles,
 																	));
 				
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		
@@ -489,7 +548,10 @@ class UserController extends Controller
 	}
 
 	/**
-	 * @Route(	"api/user.{_format}", name="API_user_create", requirements={"_method" = "POST", "_format" = "json|xml"}, defaults={"_format" = "json"})
+	 * @Route(	"api/user.{_format}",
+				name="API_user_create",
+				requirements={"_method" = "POST", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function API_createAction(Request $request) // create company admin
@@ -551,15 +613,14 @@ class UserController extends Controller
 					$model['company'] = 0;
 				}
 				
-				$code = 200;
-				$result = array(	'code' => $code, 'data' => array(	'id' => $user->getId(),
+				$result = array(	'code' => 200, 'data' => array(	'id' => $user->getId(),
 																		'fullname' => $user->getFullname(), 
 																		'username' => $user->getUsername(), 
 																		'email' => $user->getEmail(),
 																		'company' => (int)$model['company'],
 																	));
 				
-				return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
 		
@@ -567,10 +628,13 @@ class UserController extends Controller
 	}
 	
 	/**
-	 * @Route(	"/company/{cid}/user/{uid}", name="user_ajax_delete_manag", requirements={"_method" = "DELETE"})
+	 * @Route(	"api/company/{cid}/user/{uid}.{_format}",
+				name="API_user_delete_manag",
+				requirements={"_method" = "DELETE", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxdeleteManagerAction($cid, $uid, Request $request)
+	public function API_deleteManagerAction($cid, $uid, Request $request)
 	{
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
@@ -597,19 +661,19 @@ class UserController extends Controller
 		$em->remove($user);
 		$em->flush();
 		
-		$code = 200;
-		$result = array('code' => $code, 'data' => $uid);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+		$result = array('code' => 200, 'data' => $uid);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 
 	
 	/**
-	 * @Route(	"/user/{uid}", 
-	 * 			name="user_ajax_delete", 
-	 * 			requirements={"_method" = "DELETE"})
+	 * @Route(	"api/user/{uid}.{_format}", 
+	 * 			name="API_user_delete", 
+	 * 			requirements={"_method" = "DELETE", "_format" = "json|xml"},
+				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
-	public function ajaxdeleteAction($uid, Request $request)
+	public function API_deleteAction($uid, Request $request)
 	{
 		$user = $this->getDoctrine()
 					->getRepository('AcmeUserBundle:User')
@@ -623,10 +687,8 @@ class UserController extends Controller
 		$em->remove($user);
 		$em->flush();
 		
-		$code = 200;
-		$result = array('code' => $code, 'data' => $uid);
-		return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-
+		$result = array('code' => 200, 'data' => $uid);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
 	
@@ -673,6 +735,93 @@ class UserController extends Controller
 		}
 	}
 	
+	
+    /**
+     * @Route(	"api/company/{cid}/user.{_format}",
+				name="API_user_management",
+				requirements={"_method" = "GET", "_format" = "json|xml"},
+				defaults={"_format" = "json"} )
+     * @Template()
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+     */
+    public function API_listByCompanyAction($cid, Request $request)
+    {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+				return new Response('Нет доступа', 403, array('Content-Type' => 'application/json'));
+		}
+
+		
+		$company = $this->getDoctrine()
+						->getRepository('SupplierBundle:Company')
+						->find($cid);
+		
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+		
+		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
+
+		if ($available_roles)
+		{
+			foreach ($available_roles AS $r)
+				$roles_array[] = array( 'id' => $r->getId(),
+										'name' => $r->getName(),
+										'role' => $r->getRole(), );
+				
+		}
+
+		
+		$permissions = $this->getDoctrine()
+					->getRepository('AcmeUserBundle:Permission')
+					->findByCompany($cid);
+
+		$users_array = array();
+		if ($permissions)
+		{
+			foreach ($permissions AS $p)
+			{
+				$available_role = true;
+				foreach ($p->getUser()->getRoles() AS $r)
+					if ($r->getRole() == 'ROLE_COMPANY_ADMIN')
+						$available_role = false;
+						
+				if ($available_role)
+				{
+					$restaurants = array();
+					foreach ($p->getRestaurants() AS $r)
+						$restaurants[] = $r->getId();
+					
+					
+					$roles = array();
+					foreach ($p->getUser()->getRoles() AS $r)
+						$roles[] = $r->getId();
+					
+					$users_array[] = array( 	'id'		=> $p->getUser()->getId(),
+												'username'	=> $p->getUser()->getUsername(), 
+												'email'		=> $p->getUser()->getEmail(),  
+												'company'	=> $cid,
+												'fullname'	=> $p->getUser()->getFullname(),
+												'roles'		=> $roles,
+												'restaurants'		=> $restaurants,
+											);
+				}
+			}
+		}
+
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
+		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
+		header("Cache-Control: post-check=0, pre-check=0", false);
+		header("Pragma: no-cache");// HTTP/1.0
+	
+		$result = array('code' => 200, 'data' => $users_array);
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
 	
     /**
      * @Route("/company/{cid}/user", name="user_management", requirements={"_method" = "GET"})
@@ -894,7 +1043,11 @@ class UserController extends Controller
 	}
 	
 	/**
-	 * @Route(	"/feedback", name="feedback", requirements={"_method" = "PUT"})
+	 * @Route(	"api/feedback.{_format}",
+				name="API_feedback",
+				requirements={	"_method" = "PUT",
+								"_format" = "json|xml"},
+				defaults={"_format"="json"})
 	 */
 	public function feedbackAction(Request $request)
 	{
@@ -915,9 +1068,8 @@ class UserController extends Controller
 			
 			$this->get('mailer')->send($message);
 
-			$code = 200;
-			$result = array('code' => $code, 'message'=> 'Успешно отправлено');
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
+			$result = array('code' => 200, 'message'=> 'Успешно отправлено');
+			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 
 		} else
 			return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));

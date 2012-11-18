@@ -256,6 +256,7 @@ $(function(){
 	$('.completed_yes').click(function(){
 		$.ajax({
 		  type: "PUT",
+		  url: href[4]?"/api/company/"+href[2]+"/order/"+href[4]:"/api/company/"+href[2]+"/order",
 		  data: '{ "completed": 1 }',
 		  success: function(data) {
 		  	$('.completed .alert').remove();
@@ -282,6 +283,7 @@ $(function(){
 	$('.completed_no').click(function(){
 		$.ajax({
 		  type: "PUT",
+		  url: href[4]?"/api/company/"+href[2]+"/order/"+href[4]:"/api/company/"+href[2]+"/order",
 		  data: '{ "completed": 0 }',
 		  success: function(data) {
 		  	$('.completed .alert').remove();

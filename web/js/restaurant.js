@@ -178,9 +178,10 @@ $(function(){
 	  sync: function(method, model, options) {
 			var restaurantOptions = options;
 			
+			restaurantOptions.url = '/api/company/'+href[2]+'/restaurant/'+this.attributes.id;
+			
 			if (method == 'delete') {
-				restaurantOptions.success = function(resp, status, xhr) {
-					
+				restaurantOptions.success = function(resp, status, xhr) {					
 					$('#preloader').fadeOut('fast');
 					
 					if (resp != null && typeof(resp.data) != 'undefined' && resp.data == model.id) {
@@ -194,8 +195,6 @@ $(function(){
 														'Ошибка удаления! Попробуйте еще раз или обратитесь к администратору.</div>');   
 					}
 				};
-				
-				restaurantOptions.url = 'restaurant/'+this.attributes.id;
 			}
 			
 			if (method == 'update') {
@@ -209,13 +208,13 @@ $(function(){
 				   view_restaurants = new ViewRestaurants({collection: restaurants});
 				   $('#restaurants_list').append(view_restaurants.render().el);
 				   view_restaurants.renderAll();
-				};
-				
-				restaurantOptions.url = 'restaurant/'+this.attributes.id;
-				
+				};				
 			}
 			
 			if (method == 'create') {
+				
+				restaurantOptions.url = '/api/company/'+href[2]+'/restaurant';
+				
 				restaurantOptions.success = function(resp, status, xhr) {
 				   model.set(resp.data, {silent:true});
 				   
@@ -266,7 +265,7 @@ $(function(){
 	  
 		model: RestaurantModel,
 
-		url: '/company/'+href[2]+'/restaurant',
+		url: '/api/company/'+href[2]+'/restaurant',
 
 		company_id: parseInt(href[2]),
 
