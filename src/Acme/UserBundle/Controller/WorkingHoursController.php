@@ -19,14 +19,15 @@ class WorkingHoursController extends Controller
     /**
      * Lists all WorkingHours entities.
      *
-     * @Route("company/{cid}/restaurant/{rid}/shift/{booking_date}", name="WorkingHours_list", defaults={"booking_date" = 0})
-     * @Route("company/{cid}/restaurant/{rid}/shift/{booking_date}/", name="WorkingHours_list_", defaults={"booking_date" = 0})
+     * @Route("company/{cid}/restaurant/{rid}/shift/{date}", name="WorkingHours_list", defaults={"date" = 0})
+     * @Route("company/{cid}/restaurant/{rid}/shift/{date}/", name="WorkingHours_list_", defaults={"date" = 0})
      * @Template()
+     * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_RESTAURANT_DIRECTOR")
      */
-    public function listAction($cid, $rid, $booking_date)
+    public function listAction($cid, $rid, $date)
     {
-		if ($booking_date == '0')
-			$booking_date = date('Y-m-d');
+		if ($date == '0')
+			$date = date('Y-m-d');
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
@@ -38,46 +39,53 @@ class WorkingHoursController extends Controller
 		
 		if (!$restaurant)
 			throw $this->createNotFoundException('Restaurant not found');
+		
+		$agreed = 0;
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && $date > date('Y-m-d'))
+			$agreed = 1;
+	
+		$edit_mode = 1;
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') || $date <= date('Y-m-d'))
+			$edit_mode = 0;
 
-
-        return array('company' => $company, 'restaurant' => $restaurant, 'booking_date' => $booking_date);
+        return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => $agreed);
     }
 
     /**
-     * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{booking_date}.{_format}", 
+     * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{date}.{_format}", 
      * 			name="API_WorkingHours_list", 
      * 			requirements={	"_method" = "GET",
 	 *							"_format" = "json|xml",
-	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
-     *			defaults={	"booking_date" = 0,
+	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={	"date" = 0,
 	 *						"_format" = "json"})
-     * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{booking_date}.{_format}/", 
+     * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{date}.{_format}/", 
      * 			name="API_WorkingHours_list_", 
      * 			requirements={	"_method" = "GET",
      *							"_format" = "json|xml",
-	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
-     *			defaults={	"booking_date" = 0,
+	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+     *			defaults={	"date" = 0,
 							"_format" = "json"}	)
      * @Route(	"api/company/{cid}/restaurant/{rid}/shift.{_format}/",
 	 *			name="API_WorkingHours_list__",
 	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
-	 *			defaults={"booking_date" = 0, "_format" = "json"})
+	 *			defaults={"date" = 0, "_format" = "json"})
      * @Template()
-     * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
+     * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_RESTAURANT_DIRECTOR")
      */
-    public function API_listAction($cid, $rid, $booking_date, Request $request)
+    public function API_listAction($cid, $rid, $date, Request $request)
     {
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
 		
 		if (!$company)
 			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 		
-		if ($booking_date == '0' || $booking_date == 0)
-			$booking_date = date('Y-m-d');
+		if ($date == '0' || $date == 0)
+			$date = date('Y-m-d');
 		
 		$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'company'		=> (int)$cid, 
 																										'restaurant'	=> (int)$rid,
-																										'date'			=> $booking_date));
+																										'date'			=> $date));
 
 		$entities_array = array();
 		if ($entities)
@@ -89,7 +97,7 @@ class WorkingHoursController extends Controller
 											'duty'			=> $p->getDuty()->getId(),
 											'planhours'		=> $p->getPlanhours(),
 											'facthours'		=> $p->getFacthours(),
-											'agreed'		=> $p->getAgreed()?1:0,
+											'agreed'		=> ($p->getAgreed() || $date <= date('Y-m-d'))?1:0,
 											'date'			=> $p->getDate(),
 											);
 		
@@ -185,6 +193,8 @@ class WorkingHoursController extends Controller
 				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
+		else
+			return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));
 	}
 	
 	/**
@@ -235,7 +245,8 @@ class WorkingHoursController extends Controller
 	 * 			name="API_WorkingHours_update", 
 	 * 			requirements={	"_method" = "PUT",
 	 *							"_format" = "json|xml",
-	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$",
+	 *							"sid" = "\d*"},
 	 *			defaults={	"date" = 0,
 							"_format" = "json"	})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
@@ -317,6 +328,93 @@ class WorkingHoursController extends Controller
 			}
 			else
 				return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));
-		}		
+		}
     }
+    
+	/**
+	 * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{date}/agreed.{_format}", 
+	 * 			name="API_WorkingHours_agree", 
+	 * 			requirements={	"_method" = "PUT",
+	 *							"_format" = "json|xml",
+	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={	"date" = 0,
+							"_format" = "json"	})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
+	 */
+    public function API_agreedAction($cid, $rid, $date, Request $request)
+    {
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
+		
+		if (!$company)
+			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
+	
+		$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'company'		=> (int)$cid, 
+																										'restaurant'	=> (int)$rid,
+																										'date'			=> $date));
+		$agreed_working_hourse = array();
+
+		$entities_array = array();
+		if ($entities)
+			foreach ($entities AS $p)
+			{
+				$p->setAgreed(1);
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($p);
+				$em->flush();
+				
+				$agreed_working_hourse[] = $p->getId();
+			}
+		else
+			return new Response('У вас нет смены на это число', 404, array('Content-Type' => 'application/json'));
+		
+		
+		$result = array(	'code' => 200,
+							'data' => $agreed_working_hourse);
+		
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
+    
+	/**
+	 * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{date}/disagreed.{_format}", 
+	 * 			name="API_WorkingHours_disagree", 
+	 * 			requirements={	"_method" = "PUT",
+	 *							"_format" = "json|xml",
+	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={	"date" = 0,
+							"_format" = "json"	})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
+	 */
+    public function API_disagreedAction($cid, $rid, $date, Request $request)
+    {
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
+		
+		if (!$company)
+			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
+	
+		$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'company'		=> (int)$cid, 
+																										'restaurant'	=> (int)$rid,
+																										'date'			=> $date));
+		$agreed_working_hourse = array();
+
+		$entities_array = array();
+		if ($entities)
+			foreach ($entities AS $p)
+			{
+				$p->setAgreed(0);
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($p);
+				$em->flush();
+				
+				$agreed_working_hourse[] = $p->getId();
+			}
+		else
+			return new Response('У вас нет смены на это число', 404, array('Content-Type' => 'application/json'));
+		
+		
+		$result = array(	'code' => 200,
+							'data' => $agreed_working_hourse);
+		
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
+
 }

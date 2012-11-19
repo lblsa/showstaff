@@ -146,7 +146,7 @@ $(function(){
 					var content = view.render().el;
 					$('#shift_list .bookings').prepend(content);
 					$("#up .alert-success").clone().appendTo('#shift_list .forms');
-					
+					$('#shift_list .forms .alert-success strong').html('Сотрудник добавлен');
 					$('#shift_list .forms .alert-success').fadeIn();
 					
 					$('#shift_list .planhours_add').val('');
