@@ -15,6 +15,12 @@ CREATE TABLE `Company` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE `Duty` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 CREATE TABLE `OrderItem` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `company_id` int(11) NOT NULL,
@@ -23,6 +29,7 @@ CREATE TABLE `OrderItem` (
   `product_id` int(11) NOT NULL,
   `booking_date` varchar(10) COLLATE utf8_unicode_ci NOT NULL,
   `amount` double NOT NULL,
+  `price` double NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq` (`booking_date`,`company_id`,`restaurant_id`,`product_id`),
   KEY `IDX_73D03BB5979B1AD6` (`company_id`),
@@ -133,9 +140,26 @@ CREATE TABLE `user_role` (
   `user_id` int(11) NOT NULL,
   `role_id` int(11) NOT NULL,
   PRIMARY KEY (`user_id`,`role_id`),
-  KEY `IDX_8F02BF9DA76ED395` (`user_id`),
+  KEY `IDX_2DE8C6A3A76ED395` (`user_id`),
   KEY `IDX_2DE8C6A3D60322AC` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `WorkingHours` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `restaurant_id` int(11) DEFAULT NULL,
+  `planhours` int(11) NOT NULL,
+  `facthours` int(11) NOT NULL,
+  `agreed` tinyint(1) DEFAULT NULL,
+  `date` varchar(10) COLLATE utf8_unicode_ci NOT NULL,
+  `duty_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_50B58B90979B1AD6` (`company_id`),
+  KEY `IDX_50B58B90A76ED395` (`user_id`),
+  KEY `IDX_50B58B90B1E7706E` (`restaurant_id`),
+  KEY `IDX_50B58B903A1F9EC1` (`duty_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
 ALTER TABLE `OrderItem`
@@ -171,8 +195,14 @@ ALTER TABLE `users_restaurants`
   ADD CONSTRAINT `FK_5A364BD6B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `user_role`
-  ADD CONSTRAINT `FK_2DE8C6A3D60322AC` FOREIGN KEY (`role_id`) REFERENCES `UserRole` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `user_role_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `FK_2DE8C6A3A76ED395` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_2DE8C6A3D60322AC` FOREIGN KEY (`role_id`) REFERENCES `UserRole` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `WorkingHours`
+  ADD CONSTRAINT `FK_50B58B903A1F9EC1` FOREIGN KEY (`duty_id`) REFERENCES `Duty` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_50B58B90979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_50B58B90A76ED395` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_50B58B90B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`) ON DELETE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
