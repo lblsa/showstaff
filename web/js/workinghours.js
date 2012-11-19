@@ -208,12 +208,7 @@ $(function(){
 	  
 		model: WorkinghoursModel,
 	  
-		url: function(){
-			if (typeof(href[6])!='undefined')
-				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+$('.datepicker').val();
-			else
-				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift';
-		},
+		url: '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+$('.wh_datepicker').val(),
 		
 		parse: function(response) {
 			if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
