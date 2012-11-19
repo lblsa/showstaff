@@ -127,6 +127,10 @@ class WorkingHoursController extends Controller
 		
 		if ($date == '0')
 			$date = date('Y-m-d');
+			
+
+		if ($date < date('Y-m-d') )
+			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 		
@@ -209,12 +213,12 @@ class WorkingHoursController extends Controller
 		
 		if (!$row)
 		{
-			$result = array('code' => 200, 'data' => $bid, 'message' => 'No oreder item found for id '.$rid);
+			$result = array('code' => 200, 'data' => $sid, 'message' => 'Смена не найдена');
 			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 		}
 
 		if ($row->getDate() < date('Y-m-d') )
-			return new Response('You can not remove the old item', 403, array('Content-Type' => 'application/json'));
+			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		else
 		{
 			$em = $this->getDoctrine()->getEntityManager();				
