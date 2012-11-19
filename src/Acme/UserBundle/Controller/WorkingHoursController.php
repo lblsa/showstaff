@@ -28,14 +28,13 @@ class WorkingHoursController extends Controller
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 		
-		//$entities = $this->getDoctrine()->getEntityManager()->getRepository('AcmeUserBundle:WorkingHours')->findAll();
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company)
 			throw $this->createNotFoundException('Company not found');
 			
 			
-		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($rid);
+		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
 		
 		if (!$restaurant)
 			throw $this->createNotFoundException('Restaurant not found');
@@ -59,10 +58,10 @@ class WorkingHoursController extends Controller
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"booking_date" = 0,
 							"_format" = "json"}	)
-     * @Route(	"api/company/{cid}/restaurant/{rid}/shift/",
+     * @Route(	"api/company/{cid}/restaurant/{rid}/shift.{_format}/",
 	 *			name="API_WorkingHours_list__",
-	 *			requirements={"_method" = "GET"},
-	 *			defaults={"booking_date" = 0})
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"booking_date" = 0, "_format" = "json"})
      * @Template()
      * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
