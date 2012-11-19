@@ -68,6 +68,7 @@ class UserController extends Controller
 		$available_roles = $this->getDoctrine()
 							->getRepository('AcmeUserBundle:Role')
 							->findBy(array('role' => array(
+															'ROLE_RESTAURANT_DIRECTOR',
 															'ROLE_RESTAURANT_ADMIN',
 															'ROLE_ORDER_MANAGER',
 															'ROLE_ADMIN'))); // available roles for company admin
@@ -214,12 +215,7 @@ class UserController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			} 
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$model = (array)json_decode($request->getContent());
@@ -286,6 +282,7 @@ class UserController extends Controller
 					$available_roles = $this->getDoctrine()
 											->getRepository('AcmeUserBundle:Role')
 											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
+																			'ROLE_RESTAURANT_DIRECTOR',
 																			'ROLE_ORDER_MANAGER',
 																			'ROLE_ADMIN')));
 					
@@ -643,12 +640,7 @@ class UserController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Нет доступа');
-			}
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($uid);
@@ -742,7 +734,7 @@ class UserController extends Controller
 				requirements={"_method" = "GET", "_format" = "json|xml"},
 				defaults={"_format" = "json"} )
      * @Template()
-	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR, ROLE_RESTAURANT_ADMIN")
      */
     public function API_listByCompanyAction($cid, Request $request)
     {

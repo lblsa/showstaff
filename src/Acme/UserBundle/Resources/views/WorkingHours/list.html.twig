@@ -4,15 +4,16 @@
 <div class="row-fluid">
 	<div class="span9">
 		<h1>Компания "{{ company.name }}"</h1>
-		<h2>Смена для ресторана "{{ restaurant.name }}" на {{ booking_date }}</h2>
+		<h2>Смена для ресторана "{{ restaurant.name }}" на {{ date }}</h2>
 	</div>
 	<div class="span3">
 		<form class=" pull-right form-inline">
-			<input type="text" value="{{ booking_date }}" class="wh_datepicker input-small">
+			<input type="text" value="{{ date }}" class="wh_datepicker input-small">
 			<a href="" class="btn" id="link_to_date">Открыть</a>
 		</form>
 	</div>
 </div>
+{% if agreed == 1 %}<div class="row-fluid agreed_all"><a class="btn" rel="disagreed">Разутвердить всех</a></div><hr>{% endif %}
 
 <table class="table table-bordered table-striped" id="shift_list">
 	<thead>
@@ -22,7 +23,7 @@
 			<th>Запланировано часов</th>
 			<th>Фактических часов</th>
 			<th>Утвержден</th>
-			<th></th>
+			<th class="contr"></th>
 		</tr>
 		<tr id="add_row">
 			<th colspan="6" class="add">
@@ -50,5 +51,9 @@
 		</tr>
 	</thead>
 </table>
-<script src="/js/workinghours.js"></script>
+{% if edit_mode == 1 %}
+	<script src="/js/workinghours.js"></script>
+{% else %}
+	<script src="/js/workinghours_view.js"></script>
+{% endif %}
 {% endblock %}

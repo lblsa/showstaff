@@ -31,24 +31,15 @@ class RestaurantController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
 		
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No company found for id '.$cid);
-		}
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			$restaurants = $permission->getRestaurants();
 			
 		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
@@ -65,11 +56,7 @@ class RestaurantController extends Controller
 				$restaurants_array[] = array(	'id' => $p->getId(),
 												'name'=> $p->getName(),
 												'address'=> $p->getAddress(),
-												'director'=> $p->getDirector(), );
-												
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))	
-			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
-																							'company' => $company 	));
+												'director'=> $p->getDirector());
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
