@@ -210,9 +210,9 @@ $(function(){
 	  
 		url: function(){
 			if (typeof(href[6])!='undefined')
-				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+href[6];
-			else
 				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+$('.datepicker').val();
+			else
+				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift';
 		},
 		
 		parse: function(response) {
@@ -288,7 +288,7 @@ $(function(){
 																				
 																			}, 
 																			error: function(){
-																				error_fetch('Ошибка при получении пользователей. Обновите страницу или обратитесь к администратору');
+																				error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
 																			}
 																});
 												},
