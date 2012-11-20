@@ -13,7 +13,13 @@
 		</form>
 	</div>
 </div>
-{% if agreed == 1 %}<div class="row-fluid agreed_all"><a class="btn" rel="disagreed">Разутвердить всех</a></div><hr>{% endif %}
+{% if agreed == 1 %}
+	<div class="row-fluid agreed_all">
+		<a class="btn" rel="disagreed">Разутвердить всех</a>
+		<a class="btn" rel="agreed">Утвердить всех</a>
+	</div>
+	<hr>
+{% endif %}
 
 <table class="table table-bordered table-striped" id="shift_list">
 	<thead>
@@ -52,8 +58,13 @@
 	</thead>
 </table>
 {% if edit_mode == 1 %}
-	<script src="/js/workinghours.js"></script>
+	<script src="/js/workinghours.js"></script> <!-- редактирование всего -->
 {% else %}
-	<script src="/js/workinghours_view.js"></script>
+	{% if edit_mode == 2 %}
+		<script src="/js/workinghours_fact.js"></script> <!-- правка только фактических часов -->
+	{% else %}
+		<script src="/js/workinghours_view.js"></script> <!-- только просмотр -->
+	{% endif %}
 {% endif %}
+
 {% endblock %}

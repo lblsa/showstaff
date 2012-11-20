@@ -705,12 +705,8 @@ class UserController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 			
 			if (!$permission)
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Нет доступа');
-			} else {
+				throw new AccessDeniedHttpException('Нет доступа');
+			else {
 				$company = $permission->getCompany();
 				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN);
 			}
@@ -722,9 +718,7 @@ class UserController extends Controller
 			return $this->render('AcmeUserBundle:User:index_super_admin.html.twig', array(	'companies' => $companies, 'cid' => 1	));
 		}
 		else
-		{
 			return array('ROLE_ADMIN'=>$ROLE_ADMIN);
-		}
 	}
 	
 	

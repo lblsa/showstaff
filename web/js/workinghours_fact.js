@@ -20,8 +20,7 @@ $(function(){
 			if (this.collection.length > 0) {			
 				$('.workinghours').html('');
 				this.collection.each(function(model){
-					var view = new ViewRow({model:model});		
-					
+					var view = new ViewRow({model:model});
 					var content = view.render().el;
 					this.$('.workinghours').append(content);
 				});
@@ -44,10 +43,12 @@ $(function(){
 		template: _.template(	'<td class="u_user"><select class="user" disabled="disabled" name="user"></select></td>'+
 								'<td class="u_duty"><select class="duty" disabled="disabled" name="duty"></select></td>'+
 								'<td class="u_plan"><%= planhours %></td>'+
-								'<td class="u_fact"><%= facthours %></td>'+
+								'<td class="u_fact"><input type="text" class="input-large facthours span2" value="<%= facthours %>"></td>'+
 								'<td class="u_agreed"><% if(agreed) print("Да"); else print("Нет"); %></td>'),
 								
-		events: {	},
+		events: {
+			'change input':  'save'
+		},
 		
 		initialize: function() {
 			_.bindAll(this);
@@ -88,9 +89,89 @@ $(function(){
 			$('#preloader').fadeOut('fast'); 
 			return this;
 		},
+		
+		save: function() {
+			this.preloader();
+			
+			var roles = [];
+			$(".role_upd[name='roles[]']:checked", this.el).each(function() {
+				roles.push(parseInt($(this).val()));	
+			});
+			
+			var restaurants = [];
+			$(".restaurant_upd[name='restaurants[]']:checked", this.el).each(function() {
+				restaurants.push(parseInt($(this).val()));	
+			});
+			
+			this.model.save({	user: $('.user', this.el).val(), 
+								duty: $('.duty', this.el).val(), 
+								planhours: $('.planhours', this.el).val(), 
+								facthours: $('.facthours', this.el).val(),
+							},{wait: true});
+		},
+		
+		cancel: function() {
+			return this.render().el;
+		},
 	})
 	
-	var WorkinghoursModel = Backbone.Model.extend({ 	});
+	var WorkinghoursModel = Backbone.Model.extend({
+		sync: function(method, model, options) {
+			var userOptions = options;
+			
+			if (method == 'create') {
+				userOptions.success = function(resp, status, xhr) {
+					
+					$('#shift_list .alert').remove();
+					$('#preloader').fadeOut('fast');
+					
+					model.set(resp.data, {silent:true});
+					
+					$('.workinghours .alert_row').remove();
+					
+					var view = new ViewRow({model:model});
+					var content = view.render().el;
+					$('#shift_list .bookings').prepend(content);
+					$("#up .alert-success").clone().appendTo('#shift_list .forms');
+					$('#shift_list .forms .alert-success strong').html('Сотрудник добавлен');
+					$('#shift_list .forms .alert-success').fadeIn();
+					
+					$('#shift_list .planhours_add').val('');
+					$('#shift_list .facthours_add').val('');
+
+					$('.workinghours').remove();
+					view_content = new ViewWorkinghours({collection: workinghours});
+					$('#shift_list').append(view_content.render().el);
+					view_content.renderAll().el;
+
+				};
+				userOptions.error = function(jqXHR, textStatus, errorThrown) {
+					$('#preloader').fadeOut('fast');
+					if (typeof(jqXHR) != 'undefined' && typeof(jqXHR.responseText) != 'undefined')
+						$('#up .alert-error strong').html(' ('+jqXHR.responseText+'). ');
+					else
+						$('#up .alert-error strong').html(' (Некорректный ответ сервера). ');
+											
+					$("#up .alert-error").width($('.forms').width()-49);
+					$("#up .alert-error").height($('.forms').height()-14);
+					var p = $('.forms').position();
+					$('#up .alert-error').css({'left':p.left, 'top': p.top});
+					$('#up .alert-error').fadeIn();
+					workinghours.remove(model, {silent:true});
+				}
+			}
+			
+			if (method == 'update') {
+				userOptions.success = function(resp, status, xhr) {
+					model.set(resp.data, {silent: true});
+					model.view.render();
+					$('#preloader').fadeOut('fast');
+				};
+			}
+			
+			Backbone.sync.call(this, method, model, userOptions);
+		}
+	});
 	
 	var Workinghours = Backbone.Collection.extend({
 	  
@@ -184,7 +265,6 @@ $(function(){
 							error_fetch('Ошибка получения должностей. Обновите страницу или обратитесь к администратору');
 						}
 					})
-	
 	
 	$('#add_row, .contr').remove();
 	

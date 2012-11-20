@@ -36,7 +36,7 @@ $(document).ready(function(){
 		initialize: function(){
 			this.fetch({
 							error: function(){
-								error_fetch('Ошибка получения едениц измерения');
+								error_fetch('Ошибка получения единиц измерения');
 							}
 						});
 		},
@@ -44,7 +44,7 @@ $(document).ready(function(){
 			if(response && 'code' in response && response.code == 200 && 'data' in response) {
 				return response.data;
 			} else {
-				error_fetch('Ошибка получения едениц измерения');
+				error_fetch('Ошибка получения единиц измерения');
 			}
 		}
 	});
@@ -108,6 +108,50 @@ $(document).ready(function(){
 										'" type="password" placeholder="Password" class="pass_add span2">');
 		$('small', this).html('Показать пароль');
 	});
+	
+	
+	$(".agreed_all .btn").click(function(){
+		
+		var agreed = $(this).attr('rel');
+		
+		$.ajax({
+		  type: "PUT",
+		  url: "/api/company/"+href[2]+"/restaurant/"+href[4]+"/shift/"+$('.wh_datepicker').val()+"/"+agreed,
+		  data: function() {
+			 return '{ "agreed": '+agreed+' }'
+		  },
+		  success: function(data) {
+			 $('.agreed_all .alert').remove();
+			
+			$('.workinghours').html();
+			
+			workinghours.fetch({	success: function(collection, response) {
+				
+										view_workinghours = new ViewWorkinghours({collection: collection});
+										$('#shift_list').append(view_workinghours.render().el);
+										view_workinghours.renderAll().el;
+										
+									}, 
+									error: function(){
+										error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
+									}
+						});
+			
+		  },
+		  error: function(data) {
+			  $('.agreed_all .alert').remove();
+			  
+		  	if (data != null && typeof(data.message) != 'undefined')
+		  		$('.agreed_all').append('<span class="alert">'+data.message+'</span>');
+		  	else
+		  		$('.agreed_all').append('<span class="alert">Неизвестная ошибка.</span>');
+		  },
+		  dataType: "json"
+		});
+		
+		return false;
+	});	
+	
 });
 
 function error_fetch(message) {
