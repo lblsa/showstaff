@@ -1,5 +1,12 @@
 <?php
-
+/*
+план на завтра и дальше для неутвержденного - для менеджеров
+план на завтра и дальше для утвержденного - для директоров
+план в любой момент - для управляющих
+факт только сегодня до 14 - для менеджеров и директоров
+факт в любой момент - для управляющих
+утверждение плана не влияет на возможность ввести факт - не понял про утвержденные смены и факт
+*/
 namespace Acme\UserBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -44,9 +51,24 @@ class WorkingHoursController extends Controller
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && $date > date('Y-m-d'))
 			$agreed = 1;
 	
-		$edit_mode = 1;
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') || $date <= date('Y-m-d'))
-			$edit_mode = 0;
+		$edit_mode = 0;
+		//план на завтра и дальше для утвержденного и неутвержденного - для менеджеров или директора
+		if (	(
+					$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') || $this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN')
+				) && $date > date('Y-m-d')
+			)
+			$edit_mode = 1;
+			
+		// факт только для менеджеров и директоров сегодня до 14
+		if (	(
+					$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') || $this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
+				) && $date == date('Y-m-d') && date('H')<14
+			)
+			$edit_mode = 2; //редактируем только фактические часы
+			
+		//для управляющего все всегда можно редактировать
+		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
+			$edit_mode = 1;
 
         return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => $agreed);
     }
@@ -137,7 +159,7 @@ class WorkingHoursController extends Controller
 			$date = date('Y-m-d');
 			
 
-		if ($date < date('Y-m-d') )
+		if ($date <= date('Y-m-d') && !$this->get('security.context')->isGranted('ROLE_ADMIN') )
 			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
@@ -226,11 +248,15 @@ class WorkingHoursController extends Controller
 			$result = array('code' => 200, 'data' => $sid, 'message' => 'Смена не найдена');
 			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 		}
-
-		if ($row->getDate() < date('Y-m-d') )
+		
+		// если не управляющий можно редактировать только завтрашние смены
+		if ($row->getDate() <= date('Y-m-d') &&	!$this->get('security.context')->isGranted('ROLE_ADMIN') )
 			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		else
 		{
+			if ($row->getAgreed() && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') )
+				return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
+			
 			$em = $this->getDoctrine()->getEntityManager();				
 			$em->remove($row);
 			$em->flush();
@@ -249,7 +275,7 @@ class WorkingHoursController extends Controller
 	 *							"sid" = "\d*"},
 	 *			defaults={	"date" = 0,
 							"_format" = "json"	})
-	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_updateAction($cid, $rid, $date, $sid, Request $request)
 	{
@@ -262,17 +288,86 @@ class WorkingHoursController extends Controller
 		
 		if ($date == '0' || $date == 0)
 			$date = date('Y-m-d');
+		
+		$model = (array)json_decode($request->getContent());
 			
 		$row = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->find($sid);
 		
 		if (!$row)
 			return new Response('Не найден элемент #'.$sid, 404, array('Content-Type' => 'application/json'));
 
-		if ($row->getDate() < date('Y-m-d') )
+		if (	(
+					 $this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') ||
+					 $this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
+				) && $row->getDate() < date('Y-m-d') 
+			)
+		{
+			// менеджер и деректор ресторана неможет редактировать вчерашнее
 			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
+		}
 		else
 		{
-			$model = (array)json_decode($request->getContent());
+			// редактируем только факт, доступно для менеджера и директора сегодня до 14
+			if (	!$this->get('security.context')->isGranted('ROLE_ADMIN') && 
+					(
+						$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') || 
+						$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
+					) && 
+					date('Y-m-d') == $date && 
+					date('H') < 14
+				)
+			{
+				$row->setFacthours((int)$model['facthours']);
+				
+				$validator = $this->get('validator');
+				$errors = $validator->validate($row);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+					
+					return new Response(implode(', ',$errorMessage), 400, array('Content-Type' => 'application/json'));
+					
+				} else {
+					
+					$em = $this->getDoctrine()->getEntityManager();
+					$em->persist($row);
+					$em->flush();
+				
+					$result = array(	'code' => 200,
+										'data' => array(	'id'			=> $row->getId(),
+															'company'		=> $company->getId(),
+															'restaurant'	=> $restaurant->getId(),
+															'user'			=> $row->getUser()->getId(),
+															'duty'			=> $row->getDuty()->getId(),
+															'date' 			=> $row->getDate(), 
+															'planhours'		=> $row->getPlanhours(),
+															'facthours'		=> $row->getFacthours(),
+															'agreed'		=> 0	));
+					
+					return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+				}
+			}
+			
+			
+			//сегодня после 14 нельзя редактировать менеджеру и директору
+			if (	!$this->get('security.context')->isGranted('ROLE_ADMIN') && 
+					(
+						$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') || 
+						$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
+					) && date('Y-m-d') == $date && date('H') > 13
+				)
+				return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
+			
+			
+			//утвержденное нельзя редактировать менеджеру
+			if (	$row->getAgreed() &&
+					!$this->get('security.context')->isGranted('ROLE_ADMIN') && 
+					!$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && 
+					$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN')
+				)
+				return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
 
 			if	(	count($model) > 0 && 
 					isset($model['user']) && 
