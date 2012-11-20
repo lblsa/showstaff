@@ -20,4 +20,5 @@ INSERT INTO `UserRole` (`id`, `name`, `role`) VALUES
 (2, 'Администратор компании', 'ROLE_COMPANY_ADMIN'),
 (3, 'Менеджер ресторана', 'ROLE_RESTAURANT_ADMIN'),
 (4, 'Менеджер по закупкам', 'ROLE_ORDER_MANAGER'),
-(5, 'Управляющий', 'ROLE_ADMIN');
+(5, 'Управляющий', 'ROLE_ADMIN'),
+(6, 'Директор ресторана', 'ROLE_RESTAURANT_DIRECTOR');

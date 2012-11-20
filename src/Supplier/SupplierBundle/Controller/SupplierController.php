@@ -252,7 +252,7 @@ class SupplierController extends Controller
 				defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
-	public function ajaxcreateAction($cid, Request $request)
+	public function API_createAction($cid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		

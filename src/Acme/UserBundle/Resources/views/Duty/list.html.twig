@@ -1,0 +1,31 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+<div  class="row">
+	<div class="span12">
+		<h2>Должности</h2>
+		<table class="table table-bordered table-striped" id="supplier_list">
+		 <thead>
+		  <tr>
+			<th>Название
+				<a href="#" class="sort"><i class="icon-arrow-up"></i></a>
+			</th>
+			<th>Удалить</th>
+		  </tr>
+		  <tr id="add_row">
+			<th colspan="2" class="add">
+				<a href="#" id="add_supplier" class="create btn btn-small">Добавить должность <i class="icon-plus-sign"></i></a>
+				<div class="form-inline hide forms">
+					<div class="controls-group">
+						<input name="name_add" type="text" class="input name_add">
+						<button class="add_supplier btn btn-mini btn-success">add</button>
+					</div>
+				</div>
+			</th>
+		  </tr>
+		 </thead>
+		</table>
+		<script src="/js/duty.js"></script>
+	</div>
+</div>
+{% endblock %}

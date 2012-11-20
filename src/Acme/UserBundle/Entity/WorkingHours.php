@@ -72,7 +72,7 @@ class WorkingHours
     
     /**
      * @ORM\ManyToOne(targetEntity="Duty")
-     * @ORM\JoinColumn(name="duty_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="duty_id", referencedColumnName="id")
      */
     protected $duty;
     
