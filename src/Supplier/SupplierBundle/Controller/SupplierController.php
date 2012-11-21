@@ -291,32 +291,43 @@ class SupplierController extends Controller
 		
 		if (count($model) > 0 && isset($model['name']))
 		{
-			$validator = $this->get('validator');
-			$supplier = new Supplier();
-			$supplier->setName($model['name']);
-			
-			$errors = $validator->validate($supplier);
-			
-			if (count($errors) > 0) {
-				
-				foreach($errors AS $error)
-					$errorMessage[] = $error->getMessage();
+			$supplier = $this->getDoctrine()
+							->getRepository('SupplierBundle:Supplier')
+							->findOneByName($model['name']);
 
-				return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
-				
-			} else {
-				
-				$supplier->setCompany($company);
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier);
-				$em->flush();
-				
-				$result = array('code' => 200, 'data' => array(	'id' => $supplier->getId(),
-																	'name' => $supplier->getName()
-																));
-				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
-			
+			if ($supplier)
+			{
+				$supplier->setActive(1);
 			}
+			else
+			{
+				$validator = $this->get('validator');
+				$supplier = new Supplier();
+				$supplier->setName($model['name']);
+				
+				$errors = $validator->validate($supplier);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+
+					return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
+					
+				} else {					
+					$supplier->setCompany($company);
+				}
+			}
+			
+			$em = $this->getDoctrine()->getEntityManager();
+			$em->persist($supplier);
+			$em->flush();
+
+			$result = array('code' => 200, 'data' => array(	'id' => $supplier->getId(),
+															'name' => $supplier->getName()
+															));
+			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+
 		}
 		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
