@@ -344,7 +344,7 @@ class WorkingHoursController extends Controller
 															'date' 			=> $row->getDate(), 
 															'planhours'		=> $row->getPlanhours(),
 															'facthours'		=> $row->getFacthours(),
-															'agreed'		=> 0	));
+															'agreed'		=> $row->getAgreed()	));
 					
 					return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 				}
@@ -416,7 +416,7 @@ class WorkingHoursController extends Controller
 															'date' 			=> $row->getDate(), 
 															'planhours'		=> $row->getPlanhours(),
 															'facthours'		=> $row->getFacthours(),
-															'agreed'		=> 0	));
+															'agreed'		=> $row->getAgreed()	));
 					
 					return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 				}
