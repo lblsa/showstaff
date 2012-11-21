@@ -224,7 +224,7 @@ class SupplierController extends Controller
 					->find($sid);
 					
 		if (!$supplier)
-			return new Response('No supplier found for id '.$sid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Не найден поставщик', 404, array('Content-Type' => 'application/json'));		
 		
 		$supplier->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -238,6 +238,16 @@ class SupplierController extends Controller
 				->set('p.active', 0)
 				->where('p.supplier = :supplier')
 				->setParameters(array('supplier' => $supplier->getId()))
+				->getQuery()
+				->execute();
+		
+		// удалим все существующие заказы на сегодня и будущее
+		$q = $this->getDoctrine()
+				->getRepository('SupplierBundle:OrderItem')
+				->createQueryBuilder('p')
+				->delete('SupplierBundle:OrderItem p')
+				->where('p.supplier = :supplier AND p.date >= :date')
+				->setParameters(array('supplier' => $supplier->getId(), 'date' => date('Y-m-d')))
 				->getQuery()
 				->execute();
 		
