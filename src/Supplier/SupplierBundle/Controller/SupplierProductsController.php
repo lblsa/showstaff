@@ -48,8 +48,8 @@ class SupplierProductsController extends Controller
 						->getRepository('SupplierBundle:Supplier')
 						->find($sid);
 
-		if (!$supplier)
-			throw $this->createNotFoundException('No supplier found supplier_id='.$sid);
+		if (!$supplier || $supplier->getActive() == 0)
+			throw $this->createNotFoundException('Не найден поставщик');
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется

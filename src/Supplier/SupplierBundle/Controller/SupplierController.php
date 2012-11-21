@@ -224,7 +224,7 @@ class SupplierController extends Controller
 					->find($sid);
 					
 		if (!$supplier)
-			return new Response('No supplier found for id '.$sid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Не найден поставщик', 404, array('Content-Type' => 'application/json'));		
 		
 		$supplier->setActive(0);
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -238,6 +238,16 @@ class SupplierController extends Controller
 				->set('p.active', 0)
 				->where('p.supplier = :supplier')
 				->setParameters(array('supplier' => $supplier->getId()))
+				->getQuery()
+				->execute();
+		
+		// удалим все существующие заказы на сегодня и будущее
+		$q = $this->getDoctrine()
+				->getRepository('SupplierBundle:OrderItem')
+				->createQueryBuilder('p')
+				->delete('SupplierBundle:OrderItem p')
+				->where('p.supplier = :supplier AND p.date >= :date')
+				->setParameters(array('supplier' => $supplier->getId(), 'date' => date('Y-m-d')))
 				->getQuery()
 				->execute();
 		
@@ -281,32 +291,43 @@ class SupplierController extends Controller
 		
 		if (count($model) > 0 && isset($model['name']))
 		{
-			$validator = $this->get('validator');
-			$supplier = new Supplier();
-			$supplier->setName($model['name']);
-			
-			$errors = $validator->validate($supplier);
-			
-			if (count($errors) > 0) {
-				
-				foreach($errors AS $error)
-					$errorMessage[] = $error->getMessage();
+			$supplier = $this->getDoctrine()
+							->getRepository('SupplierBundle:Supplier')
+							->findOneByName($model['name']);
 
-				return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
-				
-			} else {
-				
-				$supplier->setCompany($company);
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($supplier);
-				$em->flush();
-				
-				$result = array('code' => 200, 'data' => array(	'id' => $supplier->getId(),
-																	'name' => $supplier->getName()
-																));
-				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
-			
+			if ($supplier)
+			{
+				$supplier->setActive(1);
 			}
+			else
+			{
+				$validator = $this->get('validator');
+				$supplier = new Supplier();
+				$supplier->setName($model['name']);
+				
+				$errors = $validator->validate($supplier);
+				
+				if (count($errors) > 0) {
+					
+					foreach($errors AS $error)
+						$errorMessage[] = $error->getMessage();
+
+					return new Response(implode(', ', $errorMessage), 400, array('Content-Type' => 'application/json'));
+					
+				} else {					
+					$supplier->setCompany($company);
+				}
+			}
+			
+			$em = $this->getDoctrine()->getEntityManager();
+			$em->persist($supplier);
+			$em->flush();
+
+			$result = array('code' => 200, 'data' => array(	'id' => $supplier->getId(),
+															'name' => $supplier->getName()
+															));
+			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+
 		}
 		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
