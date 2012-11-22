@@ -934,12 +934,12 @@ class UserController extends Controller
 					
 				if (strlen($error) == 0)
 				{
-					$errors = $validator->validate($user);			
+					$errors = $validator->validate($user);
 
 					if (count($errors) > 0)
 					{
-						foreach($errors AS $error)
-							$errorMessage[] = $error->getMessage();
+						foreach($errors AS $er)
+							$errorMessage[] = $er->getMessage();
 					}
 					else
 					{
@@ -968,19 +968,14 @@ class UserController extends Controller
 				}
 			}
 			else
-			{	
+			{
 				$errors = $validator->validate($user);			
 
 				$errorMessage = array();
 
 				if (count($errors) > 0)
-				{
-					foreach($errors AS $error)
-						$errorMessage[] = $error->getMessage();
-						
-				}
-				
-				//die('test');
+					foreach($errors AS $er)
+						$errorMessage[] = $er->getMessage();
 			}
 		}
 		
