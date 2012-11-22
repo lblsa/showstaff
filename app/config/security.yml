@@ -42,7 +42,12 @@ security:
             logout: ~
             anonymous: ~
             http_basic:
-                realm: "Secured Demo Area"
+                realm: "Secured Area"
+            remember_me:
+                key:       qazxsw
+                lifetime: 31536000 # 365 days in seconds
+                path:     /
+                domain:   ~ # Defaults to the current domain from $_SERVER
 
     access_control:
         #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
