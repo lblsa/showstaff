@@ -521,6 +521,19 @@ class WorkingHoursController extends Controller
      */
     public function calendarAction($week)
     {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		if (false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			
+			if (!$permission)
+				throw new AccessDeniedHttpException('Нет доступа');
+			else {
+				$company = $permission->getCompany();
+			}
+		}
+		
 		if ($week == '0' || $week == 0)
 			$week = date('W');
 		
@@ -586,6 +599,7 @@ class WorkingHoursController extends Controller
 		
 		return array(	'duty' => $duty,
 						'week' => $week,
+						'company' => $company,
 						'date' => date('Y-m-d'),
 						'week_nav' => $week_nav,
 						'curent_week' => date('W', $t)
