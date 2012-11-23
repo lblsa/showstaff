@@ -79,7 +79,7 @@
             		Logged in as <a href="#" class="navbar-link">{% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</a>
             	{% endif %}
             	
-				{% if is_granted('IS_AUTHENTICATED_FULLY') %}
+				{% if is_granted('ROLE_USER') %}
 					,  <a href="{{ path('logout') }}">Logout</a>
 				{% else %}
 					<a href="{{ path('login') }}">Login</a>

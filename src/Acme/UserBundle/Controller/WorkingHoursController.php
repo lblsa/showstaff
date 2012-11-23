@@ -512,4 +512,84 @@ class WorkingHoursController extends Controller
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 
+    /**
+     * My Plan.
+     *
+     * @Route("calendar/{week}", name="my_calendar", defaults={	"week" = 0})
+     * @Template()
+     * @Secure(roles="ROLE_USER")
+     */
+    public function calendarAction($week)
+    {
+		if ($week == '0' || $week == 0)
+			$week = date('W');
+		
+		$str = $week-date('W').' week';
+		
+		if (($timestamp = strtotime($str)) === -1)
+			throw $this->createNotFoundException('Строка ($str) недопустима');
+		
+		$t = strtotime($str);
+		
+		$week_nav = array();
+		for ($j=-3; $j<4; $j++)
+			$week_nav[$week+$j] = date('d M',strtotime($week+$j-date('W').' week last Monday')).'-'.date('d M',strtotime($week+$j-date('W').' week next Sunday'));
+
+		
+		
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->loadUserByUsername($user->getUsername());
+		
+		if (!$user)
+			throw $this->createNotFoundException('Пользователь не найден');
+		
+		$week = array();
+		$used_duty = array();
+
+		for ($i=1; $i<8; $i++)
+		{
+			$date = date('Y-m-d',$t+( $i - date('w'))*24*3600);
+			
+			$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'user'	=> $user->getId(),
+																											'date'	=> $date	));
+			$entities_array = array();
+			if ($entities)
+			{
+				foreach ($entities AS $p)
+				{
+					$entities_array[$p->getDuty()->getId()] = array( 	'company'		=> $p->getCompany()->getName(),
+																		'company_id'	=> $p->getCompany()->getId(),
+																		'restaurant'	=> $p->getRestaurant()->getName(),
+																		'restaurant_id'	=> $p->getRestaurant()->getId(),
+																		'duty'			=> $p->getDuty()->getId(),
+																		'planhours'		=> $p->getPlanhours(),
+																		'facthours'		=> $p->getFacthours(),
+																		'date'			=> $p->getDate(),
+																		'agreed'		=> ($p->getAgreed() || $date <= date('Y-m-d'))?1:0	);
+					$used_duty[] = $p->getDuty()->getId();
+				}
+			}
+			
+			$week[$date] = $entities_array;
+		
+		}
+		
+		$used_duty = array_unique($used_duty); 
+		
+		if (count($used_duty) > 0)
+			$duty = $this->getDoctrine()->getRepository('AcmeUserBundle:Duty')->findBy(array('id'=>$used_duty));
+		else
+			$duty = array();
+			
+		//var_dump($duty, $week); die;
+		
+		return array(	'duty' => $duty,
+						'week' => $week,
+						'date' => date('Y-m-d'),
+						'week_nav' => $week_nav,
+						'curent_week' => date('W', $t)
+					);
+	}
+	
 }
