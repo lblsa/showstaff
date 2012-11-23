@@ -12,7 +12,6 @@
     <link href="/css/bootstrap.css" rel="stylesheet">
     <link href="/css/datepicker.css" rel="stylesheet">
     <style type="text/css">
-      body { padding-top: 60px; padding-bottom: 40px;  }
       .sidebar-nav { padding: 9px 0; }
     </style>
     <link href="/css/bootstrap-responsive.css" rel="stylesheet">
@@ -29,6 +28,7 @@
     <script src="/js/bootstrap-modal.js"></script>
     <script src="/js/bootstrap-datepicker.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/menu.min.js"></script>
     <script src="/js/feedback.js"></script>
     
     <!-- Le fav and touch icons -->
@@ -64,36 +64,59 @@
 	}
 </script>
 <input type="hidden" id="refreshed" value="no" />
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container-fluid">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">Show Staff</a>
-          <div class="nav-collapse collapse">
-            <p class="navbar-text pull-right">
-            	{% if app.user.username is defined %}
-            		Logged in as <a href="#" class="navbar-link">{% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</a>
-            	{% endif %}
-            	
-				{% if is_granted('ROLE_USER') %}
-					,  <a href="{{ path('logout') }}">Logout</a>
-				{% else %}
-					<a href="{{ path('login') }}">Login</a>
-				{% endif %}
-            </p>
-            <ul class="nav">
-              <li class="active"><a href="/">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
 
+<div class="meny">
+	<ul class="nav nav-list">
+		{% if company.id is defined %}<li class="nav-header">Компания "{{ company.name }}"</li>{% endif %}
+		<li class="active"><a href="/">Home</a></li>
+		{% if company.id is defined %}
+		<li><a href="/company/{{ company.id }}/restaurant">Управление ресторанами</a></li>
+		<li><a href="/company/{{ company.id }}/user">Пользователи компании</a></li>
+		<li><a href="/company/{{ company.id }}/product">Продукты компании</a></li>
+		<li class="divider"></li>
+		<li class="nav-header">Поставщик</li>
+		<li><a href="/company/{{ company.id }}/supplier">Управление поставщиками</a></li>
+		<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
+		<li class="divider"></li>
+		<li class="nav-header">Супер админ</li>
+		<li><a href="/company">Управление компаниями</a></li>
+		<li><a href="/user">Администраторы компании</a></li>
+	</ul>
+</div>
+
+<div class="meny-arrow"></div>
+
+<div class="contents">
     <div class="container">
+		<div class="navbar navbar-inverse">
+		  <div class="navbar-inner">
+			<div class="container-fluid">
+			  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			  </a>
+			  <a class="brand" href="/">Show Staff</a>
+			  <div class="nav-collapse collapse">
+				<p class="navbar-text pull-right">
+					{% if app.user.username is defined %}
+						Logged in as <a href="#" class="navbar-link">{% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</a>
+					{% endif %}
+					
+					{% if is_granted('ROLE_USER') %}
+						,  <a href="{{ path('logout') }}">Logout</a>
+					{% else %}
+						<a href="{{ path('login') }}">Login</a>
+					{% endif %}
+				</p>
+				<ul class="nav">
+				  <li class="active"><a href="/">Home</a></li>
+				</ul>
+			  </div><!--/.nav-collapse -->
+			</div>
+		  </div>
+		</div>
+		
       <div class="row">
         <div class="span12">
 		 {% block body %}{% endblock %}
@@ -119,10 +142,50 @@
       </footer>
 
     </div><!--/.fluid-container-->
-
+</div>
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+    
+	<script>
+		// Create an instance of Meny
+		var meny = Meny.create({
+			// The element that will be animated in from off screen
+			menuElement: document.querySelector( '.meny' ),
+
+			// The contents that gets pushed aside while Meny is active
+			contentsElement: document.querySelector( '.contents' ),
+
+			// [optional] The alignment of the menu (top/right/bottom/left)
+			position: 'right',
+
+			// [optional] The height of the menu (when using top/bottom position)
+			height: 200,
+
+			// [optional] The width of the menu (when using left/right position)
+			width: 260,
+
+			// [optional] Distance from mouse (in pixels) when menu should open
+			threshold: 40
+		});
+
+		// API Methods:
+		// meny.open();
+		// meny.close();
+		// meny.isOpen();
+		
+		// Events:
+		// meny.addEventListener( 'open', function(){ console.log( 'open' ); } );
+		// meny.addEventListener( 'close', function(){ console.log( 'close' ); } );
+
+		// Embed an iframe if a URL is passed in
+		if( Meny.getQuery().u && Meny.getQuery().u.match( /^http/gi ) ) {
+			var contents = document.querySelector( '.contents' );
+			contents.style.padding = '0px';
+			contents.innerHTML = '<div class="cover"></div><iframe src="'+ Meny.getQuery().u +'" style="width: 100%; height: 100%; border: 0; position: absolute;"></iframe>';
+		}
+	</script>
+    
     <script src="/js/bootstrap-transition.js"></script>
     <script src="/js/bootstrap-alert.js"></script>
     <script src="/js/bootstrap-modal.js"></script>
