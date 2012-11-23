@@ -708,7 +708,7 @@ class UserController extends Controller
 				throw new AccessDeniedHttpException('Нет доступа');
 			else {
 				$company = $permission->getCompany();
-				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN);
+				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN, 'company' => $company);
 			}
 		}
 		
@@ -718,7 +718,7 @@ class UserController extends Controller
 			return $this->render('AcmeUserBundle:User:index_super_admin.html.twig', array(	'companies' => $companies, 'cid' => 1	));
 		}
 		else
-			return array('ROLE_ADMIN'=>$ROLE_ADMIN);
+			return array('ROLE_ADMIN'=>$ROLE_ADMIN, 'company' => false, 'cid' => 0);
 	}
 	
 	
