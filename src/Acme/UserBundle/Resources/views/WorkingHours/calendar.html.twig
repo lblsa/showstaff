@@ -1,0 +1,64 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block body %}
+<div class="row-fluid">
+	<form class=" pull-right form-inline">
+		<input type="text" value="{{ date }}" class="wh_datepicker input-small">
+	</form>
+</div>
+
+<div class="row-fluid">
+	<div class="span3">
+		<h1>#{{ app.user.id }} {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h1>
+		<p>Номер телефона: <strong>{{ app.user.username }}</strong></p>
+		<p>Эл. почта: <strong>{{ app.user.email }}</strong></p>
+	</div>
+	<div class="span9">
+		
+		<h2>{{ curent_week }} неделя</h2>
+		
+		<ul class="breadcrumb">
+		{% for d, v in week_nav %}
+			<li {% if curent_week == d %}class="active"{% endif %}>
+				
+				{% if curent_week == d %}
+					{{ v }}
+				{% else %}
+					<a href="/calendar/{{ d }}">{{ v }}</a>
+				{% endif %}
+				
+				{% if loop.last %}{% else %}
+					<span class="divider">/</span>
+				{% endif %}
+			</li>
+		{% endfor %}
+		</ul>
+		
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>Должность\Дата</th>
+					{% for d, v in week %}
+					<th>{{ d }}<br>План/факт</th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for w in duty %}
+					<tr>
+						<td>#{{w.id}} {{ w.name }}</td>
+						{% for d, v in week %}
+							{% if v[w.id] is defined %}
+								<td>{{ v[w.id].planhours }} / {{ v[w.id].facthours }}</td>
+							{% else %}
+								<td>0 / 0</td>
+							{% endif %}
+						{% endfor %}
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+{% endblock %}
