@@ -257,7 +257,7 @@ $(function() {
 		tagName: "label",
 		className: "checkbox",
 		
-		template: _.template('<%= name %>'),
+		template: _.template('<span class="metro-checkbox"><%= name %></span>'),
 		
 		render: function() {
 			var content = this.template(this.model.toJSON());
@@ -334,7 +334,7 @@ $(function() {
 		tagName: "label",
 		className: "checkbox",
 		
-		template: _.template('<%= name %>'),
+		template: _.template('<span class="metro-checkbox"><%= name %></span>'),
 		
 		render: function() {
 			var content = this.template(this.model.toJSON());

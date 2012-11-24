@@ -10,6 +10,13 @@
 
     <!-- Le styles -->
     <link href="/css/bootstrap.css" rel="stylesheet">
+    
+	<link rel="stylesheet" type="text/css" href="/css/bootmetro.css">
+   <link rel="stylesheet" type="text/css" href="/css/bootmetro-tiles.css">
+   <link rel="stylesheet" type="text/css" href="/css/bootmetro-charms.css">
+   <link rel="stylesheet" type="text/css" href="/css/metro-ui-light.css">
+   <link rel="stylesheet" type="text/css" href="/css/icomoon.css">
+    
     <link href="/css/datepicker.css" rel="stylesheet">
     <style type="text/css">
       .sidebar-nav { padding: 9px 0; }
@@ -65,57 +72,55 @@
 </script>
 <input type="hidden" id="refreshed" value="no" />
 
-<div class="meny">
-	<ul class="nav nav-list">
-		{% if company.id is defined %}<li class="nav-header">Компания "{{ company.name }}"</li>{% endif %}
-		<li class="active"><a href="/">Home</a></li>
-		{% if company.id is defined %}
-		<li><a href="/company/{{ company.id }}/restaurant">Управление ресторанами</a></li>
-		<li><a href="/company/{{ company.id }}/user">Пользователи компании</a></li>
-		<li><a href="/company/{{ company.id }}/product">Продукты компании</a></li>
-		<li class="divider"></li>
-		<li class="nav-header">Поставщик</li>
-		<li><a href="/company/{{ company.id }}/supplier">Управление поставщиками</a></li>
-		<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
-		<li class="divider"></li>
-		<li class="nav-header">Супер админ</li>
-		<li><a href="/company">Управление компаниями</a></li>
-		<li><a href="/user">Администраторы компании</a></li>
-	</ul>
-</div>
-
-<div class="meny-arrow"></div>
-
-<div class="contents">
-    <div class="container">
-		<div class="navbar navbar-inverse">
-		  <div class="navbar-inner">
-			<div class="container-fluid">
-			  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			  </a>
-			  <a class="brand" href="/">Show Staff</a>
-			  <div class="nav-collapse collapse">
-				<p class="navbar-text pull-right">
-					{% if app.user.username is defined %}
-						Logged in as <a href="#" class="navbar-link">{% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</a>
-					{% endif %}
-					
-					{% if is_granted('ROLE_USER') %}
-						,  <a href="{{ path('logout') }}">Logout</a>
-					{% else %}
-						<a href="{{ path('login') }}">Login</a>
-					{% endif %}
-				</p>
-				<ul class="nav">
-				  <li class="active"><a href="/">Home</a></li>
+<header id="nav-bar" class="container-fluid">
+      <div class="row-fluid">
+         <div class="span8">
+            <div id="header-container">
+               <a id="backbutton" class="win-backbutton" title="Главная" href="/"></a>
+               <h5>Меню</h5>
+               <div class="dropdown">
+                  <a class="header-dropdown dropdown-toggle accent-color" data-toggle="dropdown" href="#">
+                    {% if company.id is defined %}Компания "{{ company.name }}"{% endif %}
+                     <b class="caret"></b>
+                  </a>
+				<ul class="dropdown-menu">
+					{% if company.id is defined %}
+					<li><a href="/company/{{ company.id }}/restaurant">Управление ресторанами</a></li>
+					<li><a href="/company/{{ company.id }}/user">Пользователи компании</a></li>
+					<li><a href="/company/{{ company.id }}/product">Продукты компании</a></li>
+					<li class="divider"></li>
+					<li class="nav-header">Поставщик</li>
+					<li><a href="/company/{{ company.id }}/supplier">Управление поставщиками</a></li>
+					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
+					<li class="divider"></li>
+					<li class="nav-header">Супер админ</li>
+					<li><a href="/company">Управление компаниями</a></li>
+					<li><a href="/user">Администраторы компании</a></li>
 				</ul>
-			  </div><!--/.nav-collapse -->
-			</div>
-		  </div>
-		</div>
+            </div>
+            </div>
+         </div>
+         <div id="top-info" class="pull-right">
+         <a href="#" class="pull-left">
+            <div class="top-info-block">
+               {% if app.user.username is defined %}
+					<h3>{% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h3>
+				{% endif %}
+               <h4>{{ app.user.username }}</h4>
+            </div>
+            <div class="top-info-block">
+               <b class="icon-user"></b>
+            </div>
+         </a>
+         <hr class="separator pull-left">
+         <a id="settings" title="{% if is_granted('ROLE_USER') %}Logout{% else %}Login{% endif %}" class="pull-left" href="{% if is_granted('ROLE_USER') %}{{ path('logout') }}{% else %}{{ path('login') }}{% endif %}">
+            <b class="icon-settings"></b>
+         </a>
+      </div>
+   </div>
+   </header>
+
+    <div class="container">
 		
       <div class="row">
         <div class="span12">
@@ -142,7 +147,6 @@
       </footer>
 
     </div><!--/.fluid-container-->
-</div>
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
