@@ -77,9 +77,9 @@
          <div class="span8">
             <div id="header-container">
                <a id="backbutton" class="win-backbutton" title="Главная" href="/"></a>
-               <h5>{% if company.id is defined %}{{ company.name }}{% else %}Супер админ{% endif %}</h5>
-               <div class="dropdown">
+               <div class="dropdown margintop10">
                   <a class="header-dropdown dropdown-toggle accent-color" data-toggle="dropdown" href="#">
+                    {% if company.id is defined %}Компания "{{ company.name }}"{% else %}Супер админ{% endif %}
                      <b class="caret"></b>
                   </a>
 				<ul class="dropdown-menu">
