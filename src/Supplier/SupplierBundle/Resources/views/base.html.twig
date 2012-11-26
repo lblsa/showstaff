@@ -31,12 +31,12 @@
 	<script src="/js/jquery.js"></script>
 	<script src="/js/underscore-min.js"></script>
 	<script src="/js/backbone.js"></script>
-    <script src="/js/bootstrap-tooltip.js"></script>
-    <script src="/js/bootstrap-modal.js"></script>
-    <script src="/js/bootstrap-datepicker.js"></script>
-    <script src="/js/main.js"></script>
-    <script src="/js/menu.min.js"></script>
-    <script src="/js/feedback.js"></script>
+  <script src="/js/bootstrap-tooltip.js"></script>  
+  <script src="/js/bootstrap-modal.js"></script>
+  <script src="/js/bootstrap-datepicker.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/menu.min.js"></script>
+  <script src="/js/feedback.js"></script>
     
     <!-- Le fav and touch icons -->
     <link rel="shortcut icon" href="../assets/ico/favicon.ico">
@@ -77,25 +77,27 @@
          <div class="span8">
             <div id="header-container">
                <a id="backbutton" class="win-backbutton" title="Главная" href="/"></a>
-               <h5>Меню</h5>
+               <h5>{% if company.id is defined %}{{ company.name }}{% else %}Супер админ{% endif %}</h5>
                <div class="dropdown">
                   <a class="header-dropdown dropdown-toggle accent-color" data-toggle="dropdown" href="#">
-                    {% if company.id is defined %}Компания "{{ company.name }}"{% endif %}
                      <b class="caret"></b>
                   </a>
 				<ul class="dropdown-menu">
 					{% if company.id is defined %}
-					<li><a href="/company/{{ company.id }}/restaurant">Управление ресторанами</a></li>
-					<li><a href="/company/{{ company.id }}/user">Пользователи компании</a></li>
-					<li><a href="/company/{{ company.id }}/product">Продукты компании</a></li>
+					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
+					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
 					<li class="divider"></li>
-					<li class="nav-header">Поставщик</li>
-					<li><a href="/company/{{ company.id }}/supplier">Управление поставщиками</a></li>
+					<li class="nav-header">Заказы</li>
+          <li><a href="/company/{{ company.id }}/supplier">Поставщики</a></li>
+					<li><a href="/company/{{ company.id }}/product">Продукты</a></li>
 					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
 					<li class="divider"></li>
-					<li class="nav-header">Супер админ</li>
-					<li><a href="/company">Управление компаниями</a></li>
-					<li><a href="/user">Администраторы компании</a></li>
+          <li class="nav-header">Супер админ</li>
+          <li><a href="/company">Компании</a></li>
+          <li><a href="/user">Администраторы</a></li>
+          <li class="divider"></li>
+					<li class="nav-header">Смены</li>
+					<li><a href="/calendar">Смены</a></li>
 				</ul>
             </div>
             </div>

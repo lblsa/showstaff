@@ -17,9 +17,9 @@ class SupplierController extends Controller
 {
 	/**
 	 * @Route(	"api/company/{cid}/supplier.{_format}",
-				name="API_supplier",
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_supplier",
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Template()
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
@@ -136,7 +136,7 @@ class SupplierController extends Controller
 	 * @Route(	"api/company/{cid}/supplier/{sid}.{_format}", 
 	 * 			name="API_supplier_update", 
 	 * 			requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function API_updateAction($cid, $sid, Request $request)
@@ -197,9 +197,9 @@ class SupplierController extends Controller
 	 
 	/**
 	 * @Route(	"api/company/{cid}/supplier/{sid}.{_format}",
-				name="API_supplier_delete",
-				requirements={"_method" = "DELETE", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_supplier_delete",
+	 *			requirements={"_method" = "DELETE", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteAction($cid, $sid, Request $request)
@@ -259,7 +259,7 @@ class SupplierController extends Controller
 	 * @Route(	"api/company/{cid}/supplier.{_format}", 
 	 * 			name="API_supplier_create", 
 	 * 			requirements={"_method" = "POST", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_createAction($cid, Request $request)

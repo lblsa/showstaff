@@ -5,6 +5,10 @@ var Units, units;
 $(document).ready(function(){
 	reloadIfBack();
 	
+	if (/chrome/.test(navigator.userAgent.toLowerCase())) $('.win-backbutton').css('line-height', '35px');
+	
+	if (/firefox/.test(navigator.userAgent.toLowerCase())) $('.btn-circle i').css('line-height', '20px');
+	
 	var OldSync = Backbone.sync; 
 	
 	Backbone.sync = function(method, model, options) {
