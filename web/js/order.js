@@ -233,8 +233,6 @@ $(function(){
 		$('#order_list').append(view_order_by_supp.render().el);
 		$('#order_list').append(view_order_by_supp.renderAll().el);
 		
-		$('#order_list h3').html('Поставщики');
-		
 		$('#group_by_supp').addClass('disabled');
 		$('#group_by_rest').removeClass('disabled');
 		return false;
@@ -245,8 +243,6 @@ $(function(){
 		var view_order_by_rest = new ViewOrdersByRestaurant({collection: orders});
 		$('#order_list').append(view_order_by_rest.render().el);
 		$('#order_list').append(view_order_by_rest.renderAll().el);
-		
-		$('#order_list h3').html('Рестораны');
 		
 		$('#group_by_rest').addClass('disabled');
 		$('#group_by_supp').removeClass('disabled');

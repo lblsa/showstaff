@@ -17,9 +17,9 @@ class RestaurantController extends Controller
 {
 	/**
 	 * @Route(	"api/company/{cid}/restaurant.{_format}",
-				name="API_restaurant",
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_restaurant",
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Template()
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER")
 	 */
@@ -131,9 +131,9 @@ class RestaurantController extends Controller
 	
 	/**
 	 * @Route(	"api/company/{cid}/restaurant/{rid}.{_format}",
-				name="API_restaurant_update",
-				requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_restaurant_update",
+	 *			requirements={"_method" = "PUT", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	 public function API_updateAction($cid, $rid, Request $request)
@@ -198,9 +198,9 @@ class RestaurantController extends Controller
 	 
 	/**
 	 * @Route(	"api/company/{cid}/restaurant/{rid}.{_format}",
-				name="API_restaurant_delete",
-				requirements={"_method" = "DELETE", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_restaurant_delete",
+	 *			requirements={"_method" = "DELETE", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteAction($cid, $rid, Request $request)
@@ -238,9 +238,9 @@ class RestaurantController extends Controller
 	
 	/**
 	 * @Route(	"api/company/{cid}/restaurant.{_format}",
-				name="API_restaurant_create",
-				requirements={"_method" = "POST", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_restaurant_create",
+	 *			requirements={"_method" = "POST", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function API_createAction($cid, Request $request)

@@ -64,7 +64,7 @@ $(function(){
 			});
 			products._byId[product_id].attributes.use = 1;
 			
-			$('.ps_prime', this.el).prepend('<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> Первичный</label></p>');
+			$('.ps_prime', this.el).prepend('<p><label class="checkbox"><input type="checkbox" class="input-small primary_supplier"> <span class="metro-checkbox">Первичный</span></label></p>');
 			if (this.model.get('primary_supplier'))
 				$('.primary_supplier', this.el).attr('checked','checked');
 				

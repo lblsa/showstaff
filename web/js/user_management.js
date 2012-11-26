@@ -366,7 +366,7 @@ $(function() {
 											success: function(collection, response){
 													collection.each(function(role){
 														$('.roles_add').append('<label class="checkbox">'+
-															'<input type="checkbox" class="role_add" name="roles[]" value="'+role.id+'"> '+role.get('name')+'</label><br />');
+															'<input type="checkbox" class="role_add" name="roles[]" value="'+role.id+'"> <span class="metro-checkbox">'+role.get('name')+'</span></label><br />');
 														
 													});
 													
@@ -396,9 +396,9 @@ $(function() {
 			$('.restaurants_add').html('');
 			restaurants.each(function(restaurant){
 				$('.restaurants_add').append('<label class="checkbox">'+
-												'<input type="checkbox" class="restaurant_add" name="restaurants[]" value="'+restaurant.id+'">'+
+												'<input type="checkbox" class="restaurant_add" name="restaurants[]" value="'+restaurant.id+'"><span class="metro-checkbox">'+
 												restaurant.get("name")+
-											'</label><br>');
+											'</span></label><br>');
 			});
 	});
 	
