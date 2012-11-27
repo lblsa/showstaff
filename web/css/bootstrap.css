@@ -5808,3 +5808,6 @@ select.product {
 .margintop10 {
   margin-top: 10px;
 }
+.metro-datepicker {
+  height: 257px;
+}

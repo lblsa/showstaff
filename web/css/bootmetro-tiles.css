@@ -1,6 +1,5 @@
 /* Metro Tiles
 -------------------------------------------------- */
-
 .bg-color-blue {
    background-color: #0072BC !important;
 }
@@ -8,7 +7,7 @@
    background-color: #662D91 !important;
 }
 .bg-color-green {
-   background-color: #01a31c !important;
+   background-color: #668000 !important;
 }
 .bg-color-greenDark {
    background-color: #008641 !important;
@@ -32,18 +31,13 @@
    background-color: #1c1c1c !important;
 }
 
-
-
 .metro {
    overflow: hidden;
 }
 
-
 .metro .carousel-control {
    top: 20%;
 }
-
-
 
 .metro .metro-sections {
    height: auto;
@@ -96,7 +90,7 @@
    cursor: pointer;
    overflow: hidden;
    text-decoration: none;
-   background-color: #2C83EF;
+   background-color: #3B659C;
 }
    .metro .tile:hover {
       outline: 3px #225a68 solid;
@@ -113,8 +107,8 @@
 /* Metro Tiles Templates
 -------------------------------------------------- */
 .metro .tile.square.text {
-   width: 110px;
-   height: 110px;
+   width: 180px;
+   height: 180px;
    padding: 20px;
 }
 .metro .tile.square.image {
@@ -133,13 +127,18 @@
 }
    .metro .tile.squarepeek .text-inner {
       width: 110px;
-      height: 110px;
+      height: 180px;
       padding: 20px;
    }
 
 .metro .tile.wide.text {
-   width: 270px;
-   height: 110px;
+   width: 300px;
+   height: 180px;
+   padding: 20px;
+}
+.metro .tile.half-wide.text {
+   width: 240px;
+   height: 180px;
    padding: 20px;
 }
 .metro .tile.wide.image {
@@ -161,7 +160,7 @@
 /* template with normal 80x80 image */
 .metro .tile.wide.imagetext {
    width: 270px;
-   height: 110px;
+   height: 180px;
    padding: 20px;
 }
    .metro .tile.wide.imagetext .textover-wrapper {
@@ -172,15 +171,10 @@
       padding: 2px 20px;
       background-color: inherit;
    }
-
 .metro .tile.widepeek {
    width: 310px;
    height: 300px;
 }
-
-
-
-
 
 /* Default Tile
 -------------------------------------------------- */
@@ -254,6 +248,7 @@
    max-height: 36px;
    text-align: left;
    overflow: hidden;
+   display: inline; /* что не обрезало и переносило строку */
 }
 /* One string of large text wrapped over a maximum of three lines.*/
 .metro .tile .text-header3 {
@@ -281,7 +276,7 @@
    font-size: 15px;
    font-weight: normal;
    line-height: 20px;
-   max-height: 44px;
+   max-height: 100px;
    overflow: hidden;
    text-align: left;
 }

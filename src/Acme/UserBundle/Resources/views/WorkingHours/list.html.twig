@@ -1,16 +1,37 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
 {% block body %}
-<div class="row-fluid">
-	<div class="span9">
-		<h1>Компания "{{ company.name }}"</h1>
-		<h2>Смена для ресторана "{{ restaurant.name }}" на {{ date }}</h2>
+<div class="row-fluid metro-datepicker">
+	<div class="metro span9">
+		<div class="metro-sections" style="width: 1035px; left: 0px; ">
+			<div class="metro-section" id="section1">
+				<a class="tile wide text bg-color-gree" href="./square-tiles-templates.html">
+					<div class="text-header3">Смены для ресторана</div>
+					<div class="text2">Редактирование смен доступно для любой будущей даты и смены должны быть сформированы до полуночи (либо пока директор не утвердит)</div>
+				</a>
+
+				<a class="tile square text tile-double bg-color-orange" style="background-color: #C33;" href="./wide-tiles-templates.html">
+					<div class="text-header">Директор утверждает смены</div>
+					<div class="text2">Либо они закроются для редактирования в определенное время</div>
+				</a>
+
+				<a class="tile half-wide  text bg-color-green" href="./widepeek-tiles-templates.html">
+					<div class="text-header3">Фактическое время работы</div>
+					<div class="text2">Каждый день до 14:00 менеджер ресторана должен внести фактическое время работы сотрудников</div>
+				</a>
+			</div>
+		</div>
 	</div>
 	<div class="span3">
-		<form class=" pull-right form-inline">
-			<input type="text" value="{{ date }}" class="wh_datepicker input-small">
-			<a href="" class="btn" id="link_to_date">Открыть</a>
-		</form>
+		<link rel="stylesheet" href="/css/jquery-ui.css">
+    	<script src="/js/jquery-ui-1.8.16.custom.min.js"></script>
+		<div id="smena_datapicker"></div>
+		<input type="hidden" value="{{ date }}" class="wh_datepicker" />
+		<script>
+			$( "#smena_datapicker" ).datepicker(); //"setDate", "{{ date }}"
+			var sday = $( "#smena_datapicker" ).datepicker( "getDate" );
+			var s_date = sday.getFullYear()+'-'+(sday.getMonth()+1)+'-'+sday.getDate();
+		</script>
 	</div>
 </div>
 {% if agreed == 1 %}
@@ -21,6 +42,7 @@
 	<hr>
 {% endif %}
 
+<h2>Смена для ресторана "{{ restaurant.name }}" на <span class="curent-date-header">{{ date }}</span></h2>
 <table class="table table-bordered table-striped" id="shift_list">
 	<thead>
 		<tr>

@@ -87,7 +87,7 @@ class WorkingHoursController extends Controller
      *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"date" = 0,
-							"_format" = "json"}	)
+	 *						"_format" = "json"}	)
      * @Route(	"api/company/{cid}/restaurant/{rid}/shift.{_format}/",
 	 *			name="API_WorkingHours_list__",
 	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
@@ -140,7 +140,7 @@ class WorkingHoursController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"_format" = "json",
-							"date" = 0 })
+	 *						"date" = 0 })
      * @Template()
      * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
@@ -223,10 +223,10 @@ class WorkingHoursController extends Controller
 	 * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{date}/{sid}.{_format}", 
 	 * 				name="API_WorkingHours_delete", 
  	 * 				requirements={	"_method" = "DELETE",
-									"_format" = "json|xml",
-									"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *								"_format" = "json|xml",
+	 *								"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"})
+	 *						"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteAction($cid, $rid, $date, $sid)
@@ -274,7 +274,7 @@ class WorkingHoursController extends Controller
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$",
 	 *							"sid" = "\d*"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_updateAction($cid, $rid, $date, $sid, Request $request)
@@ -433,7 +433,7 @@ class WorkingHoursController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
 	 */
     public function API_agreedAction($cid, $rid, $date, Request $request)
@@ -476,7 +476,7 @@ class WorkingHoursController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
 	 */
     public function API_disagreedAction($cid, $rid, $date, Request $request)
