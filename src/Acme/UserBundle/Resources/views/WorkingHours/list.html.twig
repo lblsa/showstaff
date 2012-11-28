@@ -3,7 +3,7 @@
 {% block body %}
 <div class="row-fluid metro-datepicker">
 	<div class="metro span9">
-		<div class="metro-sections" style="width: 1035px; left: 0px; ">
+		<div class="metro-sections">
 			<div class="metro-section" id="section1">
 				<a class="tile wide text bg-color-gree" href="#">
 					<div class="text-header3">Смены для ресторана</div>
@@ -38,43 +38,46 @@
 	<hr>
 {% endif %}
 -->
-
-<h2 class="curent-page-title">Смена для ресторана "{{ restaurant.name }}" на <span class="curent-date-header">{{ date }}</span></h2>
-<table class="table table-bordered table-striped" id="shift_list">
-	<thead>
-		<tr>
-			<th>Пользователь</th>
-			<th>Запланировано часов</th>
-			<th>Фактических часов</th>
-			<th>Должность</th>
-			<th class="contr"></th>
-		</tr>
-		<tr id="add_row">
-			<th colspan="6" class="add">
-				<a href="#" class="create btn btn-small">Добавить сотрудника <i class="icon-plus-sign"></i></a>
-				<div class="form-inline hide forms">
-					<div class="controls-group">
-						<div class="controls">
-							<select name="user_add" class="user_add"></select>
+<div class="row">
+	<div class="span12">
+		<h2 class="curent-page-title">Смена для ресторана "{{ restaurant.name }}" на <span class="curent-date-header">{{ date }}</span></h2>
+		<table class="table table-bordered table-striped" id="shift_list">
+			<thead>
+				<tr>
+					<th>Пользователь</th>
+					<th>Запланировано часов</th>
+					<th>Фактических часов</th>
+					<th>Должность</th>
+					<th class="contr"></th>
+				</tr>
+				<tr id="add_row">
+					<th colspan="6" class="add">
+						<a href="#" class="create btn btn-small">Добавить сотрудника <i class="icon-plus-sign"></i></a>
+						<div class="form-inline hide forms">
+							<div class="controls-group">
+								<div class="controls">
+									<select name="user_add" class="user_add"></select>
+								</div>
+								<div class="controls">
+									<input type="number" placeholder="Запланировано часов" class="planhours_add" name="planhours_add" />
+								</div>
+								<div class="controls">
+									<input type="number" placeholder="Фактических часов" class="facthours_add" name="planhours_add" />
+								</div>
+								<div class="controls">
+									<textarea name="description_add" class="description_add"></textarea>
+								</div>
+								<div class="controls">
+									<button class="add_employee btn btn-mini btn-success">add</button>
+								</div>
+							</div>
 						</div>
-						<div class="controls">
-							<input type="number" placeholder="Запланировано часов" class="planhours_add" name="planhours_add" />
-						</div>
-						<div class="controls">
-							<input type="number" placeholder="Фактических часов" class="facthours_add" name="planhours_add" />
-						</div>
-						<div class="controls">
-							<textarea name="description_add" class="description_add"></textarea>
-						</div>
-						<div class="controls">
-							<button class="add_employee btn btn-mini btn-success">add</button>
-						</div>
-					</div>
-				</div>
-			</th>
-		</tr>
-	</thead>
-</table>
+					</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+</div>
 
 <script src="/js/workinghours.js"></script> <!-- редактирование всего -->
 

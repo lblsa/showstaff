@@ -14,6 +14,7 @@ body {
    font-family: "Open Sans",Arial,Helvetica,Sans-Serif;
    font-weight: 300;
    font-size: 11px;
+   min-width: 890px;
 }
 
 
@@ -2143,6 +2144,7 @@ Thumbnail
 /* Alerts
 -------------------------------------------------- */
 .alert {
+   opacity: .5;
    -webkit-border-radius: 0;
    -moz-border-radius: 0;
    border-radius: 0;

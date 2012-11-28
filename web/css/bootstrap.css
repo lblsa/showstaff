@@ -5809,5 +5809,15 @@ select.product {
   margin-top: 10px;
 }
 .metro-datepicker {
-  height: 257px;
+  min-height: 257px;
+}
+#top-info a.btn-logout {
+  height:inherit;
+}
+#top-info b.caret-right {
+  height: 20px; 
+  width: 20px;
+  font-size: 18px;
+  line-height: 20px;
+  margin-top: 5px;
 }
