@@ -103,21 +103,23 @@
             </div>
          </div>
          <div id="top-info" class="pull-right">
-         <a href="#" class="pull-left">
-            <div class="top-info-block">
-               {% if app.user.username is defined %}
-					<h3>{% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h3>
-				{% endif %}
-               <h4>{{ app.user.username }}</h4>
-            </div>
-            <div class="top-info-block">
-               <b class="icon-user"></b>
-            </div>
-         </a>
+          <div class="top-info-block dropdown">
+            {% if app.user.username is defined %}
+    					<h3 data-toggle="dropdown" class="right-menu dropdown-toggle" role="button" id="dLabel" >
+                {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}
+                <b class="caret caret-right"></b>
+              </h3>
+              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                <li><a href="/logout" class="btn-block btn-logout">Выйти</a></li>
+              </ul>
+            {% endif %}
+             <h4>{{ app.user.username }}</h4>
+          </div>
+          <div class="top-info-block">
+             <b class="icon-user"></b>
+          </div>
          <hr class="separator pull-left">
-         <a id="settings" title="{% if is_granted('ROLE_USER') %}Logout{% else %}Login{% endif %}" class="pull-left" href="{% if is_granted('ROLE_USER') %}{{ path('logout') }}{% else %}{{ path('login') }}{% endif %}">
-            <b class="icon-settings"></b>
-         </a>
+         <span id="settings" class="pull-left"><b class="icon-settings"></b></span>
       </div>
    </div>
    </header>

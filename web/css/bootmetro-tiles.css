@@ -43,7 +43,7 @@
    height: auto;
    position: relative;
    overflow: hidden;
-   width: 10000px;
+   /*width: 10000px;*/
 }
 
    .metro-sections h2 {
@@ -132,12 +132,12 @@
    }
 
 .metro .tile.wide.text {
-   width: 300px;
+   width: 230px;
    height: 180px;
    padding: 20px;
 }
 .metro .tile.half-wide.text {
-   width: 240px;
+   width: 230px;
    height: 180px;
    padding: 20px;
 }

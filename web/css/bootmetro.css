@@ -2143,6 +2143,7 @@ Thumbnail
 /* Alerts
 -------------------------------------------------- */
 .alert {
+   opacity: .5;
    -webkit-border-radius: 0;
    -moz-border-radius: 0;
    border-radius: 0;
