@@ -5,7 +5,7 @@
 план в любой момент - для управляющих
 факт только сегодня до 14 - для менеджеров и директоров
 факт в любой момент - для управляющих
-утверждение плана не влияет на возможность ввести факт - не понял про утвержденные смены и факт
+утверждение плана не влияет на возможность ввести факт
 */
 namespace Acme\UserBundle\Controller;
 
@@ -17,6 +17,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\Response;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use Acme\UserBundle\Entity\WorkingHours;
+use Acme\UserBundle\Entity\Shift;
 
 /**
  * WorkingHours controller.
@@ -47,11 +48,7 @@ class WorkingHoursController extends Controller
 		if (!$restaurant)
 			throw $this->createNotFoundException('Restaurant not found');
 		
-		/*
 		$agreed = 0;
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && $date > date('Y-m-d'))
-			$agreed = 1;
-		*/
 
 		$edit_mode = 0;
 		//план на завтра и дальше для утвержденного и неутвержденного - для менеджеров или директора
@@ -66,13 +63,16 @@ class WorkingHoursController extends Controller
 					$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') || $this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
 				) && $date == date('Y-m-d') && date('H')<14
 			)
+		{
 			$edit_mode = 2; //редактируем только фактические часы
-			
+			$agreed = 1;
+		}
+
 		//для управляющего все всегда можно редактировать
 		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
 			$edit_mode = 1;
 
-        return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => 1);
+        return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => $agreed);
     }
 
     /**
@@ -123,13 +123,48 @@ class WorkingHoursController extends Controller
 											'date'			=> $p->getDate(),
 											);
 		
+		$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
+																								'date'			=> $date));
+		if ($shift)
+			$agreed = (int)$shift->getAgreed();
+		else
+			$agreed = 0;
+
+		$edit_mode = 0;
+		//план на завтра и дальше для утвержденного и неутвержденного - для менеджеров или директора
+		if (	(
+					$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') || $this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN')
+				) && $date > date('Y-m-d')
+			)
+			$edit_mode = 1;
+
+
+		if (	(	$agreed == 1 || 
+					$date < date('Y-m-d') || 
+					( $date == date('Y-m-d') && date('H')>14 )
+				) && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
+			)
+			$edit_mode = 0;
+
+		// факт только для менеджеров и директоров сегодня до 14
+		if (	(
+					$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') || $this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
+				) && $date == date('Y-m-d') && date('H')<14
+			)
+			$edit_mode = 2; //редактируем только фактические часы
+
+		//для управляющего все всегда можно редактировать
+		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
+			$edit_mode = 1;
+
+
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 				
-		$result = array('code' => 200, 'data' => $entities_array);
+		$result = array('code' => 200, 'data' => $entities_array, 'agreed' => (int)$agreed, 'edit_mode' => $edit_mode);
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
@@ -162,6 +197,16 @@ class WorkingHoursController extends Controller
 		if ($date <= date('Y-m-d') && !$this->get('security.context')->isGranted('ROLE_ADMIN') )
 			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		
+		$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
+																								'date'			=> $date));
+		if ($shift)
+			$agreed = (int)$shift->getAgreed();
+		else
+			$agreed = 0;
+
+		if ($agreed == 1 && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') )
+			return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
+
 		$model = (array)json_decode($request->getContent());
 		
 		if ( count($model) > 0 && isset($model['user']) )
@@ -248,10 +293,16 @@ class WorkingHoursController extends Controller
 			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		else
 		{
-			/*
-			if ($row->getAgreed() && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') )
+			$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
+																									'date'			=> $date));
+			if ($shift)
+				$agreed = (int)$shift->getAgreed();
+			else
+				$agreed = 0;
+
+			if ($agreed == 1 && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') )
 				return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
-			*/
+
 			$em = $this->getDoctrine()->getEntityManager();				
 			$em->remove($row);
 			$em->flush();
@@ -309,7 +360,7 @@ class WorkingHoursController extends Controller
 						$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
 					) && 
 					date('Y-m-d') == $date && 
-					date('H') < 14
+					date('H') < 22
 				)
 			{
 				$row->setFacthours((int)$model['facthours']);
@@ -353,16 +404,16 @@ class WorkingHoursController extends Controller
 					) && date('Y-m-d') == $date && date('H') > 13 )
 				return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 			
-			
-			//утвержденное нельзя редактировать менеджеру
-			/*
-			if (	$row->getAgreed() &&
-					!$this->get('security.context')->isGranted('ROLE_ADMIN') && 
-					!$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && 
-					$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN')
-				)
+				
+			$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
+																									'date'			=> $date));
+			if ($shift)
+				$agreed = (int)$shift->getAgreed();
+			else
+				$agreed = 0;
+			// утвержденные смены можно редактировать только с правами Директора ресторана
+			if ($agreed == 1 && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') )
 				return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
-			*/
 
 			if	(	count($model) > 0 && 
 					isset($model['user']) && 
@@ -425,8 +476,7 @@ class WorkingHoursController extends Controller
 	 * 			requirements={	"_method" = "PUT",
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
-	 *			defaults={	"date" = 0,
-	 *						"_format" = "json"	})
+	 *			defaults={	"_format" = "json"	})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
 	 */
     public function API_agreedAction($cid, $rid, $date, Request $request)
@@ -434,30 +484,36 @@ class WorkingHoursController extends Controller
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
 		
 		if (!$company)
-			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Не найден ресторан #'.$rid.' в компании #'.$cid, 404, array('Content-Type' => 'application/json'));
 	
-		$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'company'		=> (int)$cid, 
-																										'restaurant'	=> (int)$rid,
-																										'date'			=> $date));
-		$agreed_working_hourse = array();
 
-		$entities_array = array();
-		if ($entities)
-			foreach ($entities AS $p)
-			{
-				$p->setAgreed(1);
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($p);
-				$em->flush();
-				
-				$agreed_working_hourse[] = $p->getId();
-			}
+		$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
+																								'date'			=> $date));
+		if ($shift)
+		{
+			$shift->setAgreed(1);
+			$em = $this->getDoctrine()->getEntityManager();
+			$em->persist($shift);
+			$em->flush();
+		}
 		else
-			return new Response('У вас нет смены на это число', 404, array('Content-Type' => 'application/json'));
-		
+		{
+			$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
+			if (!$company)
+				return new Response('Ресторан не найден #'.$rid, 404, array('Content-Type' => 'application/json'));
+			
+			$shift = new Shift();
+			$shift->setAgreed(1);
+			$shift->setDate($date);
+			$shift->setRestaurant($restaurant);
+
+			$em = $this->getDoctrine()->getEntityManager();
+			$em->persist($shift);
+			$em->flush();
+		}
 		
 		$result = array(	'code' => 200,
-							'data' => $agreed_working_hourse);
+							'data' => array('date' => $shift->getDate(), 'restaurant' => $shift->getRestaurant()->getId(), 'agreed' => $shift->getAgreed() ));
 		
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
@@ -477,30 +533,36 @@ class WorkingHoursController extends Controller
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
 		
 		if (!$company)
-			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Не найден ресторан #'.$rid.' в компании #'.$cid, 404, array('Content-Type' => 'application/json'));
 	
-		$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'company'		=> (int)$cid, 
-																										'restaurant'	=> (int)$rid,
-																										'date'			=> $date));
-		$agreed_working_hourse = array();
 
-		$entities_array = array();
-		if ($entities)
-			foreach ($entities AS $p)
-			{
-				$p->setAgreed(0);
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($p);
-				$em->flush();
-				
-				$agreed_working_hourse[] = $p->getId();
-			}
+		$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
+																								'date'			=> $date));
+		if ($shift)
+		{
+			$shift->setAgreed(0);
+			$em = $this->getDoctrine()->getEntityManager();
+			$em->persist($shift);
+			$em->flush();
+		}
 		else
-			return new Response('У вас нет смены на это число', 404, array('Content-Type' => 'application/json'));
-		
+		{
+			$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
+			if (!$company)
+				return new Response('Ресторан не найден #'.$rid, 404, array('Content-Type' => 'application/json'));
+			
+			$shift = new Shift();
+			$shift->setAgreed(0);
+			$shift->setDate($date);
+			$shift->setRestaurant($restaurant);
+
+			$em = $this->getDoctrine()->getEntityManager();
+			$em->persist($shift);
+			$em->flush();
+		}
 		
 		$result = array(	'code' => 200,
-							'data' => $agreed_working_hourse);
+							'data' => array('date' => $shift->getDate(), 'restaurant' => $shift->getRestaurant()->getId(), 'agreed' => $shift->getAgreed() ));
 		
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}

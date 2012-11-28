@@ -1,4 +1,6 @@
 var users, duties, view_workinghours;
+var agreed = 0;
+var edit_mode = 0;
 $(function(){
 	
 	var ViewWorkinghours = Backbone.View.extend({
@@ -39,13 +41,25 @@ $(function(){
 		tagName: "tr",
 		className: "user",
 		
-		template: _.template(	'<td class="u_user"><select class="user" name="user"></select></td>'+
-								'<td class="u_plan"><input type="text" class="input-large planhours span2" name="planhours" value="<%= planhours %>"></td>'+
-								'<td class="u_fact"><input type="text" class="input-large facthours span2" name="facthours" value="<%= facthours %>"></td>'+
-								'<td class="u_description"><textarea class="description"><%= description %></textarea></td>'+
-								'<td class="u_controls">'+
-									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
-								'</td>'),
+		template_mode1: _.template(	'<td class="u_user"><select class="user" name="user"></select></td>'+
+									'<td class="u_plan"><input type="text" class="input-large planhours span2" name="planhours" value="<%= planhours %>"></td>'+
+									'<td class="u_fact"><input type="text" class="input-large facthours span2" name="facthours" value="<%= facthours %>"></td>'+
+									'<td class="u_description"><textarea class="description"><%= description %></textarea></td>'+
+									'<td class="u_controls">'+
+										'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
+									'</td>'),
+
+		template_mode2: _.template(	'<td class="u_user"><select class="user" name="user" disabled="disabled"></select></td>'+
+										'<td class="u_plan"><%= planhours %></td>'+
+										'<td class="u_fact"><input type="text" class="input-large facthours span2" name="facthours" value="<%= facthours %>"></td>'+
+										'<td class="u_description"><%= description %></td>'+
+										'<td class="u_controls"></td>'),
+
+		template_mode0: _.template(	'<td class="u_user"><select class="user" name="user" disabled="disabled"></select></td>'+
+										'<td class="u_plan"><%= planhours %></td>'+
+										'<td class="u_fact"><%= facthours %></td>'+
+										'<td class="u_description"><%= description %></td>'+
+										'<td class="u_controls"></td>'),
 								
 		events: {
 			'change input':  	'save',
@@ -68,7 +82,11 @@ $(function(){
 		},
 		
 		render: function() {
-			var content = this.template(this.model.toJSON());
+			
+			if (edit_mode == 0) var content = this.template_mode0(this.model.toJSON());
+			if (edit_mode == 1) var content = this.template_mode1(this.model.toJSON());
+			if (edit_mode == 2) var content = this.template_mode2(this.model.toJSON());
+
 			this.$el.html(content);
 			var u_user = $('.u_user select', this.$el);
 			var curent_model = this.model;
@@ -192,7 +210,9 @@ $(function(){
 		url: '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+$('.wh_datepicker').val(),
 		
 		parse: function(response) {
-			if(response.code && 'code' in response && response.code == 200 && 'data' in response ){
+			if(response.code && 'code' in response && response.code == 200 && 'data' in response && 'agreed' in response && 'edit_mode' in response ) {
+				agreed = response.agreed;
+				edit_mode = response.edit_mode;
 				return response.data;
 			} else {
 				error_fetch('Ошибка при получении пользователей');
@@ -246,6 +266,10 @@ $(function(){
 														$('#shift_list').append(view_workinghours.render().el);
 														view_workinghours.renderAll().el;
 														
+													if ( $('.wh_datepicker').val() < strDate)
+														$('.agreed_all').fadeIn();
+													else
+														$('.agreed_all').fadeOut();
 													}, 
 													error: function(){
 														error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
@@ -283,6 +307,16 @@ $(function(){
 
 			document.title = $('.curent-page-title').text();
 			window.history.pushState({}, $('.curent-page-title').text(), '/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate);
+
+			var today = new Date();
+			var dd = today.getDate();
+			var mm = today.getMonth()+1; //January is 0!
+			var yyyy = today.getFullYear();
+
+			if ( yyyy+'-'+mm+'-'+dd < strDate)
+				$('.agreed_all').fadeIn();
+			else
+				$('.agreed_all').fadeOut();
 
 			$('#preloader').width($('#shift_list').width());
 			$('#preloader').height($('#shift_list').height());

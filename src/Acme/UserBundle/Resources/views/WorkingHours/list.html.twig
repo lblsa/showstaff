@@ -27,17 +27,15 @@
     	<script src="/js/jquery-ui-1.8.16.custom.min.js"></script>
 		<div id="smena_datapicker"></div>
 		<input type="hidden" value="{{ date }}" class="wh_datepicker" />
+		<input type="hidden" value="{% if is_granted('ROLE_RESTAURANT_DIRECTOR') %}edit_role{% endif %}" class="role" />
 	</div>
 </div>
-<!--
-{% if agreed == 1 %}
-	<div class="row-fluid agreed_all">
-		<a class="btn" rel="disagreed">Разутвердить всех</a>
-		<a class="btn" rel="agreed">Утвердить всех</a>
-	</div>
-	<hr>
-{% endif %}
--->
+
+{% if is_granted('ROLE_RESTAURANT_DIRECTOR') %}<div class="row-fluid agreed_all">
+	<a class="btn" rel="disagreed">Разутвердить</a>
+	<a class="btn" rel="agreed">Утвердить</a>
+</div>{% endif %}
+
 <div class="row">
 	<div class="span12">
 		<h2 class="curent-page-title">Смена для ресторана "{{ restaurant.name }}" на <span class="curent-date-header">{{ date }}</span></h2>
