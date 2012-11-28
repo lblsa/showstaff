@@ -39,13 +39,6 @@ class WorkingHours
     private $facthours;
 
     /**
-     * @var boolean $agreed
-     *
-     * @ORM\Column(name="agreed", type="boolean", nullable=true)
-     */
-    private $agreed;
-
-    /**
      * @var string $date
      *
      * @ORM\Column(name="date", type="string", length=10)
@@ -71,11 +64,12 @@ class WorkingHours
     protected $restaurant;
     
     /**
-     * @ORM\ManyToOne(targetEntity="Duty")
-     * @ORM\JoinColumn(name="duty_id", referencedColumnName="id")
+     * @var integer $description
+     *
+     * @ORM\Column(name="description", type="string", length=255)
      */
-    protected $duty;
-    
+    private $description;
+
     /**
      * Get id
      *
@@ -124,26 +118,6 @@ class WorkingHours
     public function getFacthours()
     {
         return $this->facthours;
-    }
-
-    /**
-     * Set agreed
-     *
-     * @param integer $agreed
-     */
-    public function setAgreed($agreed)
-    {
-        $this->agreed = $agreed;
-    }
-
-    /**
-     * Get agreed
-     *
-     * @return integer 
-     */
-    public function getAgreed()
-    {
-        return $this->agreed;
     }
 
     /**
@@ -227,22 +201,22 @@ class WorkingHours
     }
 
     /**
-     * Set duty
+     * Set description
      *
-     * @param Acme\UserBundle\Entity\Duty $duty
+     * @param string $description
      */
-    public function setDuty(\Acme\UserBundle\Entity\Duty $duty)
+    public function setDescription($description)
     {
-        $this->duty = $duty;
+        $this->description = $description;
     }
 
     /**
-     * Get duty
+     * Get description
      *
-     * @return Acme\UserBundle\Entity\Duty 
+     * @return string 
      */
-    public function getDuty()
+    public function getDescription()
     {
-        return $this->duty;
+        return $this->description;
     }
 }

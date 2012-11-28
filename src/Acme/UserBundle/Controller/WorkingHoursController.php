@@ -47,10 +47,12 @@ class WorkingHoursController extends Controller
 		if (!$restaurant)
 			throw $this->createNotFoundException('Restaurant not found');
 		
+		/*
 		$agreed = 0;
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && $date > date('Y-m-d'))
 			$agreed = 1;
-	
+		*/
+
 		$edit_mode = 0;
 		//план на завтра и дальше для утвержденного и неутвержденного - для менеджеров или директора
 		if (	(
@@ -70,7 +72,7 @@ class WorkingHoursController extends Controller
 		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
 			$edit_mode = 1;
 
-        return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => $agreed);
+        return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => 1);
     }
 
     /**
@@ -87,7 +89,7 @@ class WorkingHoursController extends Controller
      *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"date" = 0,
-							"_format" = "json"}	)
+	 *						"_format" = "json"}	)
      * @Route(	"api/company/{cid}/restaurant/{rid}/shift.{_format}/",
 	 *			name="API_WorkingHours_list__",
 	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
@@ -108,7 +110,6 @@ class WorkingHoursController extends Controller
 		$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'company'		=> (int)$cid, 
 																										'restaurant'	=> (int)$rid,
 																										'date'			=> $date));
-
 		$entities_array = array();
 		if ($entities)
 			foreach ($entities AS $p)
@@ -116,10 +117,9 @@ class WorkingHoursController extends Controller
 											'user'			=> $p->getUser()->getId(),
 											'company'		=> $p->getCompany()->getId(),
 											'restaurant'	=> $p->getRestaurant()->getId(),
-											'duty'			=> $p->getDuty()->getId(),
 											'planhours'		=> $p->getPlanhours(),
 											'facthours'		=> $p->getFacthours(),
-											'agreed'		=> ($p->getAgreed() || $date <= date('Y-m-d'))?1:0,
+											'description'	=> $p->getDescription(),
 											'date'			=> $p->getDate(),
 											);
 		
@@ -140,7 +140,7 @@ class WorkingHoursController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"_format" = "json",
-							"date" = 0 })
+	 *						"date" = 0 })
      * @Template()
      * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN")
      */
@@ -164,26 +164,21 @@ class WorkingHoursController extends Controller
 		
 		$model = (array)json_decode($request->getContent());
 		
-		if ( count($model) > 0 && isset($model['user']) && isset($model['duty']) )
+		if ( count($model) > 0 && isset($model['user']) )
 		{
 			$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find((int)$model['user']);
 									
 			if (!$user)
 				return new Response('No user found for id '.(int)$model['user'], 404, array('Content-Type' => 'application/json'));
 				
-			$duty = $this->getDoctrine()->getRepository('AcmeUserBundle:Duty')->find((int)$model['duty']);
-									
-			if (!$duty)
-				return new Response('No duty found for id '.(int)$model['duty'], 404, array('Content-Type' => 'application/json'));
-			
 			$new_row = new WorkingHours();
 			$new_row->setCompany($company);
 			$new_row->setRestaurant($restaurant);
 			$new_row->setUser($user);
-			$new_row->setDuty($duty);
 			$new_row->setDate($date);
 			$new_row->setPlanhours((int)$model['planhours']);
 			$new_row->setFacthours((int)$model['facthours']);
+			$new_row->setDescription($model['description']);
 			
 			$validator = $this->get('validator');
 			$errors = $validator->validate($new_row);
@@ -206,11 +201,10 @@ class WorkingHoursController extends Controller
 														'company'		=> $company->getId(),
 														'restaurant'	=> $restaurant->getId(),
 														'user'			=> $user->getId(),
-														'duty'			=> $duty->getId(),
 														'date' 			=> $new_row->getDate(), 
 														'planhours'		=> $new_row->getPlanhours(),
 														'facthours'		=> $new_row->getFacthours(),
-														'agreed'		=> 0	));
+														'description'	=> $new_row->getDescription() ));
 				
 				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
@@ -223,10 +217,10 @@ class WorkingHoursController extends Controller
 	 * @Route(	"api/company/{cid}/restaurant/{rid}/shift/{date}/{sid}.{_format}", 
 	 * 				name="API_WorkingHours_delete", 
  	 * 				requirements={	"_method" = "DELETE",
-									"_format" = "json|xml",
-									"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *								"_format" = "json|xml",
+	 *								"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"})
+	 *						"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteAction($cid, $rid, $date, $sid)
@@ -254,9 +248,10 @@ class WorkingHoursController extends Controller
 			return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 		else
 		{
+			/*
 			if ($row->getAgreed() && !$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') )
 				return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
-			
+			*/
 			$em = $this->getDoctrine()->getEntityManager();				
 			$em->remove($row);
 			$em->flush();
@@ -274,7 +269,7 @@ class WorkingHoursController extends Controller
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$",
 	 *							"sid" = "\d*"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_updateAction($cid, $rid, $date, $sid, Request $request)
@@ -340,11 +335,10 @@ class WorkingHoursController extends Controller
 															'company'		=> $company->getId(),
 															'restaurant'	=> $restaurant->getId(),
 															'user'			=> $row->getUser()->getId(),
-															'duty'			=> $row->getDuty()->getId(),
+															'description'	=> $row->getDescription(),
 															'date' 			=> $row->getDate(), 
 															'planhours'		=> $row->getPlanhours(),
-															'facthours'		=> $row->getFacthours(),
-															'agreed'		=> $row->getAgreed()	));
+															'facthours'		=> $row->getFacthours() ));
 					
 					return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 				}
@@ -356,22 +350,22 @@ class WorkingHoursController extends Controller
 					(
 						$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') || 
 						$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR')
-					) && date('Y-m-d') == $date && date('H') > 13
-				)
+					) && date('Y-m-d') == $date && date('H') > 13 )
 				return new Response('Запрещено редактировать старые смены', 403, array('Content-Type' => 'application/json'));
 			
 			
 			//утвержденное нельзя редактировать менеджеру
+			/*
 			if (	$row->getAgreed() &&
 					!$this->get('security.context')->isGranted('ROLE_ADMIN') && 
 					!$this->get('security.context')->isGranted('ROLE_RESTAURANT_DIRECTOR') && 
 					$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN')
 				)
 				return new Response('Запрещено редактировать утвержденные смены', 403, array('Content-Type' => 'application/json'));
+			*/
 
 			if	(	count($model) > 0 && 
 					isset($model['user']) && 
-					isset($model['duty']) && 
 					is_numeric($model['id']) && $sid == $model['id'] && 
 					isset($model['planhours']) &&
 					isset($model['facthours'])	)
@@ -381,15 +375,15 @@ class WorkingHoursController extends Controller
 				if (!$user)
 					return new Response('No user found for id '.(int)$model['user'], 404, array('Content-Type' => 'application/json'));
 					
-				$duty = $this->getDoctrine()->getRepository('AcmeUserBundle:Duty')->find((int)$model['duty']);
-										
-				if (!$duty)
-					return new Response('No duty found for id '.(int)$model['duty'], 404, array('Content-Type' => 'application/json'));
-					
 				$row->setUser($user);
-				$row->setDuty($duty);
-				$row->setPlanhours((int)$model['planhours']);
-				$row->setFacthours((int)$model['facthours']);
+				if (isset($model['description']))
+					$row->setDescription($model['description']);
+
+				if (isset($model['planhours']))
+					$row->setPlanhours((int)$model['planhours']);
+
+				if (isset($model['facthours']))
+					$row->setFacthours((int)$model['facthours']);
 				
 				$validator = $this->get('validator');
 				$errors = $validator->validate($row);
@@ -406,17 +400,16 @@ class WorkingHoursController extends Controller
 					$em = $this->getDoctrine()->getEntityManager();
 					$em->persist($row);
 					$em->flush();
-				
+
 					$result = array(	'code' => 200,
 										'data' => array(	'id'			=> $row->getId(),
 															'company'		=> $company->getId(),
 															'restaurant'	=> $restaurant->getId(),
 															'user'			=> $user->getId(),
-															'duty'			=> $duty->getId(),
+															'description'	=> $row->getDescription(),
 															'date' 			=> $row->getDate(), 
 															'planhours'		=> $row->getPlanhours(),
-															'facthours'		=> $row->getFacthours(),
-															'agreed'		=> $row->getAgreed()	));
+															'facthours'		=> $row->getFacthours() ));
 					
 					return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 				}
@@ -433,7 +426,7 @@ class WorkingHoursController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
 	 */
     public function API_agreedAction($cid, $rid, $date, Request $request)
@@ -476,7 +469,7 @@ class WorkingHoursController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR")
 	 */
     public function API_disagreedAction($cid, $rid, $date, Request $request)
@@ -594,8 +587,6 @@ class WorkingHoursController extends Controller
 			$duty = $this->getDoctrine()->getRepository('AcmeUserBundle:Duty')->findBy(array('id'=>$used_duty));
 		else
 			$duty = array();
-			
-		//var_dump($duty, $week); die;
 		
 		return array(	'duty' => $duty,
 						'week' => $week,

@@ -1,18 +1,35 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
 {% block body %}
-<div class="row-fluid">
-	<div class="span9">
-		<h1>Компания "{{ company.name }}"</h1>
-		<h2>Смена для ресторана "{{ restaurant.name }}" на {{ date }}</h2>
+<div class="row-fluid metro-datepicker">
+	<div class="metro span9">
+		<div class="metro-sections" style="width: 1035px; left: 0px; ">
+			<div class="metro-section" id="section1">
+				<a class="tile wide text bg-color-gree" href="#">
+					<div class="text-header3">Смены для ресторана</div>
+					<div class="text2">Редактирование смен доступно для любой будущей даты и смены должны быть сформированы до полуночи (либо пока директор не утвердит)</div>
+				</a>
+
+				<a class="tile square text tile-double bg-color-orange" href="#">
+					<div class="text-header">Директор</div>
+					<div class="text2">утверждает смены, либо они закроются для редактирования в определенное время</div>
+				</a>
+
+				<a class="tile half-wide  text bg-color-green" href="#">
+					<div class="text-header3">Фактическое время работы</div>
+					<div class="text2">Каждый день до 14:00 менеджер ресторана должен внести фактическое время работы сотрудников</div>
+				</a>
+			</div>
+		</div>
 	</div>
 	<div class="span3">
-		<form class=" pull-right form-inline">
-			<input type="text" value="{{ date }}" class="wh_datepicker input-small">
-			<a href="" class="btn" id="link_to_date">Открыть</a>
-		</form>
+		<link rel="stylesheet" href="/css/jquery-ui.css">
+    	<script src="/js/jquery-ui-1.8.16.custom.min.js"></script>
+		<div id="smena_datapicker"></div>
+		<input type="hidden" value="{{ date }}" class="wh_datepicker" />
 	</div>
 </div>
+<!--
 {% if agreed == 1 %}
 	<div class="row-fluid agreed_all">
 		<a class="btn" rel="disagreed">Разутвердить всех</a>
@@ -20,15 +37,16 @@
 	</div>
 	<hr>
 {% endif %}
+-->
 
+<h2 class="curent-page-title">Смена для ресторана "{{ restaurant.name }}" на <span class="curent-date-header">{{ date }}</span></h2>
 <table class="table table-bordered table-striped" id="shift_list">
 	<thead>
 		<tr>
 			<th>Пользователь</th>
-			<th>Должность</th>
 			<th>Запланировано часов</th>
 			<th>Фактических часов</th>
-			<th>Утвержден</th>
+			<th>Должность</th>
 			<th class="contr"></th>
 		</tr>
 		<tr id="add_row">
@@ -40,13 +58,13 @@
 							<select name="user_add" class="user_add"></select>
 						</div>
 						<div class="controls">
-							<select name="duty_add" class="duty_add"></select>
-						</div>
-						<div class="controls">
 							<input type="number" placeholder="Запланировано часов" class="planhours_add" name="planhours_add" />
 						</div>
 						<div class="controls">
 							<input type="number" placeholder="Фактических часов" class="facthours_add" name="planhours_add" />
+						</div>
+						<div class="controls">
+							<textarea name="description_add" class="description_add"></textarea>
 						</div>
 						<div class="controls">
 							<button class="add_employee btn btn-mini btn-success">add</button>
@@ -57,14 +75,8 @@
 		</tr>
 	</thead>
 </table>
-{% if edit_mode == 1 %}
-	<script src="/js/workinghours.js"></script> <!-- редактирование всего -->
-{% else %}
-	{% if edit_mode == 2 %}
-		<script src="/js/workinghours_fact.js"></script> <!-- правка только фактических часов -->
-	{% else %}
-		<script src="/js/workinghours_view.js"></script> <!-- только просмотр -->
-	{% endif %}
-{% endif %}
+
+<script src="/js/workinghours.js"></script> <!-- редактирование всего -->
+
 
 {% endblock %}

@@ -1,4 +1,3 @@
-
 var users, duties, view_workinghours;
 $(function(){
 	
@@ -41,18 +40,18 @@ $(function(){
 		className: "user",
 		
 		template: _.template(	'<td class="u_user"><select class="user" name="user"></select></td>'+
-								'<td class="u_duty"><select class="duty" name="duty"></select></td>'+
-								'<td class="u_plan"><input type="text" class="input-large planhours span2" name="email" value="<%= planhours %>"></td>'+
-								'<td class="u_fact"><input type="text" class="input-large facthours span2" name="password" value="<%= facthours %>"></td>'+
-								'<td class="u_agreed"><% if(agreed) print("Да"); else print("Нет"); %></td>'+
+								'<td class="u_plan"><input type="text" class="input-large planhours span2" name="planhours" value="<%= planhours %>"></td>'+
+								'<td class="u_fact"><input type="text" class="input-large facthours span2" name="facthours" value="<%= facthours %>"></td>'+
+								'<td class="u_description"><textarea class="description"><%= description %></textarea></td>'+
 								'<td class="u_controls">'+
 									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a>'+
 								'</td>'),
 								
 		events: {
-			'change input':  'save',
-			'change select':  'save',
-			'click .remove': 'remove',
+			'change input':  	'save',
+			'change select': 	'save',
+			'change textarea':  'save',
+			'click .remove': 	'remove',
 		},
 		
 		initialize: function() {
@@ -71,17 +70,8 @@ $(function(){
 		render: function() {
 			var content = this.template(this.model.toJSON());
 			this.$el.html(content);
-			var u_duty = $('.u_duty select', this.$el);
 			var u_user = $('.u_user select', this.$el);
 			var curent_model = this.model;
-		
-			u_duty.html('');
-			duties.each(function(r){				
-				if (curent_model.attributes.duty == r.id)
-					$(u_duty).append('<option value="'+r.id+'" selected="selected">'+r.get("name")+'</option>');
-				else
-					$(u_duty).append('<option value="'+r.id+'">'+r.get("name")+'</option>');
-			});
 			
 			u_user.html('');
 			users.each(function(r){				
@@ -98,18 +88,8 @@ $(function(){
 		save: function() {
 			this.preloader();
 			
-			var roles = [];
-			$(".role_upd[name='roles[]']:checked", this.el).each(function() {
-				roles.push(parseInt($(this).val()));	
-			});
-			
-			var restaurants = [];
-			$(".restaurant_upd[name='restaurants[]']:checked", this.el).each(function() {
-				restaurants.push(parseInt($(this).val()));	
-			});
-			
 			this.model.save({	user: $('.user', this.el).val(), 
-								duty: $('.duty', this.el).val(), 
+								description: $('.description', this.el).val(), 
 								planhours: $('.planhours', this.el).val(), 
 								facthours: $('.facthours', this.el).val(),
 							},{wait: true});
@@ -151,6 +131,7 @@ $(function(){
 					
 					$('#shift_list .planhours_add').val('');
 					$('#shift_list .facthours_add').val('');
+					$('#shift_list .description_add').html('');
 
 					$('.workinghours').remove();
 					view_content = new ViewWorkinghours({collection: workinghours});
@@ -239,20 +220,7 @@ $(function(){
 		}
 	});
 	
-	users = new Users;	
-	
-	var Duties = Backbone.Collection.extend({
-		url: '/api/duty',
-		parse: function(response, xhr){
-			if(response && 'code' in response && response.code == 200 && 'data' in response) {
-				return response.data;
-			} else {
-				error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
-			}
-		}
-	});
-	
-	duties = new Duties;
+	users = new Users;
 	
 	$('#preloader').width($('#shift_list').width());
 	$('#preloader').height($('#shift_list').height());
@@ -264,38 +232,32 @@ $(function(){
 	
 	workinghours = new Workinghours;
 	
-	duties.fetch({	success:function(collection, response){
-							collection.each(function(duty){
-								$('.duty_add').append('<option value="'+duty.id+'">'+duty.get('name')+'</option>');
+
+													
+	users.fetch({	success:function(collection, response){
+		
+							collection.each(function(user){
+								$('.user_add').append('<option value="'+user.id+'">'+user.get('fullname')+' ('+user.get('username')+')</option>');
 							});
-													
-							users.fetch({	success:function(collection, response){
-								
-													collection.each(function(user){
-														$('.user_add').append('<option value="'+user.id+'">'+user.get('fullname')+' ('+user.get('username')+')</option>');
-													});
-													
-													workinghours.fetch({	success: function(collection, response) {
-														
-																				view_workinghours = new ViewWorkinghours({collection: collection});
-																				$('#shift_list').append(view_workinghours.render().el);
-																				view_workinghours.renderAll().el;
-																				
-																			}, 
-																			error: function(){
-																				error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
-																			}
-																});
-												},
-												error:function(){
-													error_fetch('Ошибка получения пользователей. Обновите страницу или обратитесь к администратору');
-												}
-											});
 							
-						}, error:function(){
-							error_fetch('Ошибка получения должностей. Обновите страницу или обратитесь к администратору');
+							workinghours.fetch({	success: function(collection, response) {
+								
+														view_workinghours = new ViewWorkinghours({collection: collection});
+														$('#shift_list').append(view_workinghours.render().el);
+														view_workinghours.renderAll().el;
+														
+													}, 
+													error: function(){
+														error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
+													}
+										})
+						},
+						error:function(){
+							error_fetch('Ошибка получения пользователей. Обновите страницу или обратитесь к администратору');
 						}
-					})
+					});
+	
+
 	
 	
 	$('.add_employee').click(function() {
@@ -306,19 +268,44 @@ $(function(){
 		$('#preloader').css({'left':p.left, 'top': p.top});
 		$('#preloader').fadeIn('fast');
 		
-		workinghours.add([{
-							duty: $('.duty_add').val(),
+		workinghours.add([{	description: $('.description_add').val(),
 							user: $('.user_add').val(),
 							planhours: $('.planhours_add').val(),
 							facthours: $('.facthours_add').val() 	}]);
 	});
-	
-	$('.wh_datepicker').datepicker({"format": "yyyy-mm-dd"})
-		.on('changeDate', function(ev){
-			var href = window.location.pathname.split('/');
-			if (href[href.length-1] == 'shift')
-				$('#link_to_date').attr( 'href', window.location.pathname+'/'+$('.wh_datepicker').val() );
-			else
-				$('#link_to_date').attr( 'href', $('.wh_datepicker').val() );
+
+	$( "#smena_datapicker" ).datepicker({
+		'onSelect': function(strDate, inst){
+			$('.curent-date-header').html(strDate);
+			$('.wh_datepicker').val(strDate);
+			
+			workinghours.url = '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate;
+
+			document.title = $('.curent-page-title').text();
+			window.history.pushState({}, $('.curent-page-title').text(), '/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate);
+
+			$('#preloader').width($('#shift_list').width());
+			$('#preloader').height($('#shift_list').height());
+			var p = $('#shift_list').position();
+			$('#preloader').css({'left':p.left, 'top': p.top});
+			$('#preloader').fadeIn('fast');
+
+			workinghours.fetch({	success: function(collection, response) {
+												view_workinghours.remove();
+												$('.workinghours').remove();
+												view_workinghours = new ViewWorkinghours({collection: collection});
+												$('#shift_list').append(view_workinghours.render().el);
+												view_workinghours.renderAll().el;
+												
+											}, 
+											error: function(){
+												error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
+											}
+								});
+		},
 	});
+	$( "#smena_datapicker" ).datepicker( "setDate", $('.wh_datepicker').val() );
+	//var sday = $( "#smena_datapicker" ).datepicker( "getDate" );
+	//var s_date = sday.getFullYear()+'-'+(sday.getMonth()+1)+'-'+sday.getDate();
+	//Backbone.history.start({pushState: true, root: '/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+$('.wh_datepicker').val()});
 });
