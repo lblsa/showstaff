@@ -159,7 +159,19 @@ CREATE TABLE `WorkingHours` (
   KEY `IDX_50B58B90B1E7706E` (`restaurant_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE `Shift` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `restaurant_id` int(11) NOT NULL,
+  `date` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `agreed` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_64CA1441B1E7706E` (`restaurant_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+
+ALTER TABLE `Shift`
+  ADD CONSTRAINT `FK_64CA1441B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`) ON DELETE CASCADE;
+  
 ALTER TABLE `OrderItem`
   ADD CONSTRAINT `FK_2FB1D4424584665A` FOREIGN KEY (`product_id`) REFERENCES `Product` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `FK_33E85E19B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`) ON DELETE CASCADE,

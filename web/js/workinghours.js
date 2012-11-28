@@ -339,7 +339,4 @@ $(function(){
 		},
 	});
 	$( "#smena_datapicker" ).datepicker( "setDate", $('.wh_datepicker').val() );
-	//var sday = $( "#smena_datapicker" ).datepicker( "getDate" );
-	//var s_date = sday.getFullYear()+'-'+(sday.getMonth()+1)+'-'+sday.getDate();
-	//Backbone.history.start({pushState: true, root: '/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+$('.wh_datepicker').val()});
 });
