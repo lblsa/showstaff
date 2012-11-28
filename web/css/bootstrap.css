@@ -5809,7 +5809,7 @@ select.product {
   margin-top: 10px;
 }
 .metro-datepicker {
-  height: 257px;
+  min-height: 257px;
 }
 #top-info a.btn-logout {
   height:inherit;
