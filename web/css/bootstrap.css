@@ -5829,3 +5829,6 @@ select.product {
   color: #24A0DA;
   cursor: pointer;
 }
+#top-info a.accent-color:hover {
+  color:rgba(79, 26, 203, 0.6);
+}

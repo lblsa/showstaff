@@ -83,6 +83,7 @@
                      <b class="caret"></b>
                   </a>
 				<ul class="dropdown-menu">
+          <li><a href="/">Стартовая</a></li>
 					{% if company.id is defined %}
 					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
 					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
@@ -101,7 +102,7 @@
             {% if restaurants_list is defined %}
                 {% for key, restaurant_name in restaurants_list %}
                   <li class="divider"></li>
-                  <li class="nav-header">Ресторан "{{ restaurant_name }}"</li>
+                  <li class="nav-header">{{ restaurant_name }}</li>
                   <li><a href="{{ path('WorkingHours_list', {'cid': company.id, 'rid': key }) }}">Смены</a></li>
                   <li><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid': key }) }}">Заказы</a></li>
                 {% endfor %}
