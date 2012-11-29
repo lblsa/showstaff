@@ -30,6 +30,8 @@ class OrderController extends Controller
     public function listAction($cid, $booking_date, Request $request)
     {
 		$user = $this->get('security.context')->getToken()->getUser();
+
+		$restaurants_list = array();
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
@@ -39,6 +41,23 @@ class OrderController extends Controller
 				throw new AccessDeniedHttpException('Forbidden Company');
 		}
 		
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+		else
+		{
+			$restaurants = $permission->getRestaurants();
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 		
@@ -135,6 +154,7 @@ class OrderController extends Controller
 						'products_json' => json_encode($products_array),
 						'booking_date' => $booking_date,
 						'completed' => $completed,
+						'restaurants_list' => $restaurants_list,
 						'edit_mode' => $booking_date<date('Y-m-d')?false:true );
 	}
 	
@@ -145,7 +165,7 @@ class OrderController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"booking_date" = 0,
-							"_format" = "json"} )
+	 *						"_format" = "json"} )
      * @Template()
      * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */

@@ -75,29 +75,43 @@ class RestaurantController extends Controller
 	public function listAction($cid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
+
+		$restaurants_list = array();
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+			if (!$permission)
+				throw new AccessDeniedHttpException('Forbidden Company');
+			else
 			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
+				 if ($permission->getCompany()->getId() != $cid) // проверим из какой компании
+				 	throw new AccessDeniedHttpException('Forbidden Company');
+
+				$restaurants = $permission->getRestaurants();
+
+				if ($restaurants)
+					foreach ($restaurants as $r)
+						$restaurants_list[$r->getId()] = $r->getName();
 			}
 		}
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
 		
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No company found for id '.$cid);
+		if (!$company)
+			throw $this->createNotFoundException('No company found for id '.$cid);
+				
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
 		}
-		
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			$restaurants = $permission->getRestaurants();
 			
 		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
@@ -116,9 +130,10 @@ class RestaurantController extends Controller
 												'address'=> $p->getAddress(),
 												'director'=> $p->getDirector(), );
 												
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))	
-			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants' => $restaurants_array,
-																							'company' => $company 	));
+		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))	
+			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants'		=> $restaurants_array,
+																							'restaurants_list'	=> $restaurants_list,
+																							'company'			=> $company 	));
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
@@ -126,7 +141,7 @@ class RestaurantController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 		
-		return array(	'company' => $company	);
+		return array(	'company' => $company, 'restaurants_list' => $restaurants_list	);
 	}
 	
 	/**

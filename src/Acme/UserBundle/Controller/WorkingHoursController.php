@@ -14,9 +14,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpFoundation\Response;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use Acme\UserBundle\Entity\WorkingHours;
+use Acme\UserBundle\Entity\Permission;
 use Acme\UserBundle\Entity\Shift;
 
 /**
@@ -34,20 +36,75 @@ class WorkingHoursController extends Controller
      */
     public function listAction($cid, $rid, $date)
     {
+    	$user = $this->get('security.context')->getToken()->getUser();
+
 		if ($date == '0')
 			$date = date('Y-m-d');
 		
+		$restaurants_list = array();
+
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company)
-			throw $this->createNotFoundException('Company not found');
-			
+			throw $this->createNotFoundException('Company not found');		
 			
 		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
 		
 		if (!$restaurant)
 			throw $this->createNotFoundException('Restaurant not found');
 		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+
+			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+			{
+				$restaurants = $permission->getRestaurants();
+				if (!$restaurants)
+					throw new AccessDeniedHttpException('Forbidden Restaurant');
+				else
+				{
+					$available_restaurants = array();
+					foreach ($restaurants AS $r)
+						$available_restaurants[] = $r->getId();
+						
+					if (!in_array($rid, $available_restaurants))
+						throw new AccessDeniedHttpException('Forbidden Restaurant');
+				}
+			}
+
+			if (!$permission)
+				throw new AccessDeniedHttpException('Forbidden Company');
+			else
+			{
+				 if ($permission->getCompany()->getId() != $cid) // проверим из какой компании
+				 	throw new AccessDeniedHttpException('Forbidden Company');
+
+				$restaurants = $permission->getRestaurants();
+
+				if ($restaurants)
+					foreach ($restaurants as $r)
+						$restaurants_list[$r->getId()] = $r->getName();
+			}
+		}
+
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+		else
+		{
+			$restaurants = $permission->getRestaurants();
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+
 		$agreed = 0;
 
 		$edit_mode = 0;
@@ -72,7 +129,12 @@ class WorkingHoursController extends Controller
 		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
 			$edit_mode = 1;
 
-        return array('company' => $company, 'restaurant' => $restaurant, 'date' => $date, 'edit_mode' => $edit_mode, 'agreed' => $agreed);
+        return array(	'company' => $company,
+        				'restaurant' => $restaurant,
+        				'restaurants_list' => $restaurants_list,
+        				'date' => $date,
+        				'edit_mode' => $edit_mode,
+        				'agreed' => $agreed);
     }
 
     /**

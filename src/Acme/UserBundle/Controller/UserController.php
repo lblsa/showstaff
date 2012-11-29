@@ -57,9 +57,9 @@ class UserController extends Controller
 
     /**
      * @Route(	"api/role.{_format}",
-				name="API_roles",
-				requirements={"_method" = "GET", "format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_roles",
+	 *			requirements={"_method" = "GET", "format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
      * @Template()
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
      */
@@ -88,9 +88,9 @@ class UserController extends Controller
 
     /**
      * @Route(	"api/user.{_format}",
-				name="API_user",
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"} )
+	 *			name="API_user",
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"} )
      * @Template()
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
      */
@@ -201,9 +201,9 @@ class UserController extends Controller
 
 	/**
 	 * @Route(	"api/company/{cid}/user/{uid}.{_format}",
-				name="API_user_update_manag",
-				requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_user_update_manag",
+	 *			requirements={"_method" = "PUT", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	 public function API_updateManagerAction($cid, $uid, Request $request)
@@ -337,9 +337,9 @@ class UserController extends Controller
 	
 	/**
 	 * @Route(	"api/user/{uid}",
-				name="user_ajax_update",
-				requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="user_ajax_update",
+	 *			requirements={"_method" = "PUT", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	 public function API_updateAction($uid, Request $request)
@@ -431,9 +431,9 @@ class UserController extends Controller
 	 
 	/**
 	 * @Route(	"api/company/{cid}/user.{_format}",
-				name="API_user_create_manag",
-				requirements={"_method" = "POST", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_user_create_manag",
+	 *			requirements={"_method" = "POST", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function API_createManagerAction($cid, Request $request) // create company manager
@@ -546,9 +546,9 @@ class UserController extends Controller
 
 	/**
 	 * @Route(	"api/user.{_format}",
-				name="API_user_create",
-				requirements={"_method" = "POST", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_user_create",
+	 *			requirements={"_method" = "POST", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function API_createAction(Request $request) // create company admin
@@ -626,9 +626,9 @@ class UserController extends Controller
 	
 	/**
 	 * @Route(	"api/company/{cid}/user/{uid}.{_format}",
-				name="API_user_delete_manag",
-				requirements={"_method" = "DELETE", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_user_delete_manag",
+	 *			requirements={"_method" = "DELETE", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteManagerAction($cid, $uid, Request $request)
@@ -662,7 +662,7 @@ class UserController extends Controller
 	 * @Route(	"api/user/{uid}.{_format}", 
 	 * 			name="API_user_delete", 
 	 * 			requirements={"_method" = "DELETE", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function API_deleteAction($uid, Request $request)
@@ -694,6 +694,8 @@ class UserController extends Controller
         $request = $this->getRequest();
         $session = $request->getSession();
 		
+		$restaurants_array = array();
+
 		$user = $this->get('security.context')->getToken()->getUser();
 		
 		$ROLE_ADMIN = 0;
@@ -708,7 +710,13 @@ class UserController extends Controller
 				throw new AccessDeniedHttpException('Нет доступа');
 			else {
 				$company = $permission->getCompany();
-				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN, 'company' => $company);
+				$restaurants = $permission->getRestaurants();
+
+				if ($restaurants)
+					foreach ($restaurants as $r)
+						$restaurants_array[$r->getId()] = $r->getName();
+
+				return array('cid' => $company->getId(), 'ROLE_ADMIN'=>$ROLE_ADMIN, 'company' => $company, 'restaurants_list' => $restaurants_array);
 			}
 		}
 		
@@ -718,15 +726,15 @@ class UserController extends Controller
 			return $this->render('AcmeUserBundle:User:index_super_admin.html.twig', array(	'companies' => $companies, 'cid' => 1	));
 		}
 		else
-			return array('ROLE_ADMIN'=>$ROLE_ADMIN, 'company' => false, 'cid' => 0);
+			return array('ROLE_ADMIN'=>$ROLE_ADMIN, 'company' => false, 'cid' => 0, 'restaurants_list' => $restaurants_array);
 	}
 	
 	
     /**
      * @Route(	"api/company/{cid}/user.{_format}",
-				name="API_user_management",
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"} )
+	 *			name="API_user_management",
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"} )
      * @Template()
 	 * @Secure(roles="ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_DIRECTOR, ROLE_RESTAURANT_ADMIN")
      */
@@ -818,20 +826,29 @@ class UserController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		$restaurants_array = array();
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
+			if (!$permission)// проверим из какой компании
 			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Нет доступа', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
+				throw new AccessDeniedHttpException('Нет доступа к компании');	
+			}
+			else
+			{
+				if ($permission->getCompany()->getId() != $cid)// проверим из какой компании
+					throw new AccessDeniedHttpException('Нет доступа к компании');	
+
+				$restaurants = $permission->getRestaurants();
+
+				if ($restaurants)
+					foreach ($restaurants as $r)
+						$restaurants_array[$r->getId()] = $r->getName();
 			}
 		}
 
-		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->find($cid);
@@ -876,13 +893,13 @@ class UserController extends Controller
 					foreach ($p->getUser()->getRoles() AS $r)
 						$roles[] = $r->getId();
 					
-					$users_array[] = array( 	'id'		=> $p->getUser()->getId(),
-												'username'	=> $p->getUser()->getUsername(), 
-												'email'		=> $p->getUser()->getEmail(),  
-												'company'	=> $cid,
-												'fullname'	=> $p->getUser()->getFullname(),
-												'roles'		=> $roles,
-												'restaurants'		=> $restaurants,
+					$users_array[] = array( 	'id'			=> $p->getUser()->getId(),
+												'username'		=> $p->getUser()->getUsername(), 
+												'email'			=> $p->getUser()->getEmail(),  
+												'company'		=> $cid,
+												'fullname'		=> $p->getUser()->getFullname(),
+												'roles'			=> $roles,
+												'restaurants'	=> $restaurants,
 											);
 				}
 			}
@@ -893,15 +910,8 @@ class UserController extends Controller
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
-		
-		if ($request->isXmlHttpRequest()) 
-		{
-			$code = 200;
-			$result = array('code' => $code, 'data' => $users_array);
-			return new Response(json_encode($result), $code, array('Content-Type' => 'application/json'));
-		}
 
-		return array('company' => $company );
+		return array('company' => $company, 'restaurants_list' => $restaurants_array );
 	}
 	
 	
@@ -1025,10 +1035,10 @@ class UserController extends Controller
 	
 	/**
 	 * @Route(	"api/feedback.{_format}",
-				name="API_feedback",
-				requirements={	"_method" = "PUT",
-								"_format" = "json|xml"},
-				defaults={"_format"="json"})
+	 *			name="API_feedback",
+	 *			requirements={	"_method" = "PUT",
+	 *							"_format" = "json|xml"},
+	 *			defaults={"_format"="json"})
 	 */
 	public function feedbackAction(Request $request)
 	{

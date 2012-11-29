@@ -27,14 +27,14 @@ class SupplierProductsController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 
+		$restaurants_list = array();
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
 				throw new AccessDeniedHttpException('Forbidden Company');
-			}
 		}
 		
 		$company = $this->getDoctrine()
@@ -43,6 +43,23 @@ class SupplierProductsController extends Controller
 
 		if (!$company)
 			throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
+
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+		else
+		{
+			$restaurants = $permission->getRestaurants();
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
 
 		$supplier = $this->getDoctrine()
 						->getRepository('SupplierBundle:Supplier')
@@ -57,13 +74,13 @@ class SupplierProductsController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 
-		return array(	'company' => $company, 'supplier' => $supplier );
+		return array(	'company' => $company, 'supplier' => $supplier, 'restaurants_list' => $restaurants_list );
 	}
 	/**
 	 * @Route(	"api/company/{cid}/supplier/{sid}/product.{_format}", 
 	 * 			name="API_supplier_products_list", 
 	 * 			requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"})	 
+	 *			defaults={"_format" = "json"})	 
 	 * @Template()
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */

@@ -91,13 +91,24 @@
           <li><a href="/company/{{ company.id }}/supplier">Поставщики</a></li>
 					<li><a href="/company/{{ company.id }}/product">Продукты</a></li>
 					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
-					<li class="divider"></li>
-          <li class="nav-header">Супер админ</li>
-          <li><a href="/company">Компании</a></li>
-          <li><a href="/user">Администраторы</a></li>
-          <li class="divider"></li>
-					<li class="nav-header">Смены</li>
-					<li><a href="/calendar">Смены</a></li>
+					{% if is_granted('ROLE_SUPER_ADMIN') %}
+            <li class="divider"></li>
+            <li class="nav-header">Супер админ</li>
+            <li><a href="/company">Компании</a></li>
+            <li><a href="/user">Администраторы</a></li>
+          {% endif %}
+          {% if company.id is defined %}
+            {% if restaurants_list is defined %}
+                {% for key, restaurant_name in restaurants_list %}
+                  <li class="divider"></li>
+                  <li class="nav-header">Ресторан "{{ restaurant_name }}"</li>
+                  <li><a href="{{ path('WorkingHours_list', {'cid': company.id, 'rid': key }) }}">Смены</a></li>
+                  <li><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid': key }) }}">Заказы</a></li>
+                {% endfor %}
+            {% endif %}
+          {% endif %}
+					
+					
 				</ul>
             </div>
             </div>

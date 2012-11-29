@@ -39,6 +39,8 @@ class OrderItemController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 
+		$restaurants_list = array();
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -62,6 +64,23 @@ class OrderItemController extends Controller
 				}
 			}
 		}
+
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+		else
+		{
+			$restaurants = $permission->getRestaurants();
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}		
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -131,7 +150,8 @@ class OrderItemController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 
-		return array(	'restaurant' => $restaurant, 
+		return array(	'restaurant' => $restaurant,
+						'restaurants_list'=>$restaurants_list,
 						'company' => $company,
 						'booking_date' => $booking_date,
 						'edit_mode' => $edit_mode );

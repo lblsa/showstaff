@@ -7,7 +7,7 @@
    background-color: #662D91 !important;
 }
 .bg-color-green {
-   background-color: #668000 !important;
+   background-color: #01A31C !important;
 }
 .bg-color-greenDark {
    background-color: #008641 !important;
@@ -131,7 +131,7 @@
    }
 
 .metro .tile.wide.text {
-   width: 300px;
+   width: 295px;
    height: 180px;
    padding: 20px;
 }
