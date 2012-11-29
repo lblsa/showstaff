@@ -41,7 +41,7 @@ $(function(){
 													'<th>Цена</th>'+
 													'<th>Единицы</th>'+
 													'<th>Поставщик</th>'+
-												'</tr><thead><tbody></tbody></table>');
+												'</tr></thead><tbody></tbody></table>');
 						ordersByRestaurant.each(function(order_model) {
 							var order_view = new ViewOrders({model:order_model, units: units});
 							var order_content = order_view.render().el;
@@ -107,6 +107,7 @@ $(function(){
 					} else {
 						
 						$('td', content).append('<span class="label pull-right">К поставщику нет заказов</span>');
+						$('td', content).addClass('hide');
 						
 					}
 			
@@ -228,6 +229,7 @@ $(function(){
 
 
 	$(document).on('click', "#group_by_supp:not(.disabled)", function(){
+		$('.order_by_supp').remove();
 		$('.orders_by_rest').remove();
 		var view_order_by_supp = new ViewOrdersBySupplier({collection: orders});
 		$('#order_list').append(view_order_by_supp.render().el);
@@ -240,6 +242,7 @@ $(function(){
 
 	$(document).on('click', "#group_by_rest:not(.disabled)", function(){
 		$('.order_by_supp').remove();
+		$('.orders_by_rest').remove();
 		var view_order_by_rest = new ViewOrdersByRestaurant({collection: orders});
 		$('#order_list').append(view_order_by_rest.render().el);
 		$('#order_list').append(view_order_by_rest.renderAll().el);
@@ -274,7 +277,7 @@ $(function(){
 		});
 		
 		return false;
-	})
+	});
 	
 	$('.completed_no').click(function(){
 		$.ajax({

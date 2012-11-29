@@ -702,15 +702,20 @@ class UserController extends Controller
 		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
 			$ROLE_ADMIN = 1;
 		
-		if (false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 			
 			if (!$permission)
 				throw new AccessDeniedHttpException('Нет доступа');
-			else {
+			else
+			{
 				$company = $permission->getCompany();
-				$restaurants = $permission->getRestaurants();
+
+				if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+					$restaurants = $permission->getRestaurants();
+				else
+					$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany($company->getId());
 
 				if ($restaurants)
 					foreach ($restaurants as $r)

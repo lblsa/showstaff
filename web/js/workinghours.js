@@ -147,9 +147,9 @@ $(function(){
 					$('#shift_list .forms .alert-success strong').html('Сотрудник добавлен');
 					$('#shift_list .forms .alert-success').fadeIn();
 					
-					$('#shift_list .planhours_add').val('');
-					$('#shift_list .facthours_add').val('');
-					$('#shift_list .description_add').html('');
+					$('.planhours_add').val('');
+					$('.facthours_add').val('');
+					$('.description_add').val('');
 
 					$('.workinghours').remove();
 					view_content = new ViewWorkinghours({collection: workinghours});
@@ -213,6 +213,12 @@ $(function(){
 			if(response.code && 'code' in response && response.code == 200 && 'data' in response && 'agreed' in response && 'edit_mode' in response ) {
 				agreed = response.agreed;
 				edit_mode = response.edit_mode;
+				
+				if (edit_mode == 1)
+					$('#add_row').fadeIn();
+				else
+					$('#add_row').fadeOut();
+
 				return response.data;
 			} else {
 				error_fetch('Ошибка при получении пользователей');

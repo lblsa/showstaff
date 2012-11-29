@@ -66,10 +66,10 @@ class OrderController extends Controller
 		if (!$company)
 			throw $this->createNotFoundException('No company found for id '.$cid);
 		
-		$suppliers = $this->getDoctrine()
-						->getRepository('SupplierBundle:Supplier')
-						->findBy(array('company'=>(int)$cid, 'active' =>1));
-
+		if (date('Y-m-d') > $booking_date )
+			$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findByCompany((int)$cid);
+		else
+			$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findBy(array('company'=>(int)$cid, 'active' =>1));
 		
 		$suppliers_array = array();
 				if ($suppliers)
@@ -273,10 +273,10 @@ class OrderController extends Controller
      * @Route(	"api/company/{cid}/order/{booking_date}.{_format}", 
      * 			name="Order_list_save", 
      * 			requirements={	"_method" = "PUT",
-								"_format" = "json|xml",
-								"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *							"_format" = "json|xml",
+	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"booking_date" = 0,
-							"_format" = "json"} )
+	 *						"_format" = "json"} )
      * @Template()
      * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
