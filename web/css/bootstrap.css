@@ -5817,7 +5817,15 @@ select.product {
 #top-info b.caret-right {
   height: 20px; 
   width: 20px;
-  font-size: 18px;
+  font-size: 26px;
   line-height: 20px;
-  margin-top: 5px;
+  margin-top: 6px;
+}
+#top-info a.accent-color {
+  font-size: 26px;
+  line-height: 26px;
+  height: 26px;
+  text-decoration: none;
+  color: #24A0DA;
+  cursor: pointer;
 }

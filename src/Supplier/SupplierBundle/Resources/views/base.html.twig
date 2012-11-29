@@ -105,10 +105,10 @@
          <div id="top-info" class="pull-right">
           <div class="top-info-block dropdown">
             {% if app.user.username is defined %}
-    					<h3 data-toggle="dropdown" class="right-menu dropdown-toggle" role="button" id="dLabel" >
+    					<a data-toggle="dropdown" class="right-menu dropdown-toggle accent-color" role="button" id="dLabel" >
                 {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}
                 <b class="caret caret-right"></b>
-              </h3>
+              </a>
               <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
                 <li><a href="/logout" class="btn-block btn-logout">Выйти</a></li>
               </ul>
