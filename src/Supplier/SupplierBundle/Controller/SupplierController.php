@@ -84,19 +84,33 @@ class SupplierController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		$restaurants_list = array();
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
+				throw new AccessDeniedHttpException('Forbidden Company');
 		}
 		
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+		else
+		{
+			$restaurants = $permission->getRestaurants();
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
 						->findAllSupplierByCompany($cid);
@@ -129,7 +143,7 @@ class SupplierController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 		
-		return array(	'company' => $company	);
+		return array(	'company' => $company, 'restaurants_list' => $restaurants_list	);
 	}
 
 	/**

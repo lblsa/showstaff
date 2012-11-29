@@ -6,19 +6,16 @@
 					{% if is_granted('ROLE_COMPANY_ADMIN') %}ROLE_COMPANY_ADMIN{% endif %}
 					{% if is_granted('ROLE_RESTAURANT_ADMIN') %}ROLE_RESTAURANT_ADMIN{% endif %}
 					{% if is_granted('ROLE_ORDER_MANAGER') %}ROLE_ORDER_MANAGER{% endif %} -->
-	<ul class="thumbnails">
+<div class="metro">
+	<div class="metro-sections">
+		<div class="metro-section">
 	{% if is_granted('ROLE_RESTAURANT_ADMIN') %}
 		{% if cid is defined %}
 			<!-- Менеджер ресторана -->
-			<li class="span4 ">
-				<div class=" thumbnail">
-					<div class="caption">
-						<h4>Смотреть доступные рестораны</h4>
-						<p>Список ресторанов</p>
-						<p><a class="btn" href="{{ path('restaurant', {'cid': cid }) }}">Смотреть список ресторанов »</a></p>
-					</div>
-				</div>
-			</li>
+				<a class="tile wide text bg-color-orange" href="{{ path('restaurant', {'cid': cid }) }}">
+	               <div class="text-header">Рестораны</div>
+		           <div class="text4">Cписок ресторанов компании</div>
+	            </a>
 		{% endif %}
 	{% endif %}
 	
@@ -26,33 +23,18 @@
 		{% if cid is defined %}
 			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 			<!-- Менеджер по закупкам -->
-			<li class="span4">
-				<div class="thumbnail">
-					<div class="caption">
-						<h4>Cформировать заказ</h4>
-						<p>Страница списка продуктов по ресторанам/поставщикам</p>
-						<p><a class="btn" href="{{ path('Order_list', {'cid': cid }) }}">Смотреть заказанные продукты »</a></p>
-					</div>
-				</div>
-			</li>	
-			<li class="span4">
-				<div class="thumbnail">
-					<div class="caption">
-						<h4>Управление поставщиками</h4>
-						<p>Список поставщиков</p>
-						<p><a class="btn" href="{{ path('supplier', {'cid': cid }) }}">Смотреть/править список поставщиков »</a></p>
-					</div>
-				</div>
-			</li>
-			<li class="span4">
-				<div class="thumbnail">
-					<div class="caption">
-						<h4>Управление продуктами</h4>
-						<p>Список продуктов</p>
-						<p><a class="btn" href="{{ path('product', {'cid': cid }) }}">Смотреть/править список продуктов »</a></p>
-					</div>
-				</div>
-			</li>
+				<a class="tile wide text bg-color-green" href="{{ path('Order_list', {'cid': cid }) }}">
+	               <div class="text-header">Заказы</div>
+		           <div class="text4">Заказы сгруппированные по ресторанам и поставщикам</div>
+	            </a>
+				<a class="tile wide text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
+		            <div class="text-header">Поставщики</div>
+		            <div class="text4">Cписок всех поставищиков в компании</div>
+	            </a>
+				<a class="tile wide text bg-color-blueDark" href="{{ path('product', {'cid': cid }) }}">
+	               <div class="text-header">Продукты</div>
+		           		<div class="text4">Cписок продуктов компании</div>
+	            </a>
 			{% endif %}
 		{% endif %}
 	{% endif %}
@@ -60,78 +42,44 @@
 	{% if is_granted('ROLE_COMPANY_ADMIN') %}
 		{% if cid is defined %}
 			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
-				<li class="span4 ">
-					<div class=" thumbnail">
-						<div class="caption">
-							<h4>Управление ресторанами</h4>
-							<p>Список ресторанов</p>
-							<p><a class="btn" href="{{ path('restaurant', {'cid': cid }) }}">Смотреть список ресторанов »</a></p>
-						</div>
-					</div>
-				</li>
 				{% if ROLE_ADMIN == 0 %}
-				<li class="span4">
-					<div class="thumbnail">
-						<div class="caption">
-							<h4>Cформировать заказ</h4>
-							<p>Страница списка продуктов по ресторанам/поставщикам</p>
-							<p><a class="btn" href="{{ path('Order_list', {'cid': cid }) }}">Смотреть заказанные продукты »</a></p>
-						</div>
-					</div>
-				</li>	
-				<li class="span4">
-					<div class="thumbnail">
-						<div class="caption">
-							<h4>Управление поставщиками</h4>
-							<p>Список поставщиков</p>
-							<p><a class="btn" href="{{ path('supplier', {'cid': cid }) }}">Смотреть/править список поставщиков »</a></p>
-						</div>
-					</div>
-				</li>
-				<li class="span4">
-					<div class="thumbnail">
-						<div class="caption">
-							<h4>Управление продуктами</h4>
-							<p>Список продуктов</p>
-							<p><a class="btn" href="{{ path('product', {'cid': cid }) }}">Смотреть/править список продуктов »</a></p>
-						</div>
-					</div>
-				</li>
-				<li class="span4 ">
-					<div class=" thumbnail">
-						<div class="caption">
-							<h4>Управление менеджерами</h4>
-							<p>Список пользователей</p>
-							<p><a class="btn" href="{{ path('user_management', {'cid': cid }) }}">Смотреть список пользователей »</a></p>
-						</div>
-					</div>
-				</li>
+					<a class="tile wide text bg-color-green" href="{{ path('Order_list', {'cid': cid }) }}">
+		            	<div class="text-header">Заказы</div>
+		          		<div class="text4">Заказы сгруппированные по ресторанам и поставщикам</div>
+		            </a>
+					<a class="tile wide text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
+		            	<div class="text-header">Поставщики</div>
+		            <div class="text4">Cписок всех поставищиков в компании</div>
+		            </a>
+					<a class="tile wide text bg-color-blueDark" href="{{ path('product', {'cid': cid }) }}">
+		            	<div class="text-header">Продукты</div>
+		           		<div class="text4">Cписок продуктов компании</div>
+		            </a>
+					<a class="tile wide text bg-color-red" href="{{ path('user_management', {'cid': cid }) }}">
+		            	<div class="text-header">Пользователи</div>
+		           		<div class="text4">Менеджеры компании, по ресторанам ролям</div>
+		            </a>
 				{% endif %}
 			{% endif %}
 		{% endif %}
 	{% endif %}
-	
-	{% if is_granted('ROLE_SUPER_ADMIN') %}
-	<!-- Администраторов сервиса -->
-		<li class="span4">
-			<div class="thumbnail">
-				<div class="caption">
-					<h4>Управление компаниями</h4>
-					<p>Список компаний</p>
-					<p><a class="btn" href="{{ path('company') }}">Смотреть/править список компаний »</a></p>
-				</div>
-			</div>
-		</li>
-		<li class="span4">
-			<div class="thumbnail">
-				<div class="caption">
-					<h4>Управление "Администраторами компании"</h4>
-					<p>Список "Администраторов компании"</p>
-					<p><a class="btn" href="{{ path('user') }}">Смотреть/править список администраторов »</a></p>
-				</div>
-			</div>
-		</li>
-	{% endif %}
-	</ul>
+		{% if cid is defined %}
+			{% if restaurants_list is defined %}
+			    {% for key, restaurant_name in restaurants_list %}
+
+					<a class="tile square text bg-color-greenDark" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
+			        	<div class="text-header">Смены</div>
+			       		<div class="text4">Ресторан "{{ restaurant_name }}"</div>
+			        </a>	
+			        <a class="tile square text bg-color-purple" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
+			        	<div class="text-header">Заказы</div>
+			       		<div class="text4">Ресторан "{{ restaurant_name }}"</div>
+			        </a>
+			    {% endfor %}
+			{% endif %}
+		{% endif %}
+		</div>
+	</div>
+</div>
 {% endblock %}
 

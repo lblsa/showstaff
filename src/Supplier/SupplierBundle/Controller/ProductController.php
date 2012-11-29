@@ -17,9 +17,9 @@ class ProductController extends Controller
 {
 	/**
 	 * @Route(	"api/units.{_format}",
-				name="API_units", 
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"})	 
+	 *			name="API_units", 
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})	 
 	 * @Template()
 	 */
 	public function API_unitsAction()
@@ -48,6 +48,8 @@ class ProductController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		$restaurants_list = array();
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -63,19 +65,36 @@ class ProductController extends Controller
 		if (!$company)
 			throw $this->createNotFoundException('No company found for id '.$cid);
 		
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+		else
+		{
+			$restaurants = $permission->getRestaurants();
+
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_list[$r->getId()] = $r->getName();
+		}
+
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0	
-		return array('company' => $company);
+		return array('company' => $company, 'restaurants_list' => $restaurants_list );
 	}
 	
 	/**
 	 * @Route(	"api/company/{cid}/product.{_format}", 
-				name="API_product", 
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"})	 
+	 *			name="API_product", 
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})	 
 	 * @Template()
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_RESTAURANT_ADMIN")
 	 */

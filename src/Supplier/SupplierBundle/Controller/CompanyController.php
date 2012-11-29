@@ -26,7 +26,7 @@ class CompanyController extends Controller
 		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
 
 		$companies_array = array();
-		
+
 		if ($companies)
 		{
 			foreach ($companies AS $p)
@@ -43,14 +43,14 @@ class CompanyController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 
-		return array( 'companies' => $companies, 'companies_json' => json_encode($companies_array) );
+		return array( 'companies_json' => json_encode($companies_array) );
 	}
 	
 	/**
 	 * @Route(	"api/company.{_format}", 
-				name="API_company", 
-				requirements={"_method" = "GET", "_format" = "json|xml"},
-				defaults={"_format" = "json"})	 
+	 *			name="API_company", 
+	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})	 
 	 * @Template()
      * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
