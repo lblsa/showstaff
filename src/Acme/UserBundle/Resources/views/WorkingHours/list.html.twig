@@ -38,7 +38,12 @@
 
 <div class="row">
 	<div class="span12">
-		<h2 class="curent-page-title">Смена для ресторана "{{ restaurant.name }}" на <span class="curent-date-header">{{ date }}</span></h2>
+		<h2 class="curent-page-title">
+			Смена для ресторана "{{ restaurant.name }}" на 
+			<a href="#" id="prev_day">&laquo;</a>
+			<span class="curent-date-header">{{ date }}</span>
+			<a href="#" id="next_day">&raquo;</a>
+		</h2>
 		<table class="table table-bordered table-striped" id="shift_list">
 			<thead>
 				<tr>

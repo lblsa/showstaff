@@ -1,9 +1,9 @@
-var users, duties, view_workinghours;
+var users, duties, view_workinghours, ViewWorkinghours;
 var agreed = 0;
 var edit_mode = 0;
 $(function(){
 	
-	var ViewWorkinghours = Backbone.View.extend({
+	ViewWorkinghours = Backbone.View.extend({
 		
 		tagName: "tbody",
 		className: "workinghours",
@@ -306,43 +306,70 @@ $(function(){
 
 	$( "#smena_datapicker" ).datepicker({
 		'onSelect': function(strDate, inst){
-			$('.curent-date-header').html(strDate);
-			$('.wh_datepicker').val(strDate);
-			
-			workinghours.url = '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate;
-
-			document.title = $('.curent-page-title').text();
-			window.history.pushState({}, $('.curent-page-title').text(), '/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate);
-
-			var today = new Date();
-			var dd = today.getDate();
-			var mm = today.getMonth()+1; //January is 0!
-			var yyyy = today.getFullYear();
-
-			if ( yyyy+'-'+mm+'-'+dd < strDate)
-				$('.agreed_all').fadeIn();
-			else
-				$('.agreed_all').fadeOut();
-
-			$('#preloader').width($('#shift_list').width());
-			$('#preloader').height($('#shift_list').height());
-			var p = $('#shift_list').position();
-			$('#preloader').css({'left':p.left, 'top': p.top});
-			$('#preloader').fadeIn('fast');
-
-			workinghours.fetch({	success: function(collection, response) {
-												view_workinghours.remove();
-												$('.workinghours').remove();
-												view_workinghours = new ViewWorkinghours({collection: collection});
-												$('#shift_list').append(view_workinghours.render().el);
-												view_workinghours.renderAll().el;
-												
-											}, 
-											error: function(){
-												error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
-											}
-								});
+			update(strDate);
 		},
 	});
 	$( "#smena_datapicker" ).datepicker( "setDate", $('.wh_datepicker').val() );
+	
+	$('#prev_day, #next_day').click(function(){
+
+		var today = $("#smena_datapicker").datepicker("getDate");
+		var new_day = today;
+
+		if ($(this).attr('id') == 'next_day')
+			new_day.setDate(today.getDate() + 1);
+		
+		if ($(this).attr('id') == 'prev_day')
+			new_day.setDate(today.getDate() - 1);
+
+		$("#smena_datapicker").datepicker( "setDate", new_day );
+
+		var dd = new_day.getDate()<10?'0'+new_day.getDate():new_day.getDate();
+		var mm = new_day.getMonth()+1; //January is 0!
+		var yyyy = new_day.getFullYear();
+
+		update(yyyy+'-'+mm+'-'+dd);
+
+		return false;
+	});
+
 });
+
+function update(strDate){
+
+		$('.curent-date-header').html(strDate);
+		$('.wh_datepicker').val(strDate);
+		
+		workinghours.url = '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate;
+
+		document.title = $('.curent-page-title').text();
+		window.history.pushState({}, $('.curent-page-title').text(), '/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate);
+		
+		var today = new Date();
+		var dd = today.getDate()<10?'0'+today.getDate():today.getDate();
+		var mm = today.getMonth()+1; //January is 0!
+		var yyyy = today.getFullYear();
+
+		if ( yyyy+'-'+mm+'-'+dd < strDate)
+			$('.agreed_all').fadeIn();
+		else
+			$('.agreed_all').fadeOut();
+
+		$('#preloader').width($('#shift_list').width());
+		$('#preloader').height($('#shift_list').height());
+		var p = $('#shift_list').position();
+		$('#preloader').css({'left':p.left, 'top': p.top});
+		$('#preloader').fadeIn('fast');
+
+		workinghours.fetch({	success: function(collection, response) {
+											view_workinghours.remove();
+											$('.workinghours').remove();
+											view_workinghours = new ViewWorkinghours({collection: collection});
+											$('#shift_list').append(view_workinghours.render().el);
+											view_workinghours.renderAll().el;
+										}, 
+										error: function(){
+											error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
+										}
+							});
+}

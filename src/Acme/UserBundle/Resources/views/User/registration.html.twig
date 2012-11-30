@@ -5,14 +5,14 @@
 
 	<h1>Регистрация</h1>
 
-	<form action="{{ path('registr') }}" method="post"  class="form-horizontal tile wide text bg-color-green registr-metro" {{ form_enctype(form) }}>
+	<form action="{{ path('registr') }}" method="post"  class="form-horizontal registr-metro" {{ form_enctype(form) }}>
 		{{ form_widget(form.email, {'attr': {'placeholder' : 'Эл. почта', 'class':'input-xlarge'}}) }}
 		{{ form_widget(form.fullname, {'attr': { 'placeholder' : 'ФИО', 'class':'input-xlarge' }}) }}
 		{{ form_widget(form.username, {'attr':{ 'placeholder' : 'Телефон', 'class':'input-xlarge' }}) }}
 		{{ form_widget(form.password, {'attr':{ 'placeholder' : 'Пароль', 'class':'input-xlarge' }}) }}
 		{{ form_rest(form) }}
 		<button type="submit" class="btn">Зарегистрироваться</button>
-		<a href="{{ path('login') }}" class="btn btn-primary pull-right">Войти</a>
+		<a href="{{ path('login') }}" class="btn btn-primary">Войти</a>
 	</form>
 	<div class="alert alert-block pull-left">
 		<p class="text-error">{{ form_errors(form) }}</p>
