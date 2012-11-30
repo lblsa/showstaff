@@ -5833,7 +5833,7 @@ select.product {
   color:rgba(79, 26, 203, 0.6);
 }
 .login-metro {
-  padding:8px 0 0 40px;
+  padding:8px 0 0 0;
 }
 .metro .tile.wide.text.registr-metro {
   padding-top: 30px;
