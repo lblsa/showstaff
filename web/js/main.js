@@ -155,7 +155,7 @@ $(document).ready(function(){
 		});
 		
 		return false;
-	});	
+	});
 	
 	$('.add').mouseout(function(){
 		hide_add = setTimeout('$(".forms").fadeOut()', 3000);
