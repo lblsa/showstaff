@@ -3,50 +3,23 @@
 
 {% block body %}
 
-	<legend style="padding-left: 160px;">Регистрация</legend>
-	<!-- {% for message in errorMessage %}<p class="text-error">{{ message }}</p>{% endfor %} -->
-	<form action="{{ path('registr') }}" method="post"  class="form-horizontal" {{ form_enctype(form) }}>
+	<h1>Регистрация</h1>
+
+	<form action="{{ path('registr') }}" method="post"  class="form-horizontal tile wide text bg-color-green registr-metro" {{ form_enctype(form) }}>
+		{{ form_widget(form.email, {'attr': {'placeholder' : 'Эл. почта', 'class':'input-xlarge'}}) }}
+		{{ form_widget(form.fullname, {'attr': { 'placeholder' : 'ФИО', 'class':'input-xlarge' }}) }}
+		{{ form_widget(form.username, {'attr':{ 'placeholder' : 'Телефон', 'class':'input-xlarge' }}) }}
+		{{ form_widget(form.password, {'attr':{ 'placeholder' : 'Пароль', 'class':'input-xlarge' }}) }}
+		{{ form_rest(form) }}
+		<button type="submit" class="btn">Зарегистрироваться</button>
+		<a href="{{ path('login') }}" class="btn btn-primary pull-right">Войти</a>
+	</form>
+	<div class="alert alert-block pull-left">
 		<p class="text-error">{{ form_errors(form) }}</p>
 		<p class="text-error">{{ error }}</p>
-		<div class="control-group">
-			{{ form_label(form.email, null, { 'attr': {'class': 'control-label'}}) }}
-			<div class="controls">
-				{{ form_errors(form.email) }}
-				{{ form_widget(form.email) }}
-			</div>
-		</div>
-		
-		<div class="control-group">
-			{{ form_label(form.fullname, null, { 'attr': {'class': 'control-label'}}) }}
-			<div class="controls">
-				{{ form_errors(form.fullname) }}
-				{{ form_widget(form.fullname) }}
-			</div>
-		</div>
-
-		<div class="control-group">
-			{{ form_label(form.username, null, { 'attr': {'class': 'control-label'}}) }}
-			<div class="controls">
-				{{ form_errors(form.username) }}
-				{{ form_widget(form.username) }}
-			</div>
-		</div>
-
-		<div class="control-group">
-			{{ form_label(form.password, null, { 'attr': {'class': 'control-label'}}) }}
-			<div class="controls">
-				{{ form_errors(form.password) }}
-				{{ form_widget(form.password) }}
-			</div>
-		</div>
-		{{ form_rest(form) }}
-	   
-		<div class="control-group">
-			<div class="controls">
-			  <button type="submit" class="btn">Зарегистрироваться</button><br>
-			  <a href="{{ path('login') }}">Авторизация</a>
-			</div>
-		</div>
-	</form>
-
+		<p class="text-error">{{ form_errors(form.email) }}</p>
+		<p class="text-error">{{ form_errors(form.fullname) }}</p>
+		<p class="text-error">{{ form_errors(form.username) }}</p>
+		<p class="text-error">{{ form_errors(form.password) }}</p>
+	</div>
 {% endblock %}
