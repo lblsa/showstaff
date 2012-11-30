@@ -305,9 +305,9 @@ $(function(){
 	});
 
 	$( "#smena_datapicker" ).datepicker({
-		'onSelect': function(strDate, inst){
-			update(strDate);
-		},
+		onSelect: function(strDate, inst){	update(strDate); },
+		showOtherMonths: true,
+		selectOtherMonths: true,
 	});
 	$( "#smena_datapicker" ).datepicker( "setDate", $('.wh_datepicker').val() );
 	
