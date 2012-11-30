@@ -10,6 +10,11 @@
 
     <!-- Le styles -->
     <link href="/css/bootstrap.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/css/bootmetro.css">
+<link rel="stylesheet" type="text/css" href="/css/bootmetro-tiles.css">
+<link rel="stylesheet" type="text/css" href="/css/bootmetro-charms.css">
+<link rel="stylesheet" type="text/css" href="/css/metro-ui-light.css">
+<link rel="stylesheet" type="text/css" href="/css/icomoon.css">
     <link href="/css/datepicker.css" rel="stylesheet">
     <style type="text/css">
       body { padding-top: 60px; padding-bottom: 40px;  }
@@ -63,9 +68,13 @@
 </script>
 
     <div class="container">
-		<div class="span4 offset3">
+		  <div class="span4 offset4 metro">
+        <div class="metro-sections">
+          <div class="metro-section">
        		{% block body %}{% endblock %}
-		</div>
+          </div>
+        </div>
+		  </div>
     </div> <!-- /container -->
 
 

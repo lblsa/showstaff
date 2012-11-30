@@ -5832,3 +5832,29 @@ select.product {
 #top-info a.accent-color:hover {
   color:rgba(79, 26, 203, 0.6);
 }
+.login-metro {
+  padding:8px 0 0 40px;
+}
+.metro .tile.wide.text.registr-metro {
+  padding-top: 30px;
+  padding-right: 40px;
+  height: 230px;
+  width: 270px;
+  padding-left: 40px;
+}
+.login-metro input[type="text"], .login-metro input[type="password"] {
+  min-height: 34px;
+}
+.registr-metro input[type="text"], .registr-metro input[type="password"] , .registr-metro input[type="email"] {
+  min-height: 34px;
+}
+.login-metro input, .login-metro label {
+  margin-bottom: 14px;
+}
+.registr-metro input{
+  margin-bottom: 14px;
+}
+.alert-block {
+  margin:0;
+  padding:0;
+}
