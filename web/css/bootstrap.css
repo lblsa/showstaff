@@ -5858,3 +5858,7 @@ select.product {
   margin:0;
   padding:0;
 }
+.restaurant h4 {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
