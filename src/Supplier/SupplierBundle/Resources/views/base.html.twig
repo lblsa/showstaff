@@ -85,6 +85,8 @@
 				<ul class="dropdown-menu">
           <li><a href="/"><strong>Стартовая</strong></a></li>
 					{% if company.id is defined %}
+          <li class="divider"></li>
+          <li class="nav-header">Структура</li>
 					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
 					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
 					<li class="divider"></li>
