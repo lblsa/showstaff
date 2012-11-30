@@ -1,7 +1,7 @@
 //* update 2012-10-18 16:15:00 *//
 var href = window.location.pathname.split('/');
 var Units, units;
-
+var hide_add;
 $(document).ready(function(){
 	reloadIfBack();
 	
@@ -58,16 +58,17 @@ $(document).ready(function(){
 		return confirm ("Вы действительно хотите удалить элемент?");
 	});
 	
-	$('.create').toggle(function() {
-		$('i', this).attr('class', 'icon-minus-sign');
+	$('.create').click(function() {
 		$(".forms .alert").remove();
-		$('.name_add').val('');
-		$('.forms').slideDown();
-		$('.name_add').focus();
-		return false;
-	}, function() {
-		$('i', this).attr('class', 'icon-plus-sign');
-		$('.forms').slideUp();
+		if (!$('.forms').is(":visible")) {
+			$(".forms .alert").remove();
+			$('.name_add').val('');
+			$('.forms').slideDown();
+			$('.name_add').focus();
+		} else {
+			$('.forms').slideUp();
+		}
+
 		return false;
 	});
 	
@@ -156,6 +157,14 @@ $(document).ready(function(){
 		return false;
 	});	
 	
+	$('.add').mouseout(function(){
+		hide_add = setTimeout('$(".forms").fadeOut()', 3000);
+	});
+
+	$('.add').mouseover(function(){
+		clearTimeout(hide_add);
+	});
+
 });
 
 function error_fetch(message) {
