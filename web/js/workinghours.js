@@ -219,6 +219,16 @@ $(function(){
 				else
 					$('#add_row').fadeOut();
 
+				if ('agreed' in response) {
+					$('.agreed_all .btn').removeClass('disabled');
+
+					if (response.agreed == 1)
+						$('.agreed_all .btn[rel="agreed"]').addClass('disabled');
+
+					if (response.agreed == 0)
+						$('.agreed_all .btn[rel="disagreed"]').addClass('disabled');
+				}
+
 				return response.data;
 			} else {
 				error_fetch('Ошибка при получении пользователей');
