@@ -1,4 +1,4 @@
-/* Common css rules for metro-ui-light & metro-ui-dark */
+   /* Common css rules for metro-ui-light & metro-ui-dark */
 
 
 /* Body & Footer & headers
@@ -2150,7 +2150,7 @@ Thumbnail
    border-radius: 0;
    text-shadow: none;
    background-color: #D44A26;
-   border-color: #D44A26;
+   border: none;
    color: #FFF;
    position: relative;
 }

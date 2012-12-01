@@ -340,6 +340,16 @@ function update(strDate){
 		$('.curent-date-header').html(strDate);
 		$('.wh_datepicker').val(strDate);
 		
+		$( "#smena_datapicker" ).html('');
+		$( "#smena_datapicker" ).removeClass('hasDatepicker');
+
+		$( "#smena_datapicker" ).datepicker({
+			onSelect: function(strDate, inst){	update(strDate); },
+			showOtherMonths: true,
+			selectOtherMonths: true,
+		});
+		$( "#smena_datapicker" ).datepicker( "setDate", strDate );
+		
 		workinghours.url = '/api/company/'+href[2]+'/restaurant/'+href[4]+'/shift/'+strDate;
 
 		document.title = $('.curent-page-title').text();
