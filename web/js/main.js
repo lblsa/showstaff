@@ -115,7 +115,7 @@ $(document).ready(function(){
 	});
 	
 	
-	$(".agreed_all .btn").click(function(){
+	$(".agreed_all .btn:not(.disabled)").click(function(){
 		
 		var agreed = $(this).attr('rel');
 		
@@ -132,6 +132,17 @@ $(document).ready(function(){
 			
 			workinghours.fetch({	success: function(collection, response) {
 				
+										$('.agreed_all .btn').removeClass('disabled');
+
+										if (response.agreed == 1)
+											$('.agreed_all .btn[rel="agreed"]').addClass('disabled');
+
+										if (response.agreed == 0)
+											$('.agreed_all .btn[rel="disagreed"]').addClass('disabled');
+										
+
+										view_workinghours.remove();
+										$('.workinghours').remove();
 										view_workinghours = new ViewWorkinghours({collection: collection});
 										$('#shift_list').append(view_workinghours.render().el);
 										view_workinghours.renderAll().el;

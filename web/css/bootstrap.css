@@ -5862,6 +5862,10 @@ select.product {
   font-weight: bold;
   margin-bottom: 5px;
 }
+.supplier h4 {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
 .curent-page-title i {
   font-size: 34px;
   color:#24A0DA;
