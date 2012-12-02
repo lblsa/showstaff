@@ -319,6 +319,7 @@ $(function(){
 		showOtherMonths: true,
 		selectOtherMonths: true,
 	});
+	
 	$( "#smena_datapicker" ).datepicker( "setDate", $('.wh_datepicker').val() );
 	
 	$('#prev_day, #next_day').click(function(){

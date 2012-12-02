@@ -128,21 +128,7 @@ class OrderItemController extends Controller
 			}
 		}
 		
-		$products_array = array_values($products_array); 
-
-		if ($booking_date<date('Y-m-d'))
-			$edit_mode = false;
-		else
-		{
-			$order = $this->getDoctrine()
-						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-			
-			if(!$order || $this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-				$edit_mode = true;
-			else
-				$edit_mode = !(boolean)$order->getCompleted();
-		}
+		$products_array = array_values($products_array);
 		
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
@@ -153,8 +139,7 @@ class OrderItemController extends Controller
 		return array(	'restaurant' => $restaurant,
 						'restaurants_list'=>$restaurants_list,
 						'company' => $company,
-						'booking_date' => $booking_date,
-						'edit_mode' => $edit_mode );
+						'booking_date' => $booking_date );
 		
 	}
 	
@@ -173,7 +158,7 @@ class OrderItemController extends Controller
      *							"_format" = "json|xml",
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={	"booking_date" = 0,
-							"_format" = "json"}	)
+	 *						"_format" = "json"}	)
      * @Route(	"api/company/{cid}/restaurant/{rid}/order/",
 	 *			name="API_OrderItem_list__",
 	 *			requirements={"_method" = "GET"},
@@ -260,29 +245,40 @@ class OrderItemController extends Controller
 			}
 		}
 		
-		$products_array = array_values($products_array); 
+		$products_array = array_values($products_array);
 
-		if ($booking_date<date('Y-m-d'))
-			$edit_mode = false;
+		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+		{
+			$edit_mode = 1;
+		}
 		else
 		{
-			$order = $this->getDoctrine()
-						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-			
-			if(!$order || $this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-				$edit_mode = true;
+			if ( $booking_date <= date('Y-m-d') ) // можно редактировать только завтрашний заказ
+			{
+				$edit_mode = 0;
+			}
 			else
-				$edit_mode = !(boolean)$order->getCompleted();
+			{
+				$order = $this->getDoctrine()->getRepository('SupplierBundle:Order')->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
+				
+				if(!$order) // если в базе нету => не утверждали
+					$edit_mode = 1;
+				else
+					$edit_mode = !(boolean)$order->getCompleted();
+			}
 		}
-		
+
+
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 				
-		$result = array('code' => 200, 'data' => $bookings_array);
+		$result = array(	'code' => 200,
+							'data' => $bookings_array,
+							'edit_mode'=>(int)$edit_mode	);
+
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 
@@ -430,10 +426,10 @@ class OrderItemController extends Controller
 	 * @Route(	"api/company/{cid}/restaurant/{rid}/order/{booking_date}/{bid}.{_format}", 
 	 * 				name="API_OrderItem_delete", 
  	 * 				requirements={	"_method" = "DELETE",
-									"_format" = "json|xml",
-									"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *								"_format" = "json|xml",
+	 *								"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"booking_date" = 0,
-							"_format" = "json"})
+	 *						"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	 public function API_deleteAction($cid, $rid, $booking_date, $bid)
@@ -468,8 +464,8 @@ class OrderItemController extends Controller
 			}	
 		}
 		
-		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
-			$booking_date = date('Y-m-d');
+		if ( !$booking_date > date('Y-m-d') )
+			return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
 		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
@@ -527,7 +523,7 @@ class OrderItemController extends Controller
 	 *							"_format" = "json|xml",
 	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
 	 *			defaults={	"booking_date" = 0,
-							"_format" = "json"	})
+	 *						"_format" = "json"	})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_updateAction($cid, $rid, $booking_date, $bid, Request $request)

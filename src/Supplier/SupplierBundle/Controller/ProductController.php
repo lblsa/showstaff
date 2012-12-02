@@ -102,6 +102,12 @@ class ProductController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllProductsByCompany($cid);
+		
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
@@ -109,13 +115,6 @@ class ProductController extends Controller
 			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
 				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findAllProductsByCompany($cid);
-		
-		if (!$company)
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 
 		$products = $company->getProducts();
 			
@@ -173,9 +172,9 @@ class ProductController extends Controller
 	
 	/**
 	 * @Route(	"api/company/{cid}/product/{pid}.{_format}", 
-				name="API_product_update", 
-				requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})	 
+	 *			name="API_product_update", 
+	 *			requirements={"_method" = "PUT", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})	 
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function API_updateAction($cid, $pid, Request $request)
