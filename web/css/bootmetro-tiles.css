@@ -36,7 +36,7 @@
 }
 
 .metro .carousel-control {
-   top: 20%;
+   top: 28%;
 }
 
 .metro .metro-sections {
@@ -44,10 +44,6 @@
    position: relative;
    overflow: hidden;
    width: 10000px;
-}
-
-.metro.index .metro-sections {
-   margin:30px 0;
 }
    .metro-sections h2 {
       margin-left: 5px;
@@ -261,6 +257,17 @@
    font-family: "Open Sans",Arial,Helvetica,Sans-Serif;
    font-weight: 300;
    font-size: 24px;
+   line-height: 26px;
+   max-height: 26px;
+   text-align: left;
+   overflow: hidden;
+   display: inline; /* что не обрезало и переносило строку */
+}
+/* normal header in 1 line of wrapped text*/
+.metro .tile .text-header4 {
+   font-family: "Open Sans",Arial,Helvetica,Sans-Serif;
+   font-weight: 300;
+   font-size: 20px;
    line-height: 26px;
    max-height: 26px;
    text-align: left;
