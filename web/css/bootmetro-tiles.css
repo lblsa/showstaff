@@ -106,9 +106,14 @@
 /* Metro Tiles Templates
 -------------------------------------------------- */
 .metro .tile.square.text {
-   width: 180px;
-   height: 180px;
+   width: 150px;
+   height: 200px;
    padding: 20px;
+}
+.metro .tile.square.text.index {
+   width: 150px;
+   height: 150px;
+   padding: 10px;
 }
 .metro .tile.square.image {
    width: 150px;
@@ -131,13 +136,13 @@
    }
 
 .metro .tile.wide.text {
-   width: 295px;
-   height: 180px;
+   width: 330px;
+   height: 200px;
    padding: 20px;
 }
 .metro .tile.half-wide.text {
    width: 230px;
-   height: 180px;
+   height: 200px;
    padding: 20px;
 }
 .metro .tile.wide.image {
@@ -242,9 +247,9 @@
 .metro .tile .text-header {
    font-family: "Open Sans",Arial,Helvetica,Sans-Serif;
    font-weight: 300;
-   font-size: 34px;
-   line-height: 36px;
-   max-height: 36px;
+   font-size: 24px;
+   line-height: 26px;
+   max-height: 26px;
    text-align: left;
    overflow: hidden;
    display: inline; /* что не обрезало и переносило строку */
@@ -501,4 +506,13 @@
    width: 180px;
    height: 150px;
    padding: 0 65px;
+}
+.mr40 {
+   margin-right: 30px;
+}
+.metro  .index-first-line .tile.square.text {
+   height: 150px;
+}
+.metro  .index-first-line .tile.wide.text {
+   height: 150px;
 }

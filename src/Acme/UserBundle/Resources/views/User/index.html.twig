@@ -8,13 +8,13 @@
 					{% if is_granted('ROLE_ORDER_MANAGER') %}ROLE_ORDER_MANAGER{% endif %} -->
 <div class="metro">
 	<div class="metro-sections">
-		<div class="metro-section">
+		<div class="metro-section index-first-line">
 	
 	{% if is_granted('ROLE_ORDER_MANAGER') %}
 		{% if cid is defined %}
 			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 			<!-- Менеджер по закупкам -->
-				<a class="tile wide text bg-color-blue" href="{{ path('Order_list', {'cid': cid }) }}">
+				<a class="tile square text bg-color-blue" href="{{ path('Order_list', {'cid': cid }) }}">
 	               <div class="text-header">Заказы</div>
 		           <div class="text4">Заказы сгруппированные по ресторанам и поставщикам</div>
 	            </a>
@@ -22,7 +22,7 @@
 		            <div class="text-header">Поставщики</div>
 		            <div class="text4">Cписок всех поставищиков в компании</div>
 	            </a>
-				<a class="tile wide text bg-color-blueDark" href="{{ path('product', {'cid': cid }) }}">
+				<a class="tile square text bg-color-blueDark" href="{{ path('product', {'cid': cid }) }}">
 	               <div class="text-header">Продукты</div>
 		           		<div class="text4">Cписок продуктов компании</div>
 	            </a>
@@ -34,19 +34,19 @@
 		{% if cid is defined %}
 			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
 				{% if ROLE_ADMIN == 0 %}
-					<a class="tile wide text bg-color-blue" href="{{ path('Order_list', {'cid': cid }) }}">
+					<a class="tile wide text bg-color-black" href="{{ path('Order_list', {'cid': cid }) }}">
 		            	<div class="text-header">Заказы</div>
 		          		<div class="text4">Заказы сгруппированные по ресторанам и поставщикам</div>
 		            </a>
-					<a class="tile wide text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
+					<a class="tile square text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
 		            	<div class="text-header">Поставщики</div>
 		            <div class="text4">Cписок всех поставищиков в компании</div>
 		            </a>
-					<a class="tile wide text bg-color-blueDark" href="{{ path('product', {'cid': cid }) }}">
+					<a class="tile wide text bg-color-red" href="{{ path('product', {'cid': cid }) }}">
 		            	<div class="text-header">Продукты</div>
 		           		<div class="text4">Cписок продуктов компании</div>
 		            </a>
-					<a class="tile wide text bg-color-red" href="{{ path('user_management', {'cid': cid }) }}">
+					<a class="tile wide text bg-color-purple" href="{{ path('user_management', {'cid': cid }) }}">
 		            	<div class="text-header">Пользователи</div>
 		           		<div class="text4">Менеджеры компании, по ресторанам ролям</div>
 		            </a>
@@ -54,32 +54,27 @@
 			{% endif %}
 		{% endif %}
 	{% endif %}
-		</div>
-	</div>
 	{% if cid is defined %}
-			<div class="metro-sections">
-				<div class="metro-section">
-			        <a class="tile wide text bg-color-orange" href="{{ path('restaurant', {'cid': cid }) }}">
+			        <a class="tile square text bg-color-orange" href="{{ path('restaurant', {'cid': cid }) }}">
 			        	<div class="text-header">Все рестораны</div>
 			        </a>		
 			    </div>
 			</div>
+
 		{% if restaurants_list is defined %}
-		    {% for key, restaurant_name in restaurants_list %}
-		    	<div class="metro-sections">
-					<div class="metro-section">
-						<a class="tile wide text bg-color-green">
-				        	<div class="text-header">{{ restaurant_name }}</div>
-				        </a>	
-						<a class="tile square text bg-color-red" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
+			<div class="metro-sections">
+			    {% for key, restaurant_name in restaurants_list %}
+					<div class="metro-section mr40">
+				        <h2>{{ restaurant_name }}</h2>
+						<a class="tile square text index bg-color-blueDark" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
 				        	<div class="text-header">Смены</div>
 				        </a>	
-				        <a class="tile square text bg-color-purple" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
+				        <a class="tile square text index bg-color-blue" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
 				        	<div class="text-header">Заказы</div>
 				        </a>		
 				    </div>
-				</div>
-		    {% endfor %}
+			    {% endfor %}
+			</div>
 		{% endif %}
 	{% endif %}
 
