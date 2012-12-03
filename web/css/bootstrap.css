@@ -5896,3 +5896,11 @@ textarea {
   border: none;
   width: 100%;
 }
+.span3.vert-alig-bottom {
+  position: absolute;
+  bottom: 10px;
+  right: 0px;
+}
+.metro-datepicker {
+  position: relative;
+}

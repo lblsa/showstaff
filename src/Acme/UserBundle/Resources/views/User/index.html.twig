@@ -43,13 +43,13 @@
 			{% if restaurants_list is defined %}
 			    {% for key, restaurant_name in restaurants_list %}
 					<div class="metro-section tile-span-2">
-				        <a class="tile wide text bg-color-blue">
+				        <a class="tile wide text bg-color-blueDark">
 				        	<div class="text-header">{{ restaurant_name }}</div>
 				        </a>
-						<a class="tile square text bg-color-orange" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
+						<a class="tile square text bg-color-greenDark" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
 				        	<div class="text-header">Смены</div>
 				        </a>	
-				        <a class="tile square text bg-color-purple" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
+				        <a class="tile square text bg-color-red" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
 				        	<div class="text-header">Заказы</div>
 				        </a>		
 				    </div>
