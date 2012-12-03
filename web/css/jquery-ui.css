@@ -602,7 +602,7 @@ html, body{background-color:#ffffff;}
 .ui-datepicker .ui-datepicker-prev span, .ui-datepicker .ui-datepicker-next span{position:relative;top:0;left:0;margin:0;}
 .ui-datepicker .ui-datepicker-prev-hover { left:2px;top:2px; }
 .ui-datepicker .ui-datepicker-next-hover { right:2px;top:2px; }
-.ui-datepicker table {margin:0px;border:1px solid;}
+.ui-datepicker table {margin:-10px 0px 0px 0px;border:1px solid;}
 .ui-datepicker-calendar .ui-state-default, .ui-datepicker-calendar .ui-state-hover, .ui-datepicker-calendar .ui-state-highlight, .ui-datepicker-calendar .ui-state-active{border-width:2px;}
 .ui-datepicker .ui-icon{margin:4px !important;}
 
