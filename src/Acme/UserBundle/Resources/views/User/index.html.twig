@@ -14,7 +14,7 @@
 			{% if cid is defined %}
 
 		        <a class="tile square text bg-color-blue" href="{{ path('restaurant', {'cid': cid }) }}">
-		        	<div class="text-header">Рестораны</div>
+		        	<div class="text-header4">Рестораны</div>
 	           		<div class="text4">Cписок всех ресторанов компании</div>
 		        </a>
 				{% if is_granted('ROLE_COMPANY_ADMIN') %}
@@ -37,25 +37,40 @@
 	            </a>
 			{% endif %}
 		{% endif %}
+				<a class="tile square text bg-color-darken">
+		            <div class="text-header4">Сообщения</div>
+	            </a>
+				<a class="tile wide text bg-color-blue">
+		            <div class="text-header">Список дел</div>
+	            </a>
 		</div>
-
-		{% if cid is defined %}
-			{% if restaurants_list is defined %}
-			    {% for key, restaurant_name in restaurants_list %}
-					<div class="metro-section tile-span-2">
-				        <a class="tile wide text bg-color-blueDark">
-				        	<div class="text-header">{{ restaurant_name }}</div>
-				        </a>
-						<a class="tile square text bg-color-greenDark" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
-				        	<div class="text-header">Смены</div>
-				        </a>	
-				        <a class="tile square text bg-color-red" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
-				        	<div class="text-header">Заказы</div>
-				        </a>		
-				    </div>
-			    {% endfor %}
-			{% endif %}
-		{% endif %}
+		<div class="metro-section tile-span-2">
+			<div id="myCarousel" class="carousel slide" data-interval="7000">
+				<!-- Carousel items -->
+				<div class="carousel-inner">
+					{% if cid is defined %}
+						{% if restaurants_list is defined %}
+						    {% for key, restaurant_name in restaurants_list %}
+								<div class="item{% if loop.first %} active{% endif %}">
+							        <a class="tile wide text bg-color-blueDark">
+							        	<div class="text-header">{{ restaurant_name }}</div>
+							        </a>
+									<a class="tile square text bg-color-greenDark" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
+							        	<div class="text-header">Смены</div>
+							        </a>	
+							        <a class="tile square text bg-color-red" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
+							        	<div class="text-header">Заказы</div>
+							        </a>		
+							    </div>
+						    {% endfor %}
+						{% endif %}
+					{% endif %}
+				</div> 
+				<!-- Carousel nav -->
+				<a class="carousel-control left" href="#myCarousel" data-slide="prev">&#8249;</a>
+				<a class="carousel-control right" href="#myCarousel" data-slide="next">&#8250;</a>
+			</div>
+		</div>
 	</div>
 </div>
 <script type="text/javascript" src="/js/metro/jquery.mousewheel.js"></script>
@@ -64,7 +79,7 @@
 <script type="text/javascript" src="/js/metro/bootmetro.js"></script>
 <script type="text/javascript" src="/js/metro/bootmetro-charms.js"></script>
 <script type="text/javascript">
-      $(".metro").metro();
+      $('.carousel').carousel()
    </script>
 {% endblock %}
 
