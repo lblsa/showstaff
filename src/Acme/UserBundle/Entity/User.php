@@ -70,7 +70,7 @@ class User implements UserInterface, \Serializable
      *
      * @ORM\Column(name="fullname", type="string", length=255)
 	 * @Assert\NotBlank(message="ФИО не может быть пустым")
-	 
+	 *
      */
     protected $fullname;
 

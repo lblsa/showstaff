@@ -67,8 +67,8 @@
 					{% endif %}
 				</div> 
 				<!-- Carousel nav -->
-				<a class="carousel-control left" href="#myCarousel" data-slide="prev">&#8249;</a>
-				<a class="carousel-control right" href="#myCarousel" data-slide="next">&#8250;</a>
+				<a class="carousel-control left" href="#myCarousel" data-slide="prev"><i class="icon-arrow-9"></i></a>
+				<a class="carousel-control right" href="#myCarousel" data-slide="next"><i class="icon-arrow-6"></i></a>
 			</div>
 		</div>
 	</div>
@@ -79,7 +79,25 @@
 <script type="text/javascript" src="/js/metro/bootmetro.js"></script>
 <script type="text/javascript" src="/js/metro/bootmetro-charms.js"></script>
 <script type="text/javascript">
-      $('.carousel').carousel()
+	$(document).ready(function(){
+		$('.carousel').carousel();
+		
+		var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel" //FF doesn't recognize mousewheel as of FF3.x
+	    
+	    $('.carousel').bind(mousewheelevt, function(e){
+			var evt = window.event || e //equalize event object     
+			evt = evt.originalEvent ? evt.originalEvent : evt; //convert to originalEvent if possible               
+			var delta = evt.detail ? evt.detail*(-40) : evt.wheelDelta //check for detail first, because it is used by Opera and FF
+
+			if(delta > 0) {
+				$('.carousel').carousel('next');
+			}
+			else{
+				$('.carousel').carousel('prev');
+			}
+			return false;
+		});
+	});
    </script>
 {% endblock %}
 

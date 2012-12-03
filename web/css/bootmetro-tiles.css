@@ -36,7 +36,17 @@
 }
 
 .metro .carousel-control {
-   top: 28%;
+   top: 54%;
+}
+.metro .carousel-control.left {
+   left:-100px;
+}
+.metro .carousel-control.right {
+   right:4px;
+}
+.metro .carousel-control i {
+    color: #aaa;
+    font-size: 120px;
 }
 
 .metro .metro-sections {
