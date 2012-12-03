@@ -3,10 +3,10 @@
  * Booking Product
  ****************************************/
 var sort = 'asc';
-var products, bookings, view_content;
+var products, bookings, view_content, ViewBooking, ViewBookings, edit_mode = 0;
 $(function(){
 
-	var ViewBooking = Backbone.View.extend({
+	ViewBooking = Backbone.View.extend({
 		tagName: "tr",
 		className: "product",
 	   
@@ -16,6 +16,10 @@ $(function(){
 								'</td>'+
 								'<td class="ps_unit">'+
 									'<a href="#" class="btn btn-mini pull-right remove"><i class="icon-remove-circle"></i></a></td>'),
+
+		template_no_edit: _.template(	'<td class="ps_name"></td>'+
+										'<td class="ps_amount"><%= amount %></td>'+
+										'<td class="ps_unit"></td>'),
 
 		events: {
 			'click .remove'	: 'remove',
@@ -28,19 +32,23 @@ $(function(){
 		},
 		
 		render: function(){
-			
-			var content = this.template(this.model.toJSON());
+			if (edit_mode) {
+				var content = this.template(this.model.toJSON());
+			} else {
+				var content = this.template_no_edit(this.model.toJSON());
+			}
 			this.$el.html(content);
 			$('#preloader').fadeOut('fast');
-			if (edit_mode) {
 			
+			if (edit_mode) {
 				$('.ps_name', this.el).html('<select class="product_edit span3"></select>');
 				
 				var select = $('.product_edit', this.el);
 				
-				if (typeof(products._byId[this.model.get('product')]) != 'undefined' && typeof(products._byId[this.model.get('product')].attributes) != 'undefined')
+				if (	typeof(products._byId[this.model.get('product')]) != 'undefined' &&
+						typeof(products._byId[this.model.get('product')].attributes) != 'undefined' )
 					products._byId[this.model.get('product')].attributes.use = 0;
-					
+
 				products.each(function(p){
 					if (p.attributes.use == 0) {
 						var view = new OptionProducts({model:p});
@@ -50,14 +58,14 @@ $(function(){
 				
 				$('.product_edit option[value="'+this.model.get('product')+'"]', this.el).attr('selected', 'selected');
 				
-				if (typeof(products._byId[this.model.get('product')]) != 'undefined' && typeof(products._byId[this.model.get('product')].attributes.use) != 'undefined')
+				if (	typeof(products._byId[this.model.get('product')]) != 'undefined' &&
+						typeof(products._byId[this.model.get('product')].attributes.use) != 'undefined'	)
 					products._byId[this.model.get('product')].attributes.use = 1;
 					
 			} else {
-				$('.remove', this.$el).remove();
-				$('.ps_name', this.el).html(this.model.get('name')+' ['+units[products._byId[this.model.get('product')].attributes.unit]+']');
-				$('.ps_amount', this.el).html(this.model.get('amount'));
+				$('.ps_name', this.el).html(this.model.get('name')+' ['+units._byId[products._byId[this.model.get('product')].attributes.unit].get('name')+']');
 			}
+
 			return this;
 		},
 		
@@ -89,13 +97,10 @@ $(function(){
 								},{wait: true});
 			}
 		},
-		
-		
-		
 	})
 
 
-	var ViewBookings = Backbone.View.extend({
+	ViewBookings = Backbone.View.extend({
 	   
 		tagName: "tbody",
 		className: "bookings",
@@ -212,6 +217,9 @@ $(function(){
 						
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
+
+						view_content.renderAll().el;
+
 					} else {
 						
 						$('.ps_unit', model.view.el).append('<div class="alert">'+
@@ -338,7 +346,7 @@ $(function(){
 		url: '/api/company/'+parseInt(href[2])+'/product',
 		parse: function(response, xhr){
 			if(response.code && (response.code == 200)) {
-				
+
 				// remove product without supplier				
 				var result = [];
 				_.each(response.data, function(product_data){
@@ -362,11 +370,19 @@ $(function(){
 			if (typeof(href[6])!='undefined')
 				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+href[6];
 			else
-				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.datepicker').val();
+				return '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+$('.wh_datepicker').val();
 		},
 	  
 		parse: function(response){
 			if(response && 'code' in response && response.code == 200 && 'data' in response) {
+
+				if('edit_mode' in response) edit_mode = response.edit_mode;
+
+				if (edit_mode)
+					$('#add_row').fadeIn();
+				else
+					$('#add_row').fadeOut();
+
 				return response.data;
 			} else {
 				error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
@@ -384,8 +400,7 @@ $(function(){
 	});
 		
 	products = new Products;
-		
-	var edit_mode = true;	
+
 	bookings = new ContentBooking({}, {units:units}); // init collection
 
 	view_content = new ViewBookings({collection: bookings}); // initialize view
@@ -408,14 +423,20 @@ $(function(){
 	
 	products.fetch({	success:function(){
 							
-									bookings.fetch({	success:function(collection, response){
-															//console.log('success');
-															
-														},
-														error:function(){
-															console.log('error');
-														}
-													});
+							bookings.fetch({	success:function(collection, response){
+
+													products.each(function(p){ p.attributes.use = 0; });
+
+													collection.each(function(b){
+														if (typeof(products._byId[b.attributes.product]) != 'undefined')
+															products._byId[b.attributes.product].attributes.use = 1;
+													})
+													
+												},
+												error:function(){
+													console.log('error');
+												}
+											});
 							
 						}, error:function(){
 							$('#preloader').fadeOut('fast');
@@ -451,6 +472,36 @@ $(function(){
 		}
     });    
     
+	$( "#smena_datapicker" ).datepicker({
+		onSelect: function(strDate, inst){	update(strDate); },
+		showOtherMonths: true,
+		selectOtherMonths: true,
+	});
+	
+	$( "#smena_datapicker" ).datepicker( "setDate", $('.wh_datepicker').val() );
+	
+	$('#prev_day, #next_day').click(function(){
+
+		var today = $("#smena_datapicker").datepicker("getDate");
+		var new_day = today;
+
+		if ($(this).attr('id') == 'next_day')
+			new_day.setDate(today.getDate() + 1);
+		
+		if ($(this).attr('id') == 'prev_day')
+			new_day.setDate(today.getDate() - 1);
+
+		$("#smena_datapicker").datepicker( "setDate", new_day );
+
+		var dd = new_day.getDate()<10?'0'+new_day.getDate():new_day.getDate();
+		var mm = new_day.getMonth()+1; //January is 0!
+		var yyyy = new_day.getFullYear();
+
+		update(yyyy+'-'+mm+'-'+dd);
+
+		return false;
+	});
+
 	$('.add_booking').click(function(){
 		
 		$('#preloader').width($('#add_row').width());
@@ -481,3 +532,60 @@ $(function(){
 		if (e.keyCode == 27) view_content.renderAll();
 	});
 })
+
+function update(strDate){
+
+		$('.curent-date-header').html(strDate);
+		$('.wh_datepicker').val(strDate);
+		
+		$( "#smena_datapicker" ).html('');
+		$( "#smena_datapicker" ).removeClass('hasDatepicker');
+
+		$( "#smena_datapicker" ).datepicker({
+			onSelect: function(strDate, inst){	update(strDate); },
+			showOtherMonths: true,
+			selectOtherMonths: true,
+		});
+		$( "#smena_datapicker" ).datepicker( "setDate", strDate );
+		
+		bookings.url = '/api/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+strDate;
+
+		document.title = $('.curent-page-title').text();
+		window.history.pushState({}, $('.curent-page-title').text(), '/company/'+href[2]+'/restaurant/'+href[4]+'/order/'+strDate);
+		
+		var today = new Date();
+		var dd = today.getDate()<10?'0'+today.getDate():today.getDate();
+		var mm = today.getMonth()+1; //January is 0!
+		var yyyy = today.getFullYear();
+
+		if ( yyyy+'-'+mm+'-'+dd < strDate)
+			$('.agreed_all').fadeIn();
+		else
+			$('.agreed_all').fadeOut();
+
+		$('#preloader').width($('#bookin_list').width());
+		$('#preloader').height($('#bookin_list').height());
+		var p = $('#bookin_list').position();
+		$('#preloader').css({'left':p.left, 'top': p.top});
+		$('#preloader').fadeIn('fast');
+
+		bookings.fetch({	success: function(collection, response) {
+
+								products.each(function(p){ p.attributes.use = 0; });
+
+								collection.each(function(b){
+									if (typeof(products._byId[b.attributes.product]) != 'undefined')
+										products._byId[b.attributes.product].attributes.use = 1;
+								})
+			
+								view_content.remove();
+								$('.bookings').remove();
+								view_content = new ViewBookings({collection: collection});
+								$('#bookin_list').append(view_content.render().el);
+								view_content.renderAll().el;
+							}, 
+							error: function(){
+								error_fetch('Ошибка при получении продуктов. Обновите страницу или обратитесь к администратору');
+							}
+						});
+}

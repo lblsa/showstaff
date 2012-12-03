@@ -1952,7 +1952,7 @@ header h1 {display: inline;}
    display: block;
    position: relative;
    height: 64px;
-   margin-bottom: 20px;
+   margin-bottom: 0;
 }
 
 

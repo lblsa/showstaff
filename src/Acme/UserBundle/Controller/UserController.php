@@ -214,7 +214,10 @@ class UserController extends Controller
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
+			if (	!$permission || 
+					$permission->getCompany()->getId() != $cid || 
+					!$this->get('security.context')->isGranted('ROLE_ADMIN')
+				) // проверим из какой компании
 				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
@@ -444,13 +447,10 @@ class UserController extends Controller
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest())
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
+			if (	!$permission || 
+					$permission->getCompany()->getId() != $cid ||
+					!$this->get('security.context')->isGranted('ROLE_ADMIN')	) // проверим из какой компании
+				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
 		$model = (array)json_decode($request->getContent());
@@ -639,7 +639,9 @@ class UserController extends Controller
 		{
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid || $this->get('security.context')->isGranted('ROLE_ADMIN')) // проверим из какой компании
+			if (	!$permission || 
+					$permission->getCompany()->getId() != $cid || 
+					!$this->get('security.context')->isGranted('ROLE_ADMIN')	) // проверим из какой компании
 				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
 		}
 		
@@ -838,9 +840,7 @@ class UserController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
 			if (!$permission)// проверим из какой компании
-			{
 				throw new AccessDeniedHttpException('Нет доступа к компании');	
-			}
 			else
 			{
 				if ($permission->getCompany()->getId() != $cid)// проверим из какой компании
