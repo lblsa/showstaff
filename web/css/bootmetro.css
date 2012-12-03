@@ -165,7 +165,6 @@ textarea {
    width: 260px;
    /*height: 39px;*/
    padding: 4px 8px;
-   overflow-y: scroll;
    word-wrap: break-word;
    /* Leave space for autohiding scrollbar on elements that enable text selection. */
    padding-right: 17px;
