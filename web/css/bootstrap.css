@@ -5904,3 +5904,11 @@ textarea {
 .metro-datepicker {
   position: relative;
 }
+.registr-metro input[type="text"], 
+.registr-metro  input[type="password"] {
+  display: block;
+}
+.login-metro input[type="text"], 
+.login-metro  input[type="password"] {
+  display: block;
+}
