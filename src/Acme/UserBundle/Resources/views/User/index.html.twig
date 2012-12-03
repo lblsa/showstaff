@@ -12,8 +12,18 @@
 
 		{% if is_granted('ROLE_ORDER_MANAGER') %}
 			{% if cid is defined %}
+				<a class="tile wide text bg-color-orange" href="{{ path('Order_list', {'cid': cid }) }}">
+	               <div class="text-header">Заказы</div>
+		           <div class="text4">Cгруппированные по ресторанам и поставщикам</div>
+	            </a>
+				<a class="tile square text bg-color-green" href="{{ path('product', {'cid': cid }) }}">
+	               <div class="text-header4">Продукты</div>
+	            </a>
+				<a class="tile square text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
+		            <div class="text-header4">Поставщики</div>
+	            </a>
 
-		        <a class="tile square text bg-color-blue" href="{{ path('restaurant', {'cid': cid }) }}">
+		        <a class="tile wide text bg-color-blue" href="{{ path('restaurant', {'cid': cid }) }}">
 		        	<div class="text-header4">Рестораны</div>
 	           		<div class="text4">Cписок всех ресторанов компании</div>
 		        </a>
@@ -23,24 +33,12 @@
 		           		<div class="text4">Менеджеры компании, по ресторанам ролям</div>
 		            </a>
 				{% endif %}
-				<a class="tile square text bg-color-green" href="{{ path('product', {'cid': cid }) }}">
-	               <div class="text-header">Продукты</div>
-		           	<div class="text4">Cписок продуктов компании</div>
-	            </a>
-				<a class="tile wide text bg-color-orange" href="{{ path('Order_list', {'cid': cid }) }}">
-	               <div class="text-header">Заказы</div>
-		           <div class="text4">Cгруппированные по ресторанам и поставщикам</div>
-	            </a>
-				<a class="tile wide text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
-		            <div class="text-header">Поставщики</div>
-		            <div class="text4">Cписок всех поставищиков в компании</div>
-	            </a>
 			{% endif %}
 		{% endif %}
-				<a class="tile square text bg-color-darken">
+				<a class="tile square text bg-color-greenDark">
 		            <div class="text-header4">Сообщения</div>
 	            </a>
-				<a class="tile wide text bg-color-blue">
+				<a class="tile wide text bg-color-red">
 		            <div class="text-header">Список дел</div>
 	            </a>
 		</div>
