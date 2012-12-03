@@ -106,23 +106,28 @@
 /* Metro Tiles Templates
 -------------------------------------------------- */
 .metro .tile.square.text {
+   width: 110px;
+   height: 110px;
+   padding: 20px;
+}
+.metro .inner-tile .tile.square.text {
    width: 150px;
    height: 200px;
    padding: 20px;
 }
 .metro .tile.square.text.index {
-   width: 150px;
-   height: 150px;
+   width: 110px;
+   height: 110px;
    padding: 10px;
 }
 .metro .tile.square.image {
-   width: 150px;
-   height: 150px;
+   width: 110px;
+   height: 110px;
    padding: 0;
 }
    .metro .tile.square.image img {
-      max-width: 150px;
-      max-height: 150px;
+      max-width: 110px;
+      max-height: 110px;
    }
 
 .metro .tile.squarepeek {
@@ -136,11 +141,16 @@
    }
 
 .metro .tile.wide.text {
+   width: 270px;
+   height: 110px;
+   padding: 20px;
+}
+.metro .inner-tile .tile.wide.text {
    width: 330px;
    height: 200px;
    padding: 20px;
 }
-.metro .tile.half-wide.text {
+.metro .inner-tile .tile.half-wide.text {
    width: 230px;
    height: 200px;
    padding: 20px;
@@ -509,10 +519,11 @@
 }
 .mr40 {
    margin-right: 30px;
+   margin-top: 16px;
 }
 .metro  .index-first-line .tile.square.text {
-   height: 150px;
+   height: 110px;
 }
 .metro  .index-first-line .tile.wide.text {
-   height: 150px;
+   height: 110px;
 }

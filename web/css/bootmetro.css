@@ -9,7 +9,7 @@ html {
 
 body {
    padding-top: 24px;
-   padding-bottom: 88px;
+   padding-bottom: 0px;
    position: relative;
    font-family: "Open Sans",Arial,Helvetica,Sans-Serif;
    font-weight: 300;
@@ -36,9 +36,6 @@ html[xmlns] .clearfix {
 * html .clearfix {
    height: 1%;
 }
-
-
-
 .container-fluid {
    padding-left: 70px;
    padding-right: 70px;

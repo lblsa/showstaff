@@ -8,59 +8,39 @@
 					{% if is_granted('ROLE_ORDER_MANAGER') %}ROLE_ORDER_MANAGER{% endif %} -->
 <div class="metro">
 	<div class="metro-sections">
-		<div class="metro-section index-first-line">
-	
-	{% if is_granted('ROLE_ORDER_MANAGER') %}
-		{% if cid is defined %}
-			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
-			<!-- Менеджер по закупкам -->
-				<a class="tile square text bg-color-blue" href="{{ path('Order_list', {'cid': cid }) }}">
-	               <div class="text-header">Заказы</div>
-		           <div class="text4">Заказы сгруппированные по ресторанам и поставщикам</div>
-	            </a>
-				<a class="tile wide text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
-		            <div class="text-header">Поставщики</div>
-		            <div class="text4">Cписок всех поставищиков в компании</div>
-	            </a>
-				<a class="tile square text bg-color-blueDark" href="{{ path('product', {'cid': cid }) }}">
-	               <div class="text-header">Продукты</div>
-		           		<div class="text4">Cписок продуктов компании</div>
-	            </a>
-			{% endif %}
-		{% endif %}
-	{% endif %}
+		<div class="metro-section index-first-line  tile-span-4">
 
-	{% if is_granted('ROLE_COMPANY_ADMIN') %}
-		{% if cid is defined %}
-			{% if is_granted('ROLE_SUPER_ADMIN') == false %}
-				{% if ROLE_ADMIN == 0 %}
-					<a class="tile wide text bg-color-black" href="{{ path('Order_list', {'cid': cid }) }}">
-		            	<div class="text-header">Заказы</div>
-		          		<div class="text4">Заказы сгруппированные по ресторанам и поставщикам</div>
-		            </a>
-					<a class="tile square text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
-		            	<div class="text-header">Поставщики</div>
-		            <div class="text4">Cписок всех поставищиков в компании</div>
-		            </a>
-					<a class="tile wide text bg-color-red" href="{{ path('product', {'cid': cid }) }}">
-		            	<div class="text-header">Продукты</div>
-		           		<div class="text4">Cписок продуктов компании</div>
-		            </a>
+		{% if is_granted('ROLE_ORDER_MANAGER') %}
+			{% if cid is defined %}
+
+		        <a class="tile square text bg-color-blue" href="{{ path('restaurant', {'cid': cid }) }}">
+		        	<div class="text-header">Рестораны</div>
+	           		<div class="text4">Cписок всех ресторанов компании</div>
+		        </a>
+				{% if is_granted('ROLE_COMPANY_ADMIN') %}
 					<a class="tile wide text bg-color-purple" href="{{ path('user_management', {'cid': cid }) }}">
 		            	<div class="text-header">Пользователи</div>
 		           		<div class="text4">Менеджеры компании, по ресторанам ролям</div>
 		            </a>
 				{% endif %}
+				<a class="tile square text bg-color-green" href="{{ path('product', {'cid': cid }) }}">
+	               <div class="text-header">Продукты</div>
+		           	<div class="text4">Cписок продуктов компании</div>
+	            </a>
+				<a class="tile wide text bg-color-orange" href="{{ path('Order_list', {'cid': cid }) }}">
+	               <div class="text-header">Заказы</div>
+		           <div class="text4">Cгруппированные по ресторанам и поставщикам</div>
+	            </a>
+				<a class="tile wide text bg-color-yellow" href="{{ path('supplier', {'cid': cid }) }}">
+		            <div class="text-header">Поставщики</div>
+		            <div class="text4">Cписок всех поставищиков в компании</div>
+	            </a>
 			{% endif %}
 		{% endif %}
-	{% endif %}
-	{% if cid is defined %}
-			        <a class="tile square text bg-color-orange" href="{{ path('restaurant', {'cid': cid }) }}">
-			        	<div class="text-header">Все рестораны</div>
-			        </a>		
-			    </div>
-			</div>
+		</div>
+	</div>
 
+	{% if cid is defined %}
 		{% if restaurants_list is defined %}
 			<div class="metro-sections">
 			    {% for key, restaurant_name in restaurants_list %}
