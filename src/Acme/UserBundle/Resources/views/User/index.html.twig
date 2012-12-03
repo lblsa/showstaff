@@ -6,7 +6,7 @@
 					{% if is_granted('ROLE_COMPANY_ADMIN') %}ROLE_COMPANY_ADMIN{% endif %}
 					{% if is_granted('ROLE_RESTAURANT_ADMIN') %}ROLE_RESTAURANT_ADMIN{% endif %}
 					{% if is_granted('ROLE_ORDER_MANAGER') %}ROLE_ORDER_MANAGER{% endif %} -->
-<div class="metro">
+<div class="metro index">
 	<div class="metro-sections">
 		<div class="metro-section index-first-line  tile-span-4">
 
@@ -38,26 +38,33 @@
 			{% endif %}
 		{% endif %}
 		</div>
-	</div>
 
-	{% if cid is defined %}
-		{% if restaurants_list is defined %}
-			<div class="metro-sections">
+		{% if cid is defined %}
+			{% if restaurants_list is defined %}
 			    {% for key, restaurant_name in restaurants_list %}
-					<div class="metro-section mr40">
-				        <h2>{{ restaurant_name }}</h2>
-						<a class="tile square text index bg-color-blueDark" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
+					<div class="metro-section tile-span-2">
+				        <a class="tile wide text bg-color-blue">
+				        	<div class="text-header">{{ restaurant_name }}</div>
+				        </a>
+						<a class="tile square text bg-color-orange" href="{{ path('WorkingHours_list', {'cid': cid, 'rid': key }) }}">
 				        	<div class="text-header">Смены</div>
 				        </a>	
-				        <a class="tile square text index bg-color-blue" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
+				        <a class="tile square text bg-color-purple" href="{{ path('OrderItem_list', {'cid': cid, 'rid': key }) }}">
 				        	<div class="text-header">Заказы</div>
 				        </a>		
 				    </div>
 			    {% endfor %}
-			</div>
+			{% endif %}
 		{% endif %}
-	{% endif %}
-
+	</div>
 </div>
+<script type="text/javascript" src="/js/metro/jquery.mousewheel.js"></script>
+<script type="text/javascript" src="/js/metro/jquery.scrollTo.js"></script>
+<script type="text/javascript" src="/js/metro/bootstrap.min.js"></script>
+<script type="text/javascript" src="/js/metro/bootmetro.js"></script>
+<script type="text/javascript" src="/js/metro/bootmetro-charms.js"></script>
+<script type="text/javascript">
+      $(".metro").metro();
+   </script>
 {% endblock %}
 
