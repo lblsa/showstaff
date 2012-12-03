@@ -5,7 +5,7 @@
 
 	<h1>Регистрация</h1>
 
-	<form action="{{ path('registr') }}" method="post"  class="form-horizontal registr-metro" {{ form_enctype(form) }}>
+	<form action="{{ path('registr') }}" method="post"  class=" registr-metro" {{ form_enctype(form) }}>
 		{{ form_widget(form.email, {'attr': {'placeholder' : 'Эл. почта', 'class':'input-xlarge'}}) }}
 		{{ form_widget(form.fullname, {'attr': { 'placeholder' : 'ФИО', 'class':'input-xlarge' }}) }}
 		{{ form_widget(form.username, {'attr':{ 'placeholder' : 'Телефон', 'class':'input-xlarge' }}) }}
