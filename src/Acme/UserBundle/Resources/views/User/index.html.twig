@@ -80,7 +80,8 @@
 <script type="text/javascript" src="/js/metro/bootmetro-charms.js"></script>
 <script type="text/javascript">
 	$(document).ready(function(){
-		$('.carousel').carousel();
+		if ($('.carousel-inner .item').length < 2)
+			$('.carousel-control').hide();
 		
 		var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel" //FF doesn't recognize mousewheel as of FF3.x
 	    
