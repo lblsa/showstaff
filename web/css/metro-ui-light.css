@@ -105,6 +105,7 @@ input[type=search], select, textarea,
 .win-textarea, input::-ms-check {
    background-color: rgba(255, 255, 255, 0.8);
    border-color: rgba(0, 0, 0, 0.27);
+   border-width:1px;
    color: #000;
 }
 input[type=text]:hover, input[type=password]:hover,
@@ -113,7 +114,7 @@ input[type=tel]:hover, input[type=url]:hover,
 input[type=search]:hover, textarea:hover,
 select:hover, .win-textarea:hover, input:hover::-ms-check {
    background-color: rgba(255, 255, 255, 0.87);
-   border-color: rgba(0, 0, 0, 0.44);
+   border-color: rgba(0, 0, 0, 0.27);
    color: #000;
 }
 input[type=text]:focus, input[type=text]:active,

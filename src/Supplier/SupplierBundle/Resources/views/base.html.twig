@@ -82,37 +82,58 @@
                     {% if company.id is defined %}Компания "{{ company.name }}"{% else %}Супер админ{% endif %}
                      <b class="caret"></b>
                   </a>
-				<ul class="dropdown-menu">
-          <li><a href="/"><strong>Стартовая</strong></a></li>
-					{% if company.id is defined %}
-          <li class="divider"></li>
-          <li class="nav-header">Структура</li>
-					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
-					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
-					<li class="divider"></li>
-					<li class="nav-header">Заказы</li>
-          <li><a href="/company/{{ company.id }}/supplier">Поставщики</a></li>
-					<li><a href="/company/{{ company.id }}/product">Продукты</a></li>
-					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
-					{% if is_granted('ROLE_SUPER_ADMIN') %}
-            <li class="divider"></li>
-            <li class="nav-header">Супер админ</li>
-            <li><a href="/company">Компании</a></li>
-            <li><a href="/user">Администраторы</a></li>
-          {% endif %}
-          {% if company.id is defined %}
-            {% if restaurants_list is defined %}
-                {% for key, restaurant_name in restaurants_list %}
-                  <li class="divider"></li>
-                  <li class="nav-header">{{ restaurant_name }}</li>
-                  <li><a href="{{ path('WorkingHours_list', {'cid': company.id, 'rid': key }) }}">Смены</a></li>
-                  <li><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid': key }) }}">Заказы</a></li>
-                {% endfor %}
-            {% endif %}
-          {% endif %}
-					
-					
-				</ul>
+          				<ul class="dropdown-menu">
+                    <li><a href="/"><strong>Стартовая</strong></a></li>
+          					{% if company.id is defined %}
+                    <li class="divider"></li>
+                    <li class="nav-header">Структура</li>
+          					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
+          					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
+          					<li class="divider"></li>
+          					<li class="nav-header">Заказы</li>
+                    <li><a href="/company/{{ company.id }}/supplier">Поставщики</a></li>
+          					<li><a href="/company/{{ company.id }}/product">Продукты</a></li>
+          					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
+          					{% if is_granted('ROLE_SUPER_ADMIN') %}
+                      <li class="divider"></li>
+                      <li class="nav-header">Супер админ</li>
+                      <li><a href="/company">Компании</a></li>
+                      <li><a href="/user">Администраторы</a></li>
+                    {% endif %}
+                    {% if company.id is defined %}
+                      {% if restaurants_list is defined %}
+                          {% for key, restaurant_name in restaurants_list %}
+                            <li class="divider"></li>
+                            <li class="nav-header">{{ restaurant_name }}</li>
+                            <li><a href="{{ path('WorkingHours_list', {'cid': company.id, 'rid': key }) }}">Смены</a></li>
+                            <li><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid': key }) }}">Заказы</a></li>
+                          {% endfor %}
+                      {% endif %}
+                    {% endif %}
+          					
+          					
+          				</ul>
+                  {% if restaurant is defined %}
+                  {% if restaurant.name is defined %}
+                    {% if date is defined %}
+                    <h4 class="curent-page-title">
+                      Смена для ресторана "{{ restaurant.name }}" на 
+                      <a href="#" id="prev_day"><i class="icon-arrow-9"></i></a>
+                      <span class="curent-date-header">{{ date }}</span>
+                      <a href="#" id="next_day"><i class="icon-arrow-6"></i></a>
+                    </h4>
+                    {% endif %}
+
+                    {% if booking_date is defined %}
+                      <h4 class="curent-page-title">
+                        Продукты для ресторана "{{ restaurant.name }}" 
+                        <a href="#" id="prev_day"><i class="icon-arrow-9"></i></a>
+                        <span class="curent-date-header">{{ booking_date }}</span>
+                        <a href="#" id="next_day"><i class="icon-arrow-6"></i></a>
+                      </h4>
+                    {% endif %}
+                  {% endif %}
+                  {% endif %}
             </div>
             </div>
          </div>

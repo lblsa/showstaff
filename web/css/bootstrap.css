@@ -5867,15 +5867,15 @@ select.product {
   margin-bottom: 5px;
 }
 .curent-page-title i {
-  font-size: 34px;
+  font-size: 18px;
   color:#24A0DA;
-  margin-top: 8px;
+  margin-top: 0px;
 }
 .curent-page-title .icon-arrow-9 {
-  margin-right: 12px;
+  margin-right: 0px;
 }
 .curent-page-title .icon-arrow-6 {
-  margin-left: -8px;
+  margin-left: 0px;
 }
 .agreed_all {
   margin-bottom: 10px;
@@ -5885,4 +5885,14 @@ select.product {
 }
 .curent-page-title {
   margin-bottom: 14px;
+}
+textarea {
+  resize: none;
+  overflow: auto;
+}
+.u_description textarea.description {
+  margin: 0;
+  display: block;
+  border: none;
+  width: 100%;
 }
