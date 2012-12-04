@@ -5804,7 +5804,7 @@ select.product {
   line-height: 17px;
 }
 .margintop10 {
-  margin-top: 10px;
+  margin-top: 0;
 }
 .metro-datepicker {
   min-height: 257px;
@@ -5882,7 +5882,7 @@ select.product {
   margin-top: 8px;
 }
 .curent-page-title {
-  margin-bottom: 14px;
+  margin-top: -1px;
 }
 textarea {
   resize: none;

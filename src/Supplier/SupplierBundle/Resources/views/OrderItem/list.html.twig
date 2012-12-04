@@ -1,5 +1,11 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
+{% block title %}<h4 class="curent-page-title">
+                        Заказ для "{{ restaurant.name }}" на <a href="#" id="prev_day"><i class="icon-arrow-9"></i></a>
+                        <span class="curent-date-header">{{ booking_date }}</span>
+                        <a href="#" id="next_day"><i class="icon-arrow-6"></i></a>
+                      </h4>{% endblock %}
+
 {% block body %}
 <div class="row-fluid metro-datepicker">
 	<div class="metro span9">

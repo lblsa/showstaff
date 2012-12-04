@@ -23,7 +23,7 @@ security:
             providers: [in_memory, user_db]
         in_memory:
             users:
-                super_admin: { password: z3HXBWxM9rvJX1MijCTh7N+GbQo= , roles: 'ROLE_SUPER_ADMIN' } 
+                super_admin: { password: z3HXBWxM9rvJX1MijCTh7N+GbQo= , roles: 'ROLE_SUPER_ADMIN' }
                   #1234
         user_db:
             entity: { class: AcmeUserBundle:User, property: username}

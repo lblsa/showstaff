@@ -1,10 +1,11 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
+{% block title %}Продукты Поставщика "{{ supplier.name }}"{% endblock %}
+
 {% block body %}
 
 	<div  class="row">
 		<div class="span12">
-			<h3>Продукты Поставщика "{{ supplier.name }}"</h3>
 			<div class="sp_list">
 				<table class="sproducts table table-bordered white">
 				  <thead class="supplier_products_header">

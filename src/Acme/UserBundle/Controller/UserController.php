@@ -846,11 +846,22 @@ class UserController extends Controller
 				if ($permission->getCompany()->getId() != $cid)// проверим из какой компании
 					throw new AccessDeniedHttpException('Нет доступа к компании');	
 
-				$restaurants = $permission->getRestaurants();
+				if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+				{
+					$restaurants = $permission->getRestaurants();
 
-				if ($restaurants)
-					foreach ($restaurants as $r)
-						$restaurants_array[$r->getId()] = $r->getName();
+					if ($restaurants)
+						foreach ($restaurants as $r)
+							$restaurants_array[$r->getId()] = $r->getName();
+				}
+				else
+				{
+					$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+
+					if ($restaurants)
+						foreach ($restaurants as $r)
+							$restaurants_array[$r->getId()] = $r->getName();
+				}
 			}
 		}
 
