@@ -267,8 +267,6 @@ $(function(){
 	
 	
 	workinghours = new Workinghours;
-	
-
 													
 	users.fetch({	success:function(collection, response){
 		
@@ -282,10 +280,10 @@ $(function(){
 														$('#shift_list').append(view_workinghours.render().el);
 														view_workinghours.renderAll().el;
 														
-													if ( $('.wh_datepicker').val() < strDate)
-														$('.agreed_all').fadeIn();
-													else
-														$('.agreed_all').fadeOut();
+														if ( $('.wh_datepicker').val() < strDate)
+															$('.agreed_all').fadeIn();
+														else
+															$('.agreed_all').fadeOut();
 													}, 
 													error: function(){
 														error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');

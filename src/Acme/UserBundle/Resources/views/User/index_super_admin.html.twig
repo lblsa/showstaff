@@ -4,13 +4,11 @@
 <div class="metro">
 	<div class="metro-sections">
 		<div class="metro-section">
-      		<a class="tile wide text bg-color-orange" href="{{ path('company') }}">
+                  <a class="tile wide text bg-color-darken" href="{{ path('user') }}">
+                        <div class="text-header">Администраторы</div>
+                  </a>
+      		<a class="tile square text bg-color-orange" href="{{ path('company') }}">
       			<div class="text-header">Компании</div>
-      			<div class="text4">Cписок компаний</div>
-      		</a>
-      		<a class="tile wide text bg-color-darken" href="{{ path('user') }}">
-      			<div class="text-header">Администраторы</div>
-      			<div class="text4">Смотреть/править список администраторов компаний</div>
       		</a>
       		<a class="tile wide text bg-color-green" rel="restaurant" href="">
       			<div class="text-header">Рестораны</div>
@@ -26,6 +24,10 @@
 					</select>
       			</div>
       		</a>
+            </div>
+      </div>
+      <div class="metro-sections">
+            <div class="metro-section">
       		<a class="tile wide text bg-color-blueDark" rel="supplier" href="">
       			<div class="text-header">Поставщики</div>
       			<div class="text4">Поставщики компании<select>
@@ -48,8 +50,7 @@
       			</div>
       		</a>
 		</div>
-	</li>
-</ul>
+      </div>
 <script type="text/javascript">
 	$('.tile').click(function(){
 		if ($(this).attr('rel') != undefined) {

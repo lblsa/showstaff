@@ -1,5 +1,6 @@
 {# src/Acme/UserBundle/Resources/views/User/login.html.twig #}
 {% extends 'AcmeUserBundle::base.html.twig' %}
+{% block title %}Авторизация{% endblock %}
 {% block body %}
 <h1>Авторизация</h1>
 <form action="{{ path('login_check') }}" method="post"  class="">

@@ -66,17 +66,6 @@ class OrderController extends Controller
 		if (!$company)
 			throw $this->createNotFoundException('No company found for id '.$cid);
 		
-		if (date('Y-m-d') > $booking_date )
-			$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findByCompany((int)$cid);
-		else
-			$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findBy(array('company'=>(int)$cid, 'active' =>1));
-		
-		$suppliers_array = array();
-				if ($suppliers)
-					foreach ($suppliers AS $p)
-							$suppliers_array[] = array(	'id' => $p->getId(),
-														'name'=> $p->getName()	);
-		
 		$restaurants = $company->getRestaurants();
 		$restaurants_array = array();
 		
@@ -85,61 +74,6 @@ class OrderController extends Controller
 					$restaurants_array[] = array(	'id'	=> $p->getId(),
 													'name'	=> $p->getName(),
 													'company'		=> (int)$cid	);
-		
-		$products = $company->getProducts();
-		$products_array = array();
-		
-		if ($products)
-			foreach ($products AS $p)
-				if ($booking_date < date('Y-m-d') || $p->getActive())
-					$products_array[] = array(	'id' => $p->getId(),
-												'name'=> $p->getName(), 
-												'unit' => $p->getUnit()->getId(),
-												'use' => 0 );
-											
-		$suppler_products = $this->getDoctrine()
-								->getRepository('SupplierBundle:SupplierProducts')
-								->findByCompany($cid);
-		$suppler_products_array = array();
-		if ($suppler_products)
-		{
-			foreach ($suppler_products AS $p)
-			{	
-				if ($booking_date < date('Y-m-d') || $p->getSupplier()->getActive())
-				{
-					$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getPrice();
-					$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()] = $p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName();
-				}
-			}
-		}
-		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
-										
-		$order = $this->getDoctrine()
-						->getRepository('SupplierBundle:Order')
-						->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
-		
-		if(!$order)
-			$completed = 0;
-		else
-			$completed = (int)$order->getCompleted();
-										
-		$bookings_array = array();
-		if ($bookings)
-			foreach ($bookings AS $p)
-			{	
-				if ($booking_date < date('Y-m-d') || ($p->getProduct()->getActive() && $p->getSupplier()->getActive()))
-				{
-					$bookings_array[] = array(	'id' => $p->getId(),
-												'amount' => $p->getAmount(),
-												'product' => $p->getProduct()->getId(),
-												'restaurant' => $p->getRestaurant()->getId(),
-												'supplier' => $p->getSupplier()->getId(),
-												'name' => $p->getProduct()->getName(),
-												'unit' => $p->getProduct()->getUnit()->getId(),
-												'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
-												'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
-				}
-			}
 										
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
@@ -148,14 +82,8 @@ class OrderController extends Controller
 		header("Pragma: no-cache");// HTTP/1.0		
 
 		return array(	'company' => $company,
-						'restaurants_json' => json_encode($restaurants_array), 
-						'suppliers_json' => json_encode($suppliers_array), 
-						'bookings_json' => json_encode($bookings_array),
-						'products_json' => json_encode($products_array),
 						'booking_date' => $booking_date,
-						'completed' => $completed,
-						'restaurants_list' => $restaurants_list,
-						'edit_mode' => $booking_date<date('Y-m-d')?false:true );
+						'restaurants_list' => $restaurants_list,);
 	}
 	
     /**
@@ -189,11 +117,15 @@ class OrderController extends Controller
 		if (!$company)
 			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 		
-		$suppliers = $this->getDoctrine()
-						->getRepository('SupplierBundle:Supplier')
-						->findBy(array('company'=>(int)$cid, 'active' =>1));
-
+		$order = $this->getDoctrine()->getRepository('SupplierBundle:Order')->findOneBy( array(	'company'=>$cid, 'date' => $booking_date) );
 		
+		if(!$order)
+			$completed = 0;
+		else
+			$completed = (int)$order->getCompleted();
+
+		$suppliers = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findBy(array('company'=>(int)$cid, 'active' =>1));
+
 		$suppliers_array = array();
 				if ($suppliers)
 					foreach ($suppliers AS $p)
@@ -226,9 +158,7 @@ class OrderController extends Controller
 			}
 		}
 											
-		$suppler_products = $this->getDoctrine()
-								->getRepository('SupplierBundle:SupplierProducts')
-								->findByCompany($cid);
+		$suppler_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findByCompany($cid);
 		$suppler_products_array = array();
 		if ($suppler_products)
 		{
@@ -241,6 +171,8 @@ class OrderController extends Controller
 				}
 			}
 		}
+
+
 		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
 										
 		$bookings_array = array();
@@ -256,15 +188,32 @@ class OrderController extends Controller
 												'unit' => $p->getProduct()->getUnit()->getId(),
 												'supplier_name' => isset($suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
 												'price' => isset($suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$suppler_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
-				
-										
+		
+		$edit_mode = 0;	
+		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+			$edit_mode = 1;
+		else
+		{
+			if ($booking_date > date('Y-m-d') && $completed == 0)
+				$edit_mode = 1;
+		}
+						
+ 		$completed_mode = 0;
+ 		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') && $booking_date > date('Y-m-d'))
+ 			$completed_mode = 1;
+
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется
 		header("Cache-Control: no-store, no-cache, must-revalidate");// HTTP/1.1
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0		
 
-		$result = array('code' => 200, 'data' => $bookings_array);
+		$result = array(	'code' => 200, 
+							'data' => $bookings_array, 
+							'completed' => $completed, 
+							'edit_mode' => $edit_mode, 
+							'completed_mode' => $completed_mode);
+
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
 	
