@@ -3,27 +3,47 @@
 {% block title %}Консолидированный заказ{% endblock %}
 
 {% block body %}
-<div class="row-fluid">
-	<div class="span9">
-		<!-- "{{ company.name }}" заказы на {{ booking_date }} -->
-		<a href="/company/{{ company.id }}/order/export/{{ booking_date }}" class="download_excel btn btn-success">Скачать Excel &nbsp;&nbsp;<b class="icon-download"></b></a>
+<div class="row-fluid metro-datepicker">
+	<div class="metro span9">
+		<div class="metro-sections">
+			<div class="metro-section inner-tile" id="section1">
+				<a class="tile wide text bg-color-gree" href="#">
+					<div class="text-header3">Смены для ресторана</div>
+					<div class="text2">Редактирование смен доступно для любой будущей даты и смены должны быть сформированы до полуночи (либо пока директор не утвердит)</div>
+				</a>
+
+				<a class="tile square text tile-double bg-color-orange" href="#">
+					<div class="text-header">Директор</div>
+					<div class="text2">утверждает смены, либо они закроются для редактирования в определенное время</div>
+				</a>
+
+				<a class="tile half-wide  text bg-color-green" href="#">
+					<div class="text-header3">Фактическое время работы</div>
+					<div class="text2">Каждый день до 14:00 менеджер ресторана должен внести фактическое время работы сотрудников</div>
+				</a>
+			</div>
+		</div>
 	</div>
-	<div class="span3">
-		<form class=" pull-right form-inline">
-			<input type="text" value="{{ booking_date }}" class="datepicker input-small">
-			<a href="" class="btn" id="link_to_date">Открыть</a>
-		</form>
+	<div class="span3 vert-alig-bottom">
+		<link rel="stylesheet" href="/css/jquery-ui.css">
+    	<script src="/js/jquery-ui-1.8.16.custom.min.js"></script>
+		<div id="smena_datapicker"></div>
+		<input type="hidden" value="{{ booking_date }}" class="wh_datepicker" />
+		<input type="hidden" value="{% if is_granted('ROLE_RESTAURANT_DIRECTOR') %}edit_role{% endif %}" class="role" />
 	</div>
 </div>
+
+<div class="row-fluid">
+	<a href="/company/{{ company.id }}/order/export/{{ booking_date }}" class="download_excel btn btn-success">Скачать Excel &nbsp;&nbsp;<b class="icon-download"></b></a>
+</div>
+
 <table class="table table-bordered table-striped" id="order_list"><thead>
   <tr id="add_row">
 	<th>
-		<p class="pull-left completed">
-			{%if edit_mode == true%}
-				Сформирован: <a href="#" class="btn {% if completed == 1%}disabled {% endif %}completed_yes">Да</a> <a href="#" class="btn  {% if completed == 0%}disabled {% endif %}completed_no">Нет</a>
-				<span class="alert">{% if completed == 1%}Заказ сформирован и закрыт для редактирования
-									{% else %}Заказ открыт для редактирования{% endif %}</span>
-			{% endif %}
+		<p class="pull-left completed hide">
+			Сформирован: <a href="#" class="btn disabled completed_yes">Да</a> <a href="#" class="btn  disabled completed_no">Нет</a>
+			<span class="alert hide order_close_msg">Заказ сформирован и закрыт для редактирования</span>
+			<span class="alert hide order_open_msg">Заказ открыт для редактирования</span>		
 		</p>
 		<p class=" pull-right">
 			<button href="" class="btn" id="group_by_supp">Сгрупировать по Поставщикам</button>&nbsp;
@@ -34,41 +54,4 @@
   </tr>
 </thead></table>
 <script src="/js/order.js"></script>
-<script type="text/javascript">
-$(function(){
-	{% if edit_mode %}
-		edit_mode = true;
-	{% else %}
-		edit_mode = false;
-	{% endif %}
-	units.fetch({	success: function(){
-								products = new Backbone.Collection;
-								products.reset({{ products_json|raw }});
-								
-								restaurants = new Backbone.Collection;
-								restaurants.reset({{ restaurants_json|raw }});
-								
-								suppliers = new Backbone.Collection;
-								suppliers.reset({{ suppliers_json|raw }});
-								
-								// Collection bookings
-								OrderCollection = Backbone.Collection.extend({
-								  
-								  model: OrderModel,
-								  
-								  url: 'api/company/{{ company.id }}/order',
-								  
-								  initialize: function(){  },			  
-								});
-								
-								orders = new OrderCollection({}, {units: units, products: products}); // init collection
-								view_order_by_rest = new ViewOrdersByRestaurant({collection: orders}); // initialize view
-								$('#order_list').append(view_order_by_rest.render().el); // add template
-								orders.reset({{ bookings_json|raw }}, {units: units, test: function(){ console.log(this); }});
-							}
-	});
-	
-	if (!edit_mode) $('.restaurant .edit_order').remove();
-});</script>
 {% endblock %}
-

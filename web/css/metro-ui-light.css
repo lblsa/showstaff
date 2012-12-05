@@ -979,6 +979,7 @@ button[aria-selected=true]:active .win-commandring {
 -------------------------------------------------- */
 input.btn, button.btn, a.btn {
    font-family: "Open Sans",Tahoma,Arial,Helvetica,Sans-Serif;
+   text-transform: none;
 }
 
 .btn {
