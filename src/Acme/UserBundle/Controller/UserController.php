@@ -689,7 +689,7 @@ class UserController extends Controller
 	/**
 	 * @Route(	"/", name="start_page" )
 	 * @Template()
-	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_SUPER_ADMIN, ROLE_ADMIN")
+	 * @Secure(roles="ROLE_RESTAURANT_ADMIN, ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN, ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_USER")
 	 */
 	public function indexAction(Request $request)
 	{
@@ -700,6 +700,18 @@ class UserController extends Controller
 
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		//var_dump($user->getUsername()); die;
+
+
+		$roles = $user->getRoles();
+
+		if ( count($roles) == 1 && $roles[0]->getRole() == 'ROLE_USER')
+		{
+			$response = $this->forward('AcmeUserBundle:WorkingHours:calendar', array('week'=>0));
+
+			return $response;
+		}
+
 		$ROLE_ADMIN = 0;
 		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))
 			$ROLE_ADMIN = 1;
