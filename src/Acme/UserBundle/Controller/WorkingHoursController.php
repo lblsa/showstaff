@@ -664,8 +664,6 @@ class WorkingHoursController extends Controller
 		$week_nav = array();
 		for ($j=-3; $j<4; $j++)
 			$week_nav[$week+$j] = date('d M',strtotime($week+$j-date('W').' week last Monday')).'-'.date('d M',strtotime($week+$j-date('W').' week next Sunday'));
-
-		
 		
 		$user = $this->get('security.context')->getToken()->getUser();
 		
@@ -675,7 +673,7 @@ class WorkingHoursController extends Controller
 			throw $this->createNotFoundException('Пользователь не найден');
 		
 		$week = array();
-		$used_duty = array();
+		$used_restaraunts = array();
 
 		for ($i=1; $i<8; $i++)
 		{
@@ -688,37 +686,35 @@ class WorkingHoursController extends Controller
 			{
 				foreach ($entities AS $p)
 				{
-					$entities_array[$p->getDuty()->getId()] = array( 	'company'		=> $p->getCompany()->getName(),
-																		'company_id'	=> $p->getCompany()->getId(),
-																		'restaurant'	=> $p->getRestaurant()->getName(),
-																		'restaurant_id'	=> $p->getRestaurant()->getId(),
-																		'duty'			=> $p->getDuty()->getId(),
-																		'planhours'		=> $p->getPlanhours(),
-																		'facthours'		=> $p->getFacthours(),
-																		'date'			=> $p->getDate(),
-																		'agreed'		=> ($p->getAgreed() || $date <= date('Y-m-d'))?1:0	);
-					$used_duty[] = $p->getDuty()->getId();
+					$entities_array[$p->getRestaurant()->getId()] = array( 	'company'		=> $p->getCompany()->getName(),
+																			'company_id'	=> $p->getCompany()->getId(),
+																			'restaurant'	=> $p->getRestaurant()->getName(),
+																			'restaurant_id'	=> $p->getRestaurant()->getId(),
+																			'planhours'		=> $p->getPlanhours(),
+																			'facthours'		=> $p->getFacthours(),
+																			'description'	=> $p->getDescription(),
+																			'date'			=> $p->getDate() 
+																			);
+
+					$used_restaraunts[$p->getRestaurant()->getId()] = $p->getRestaurant()->getName();
 				}
 			}
-			
+			else
+			{
+				$entities_array = null;
+			}
+
 			$week[$date] = $entities_array;
 		
 		}
-		
-		$used_duty = array_unique($used_duty); 
-		
-		if (count($used_duty) > 0)
-			$duty = $this->getDoctrine()->getRepository('AcmeUserBundle:Duty')->findBy(array('id'=>$used_duty));
-		else
-			$duty = array();
-		
-		return array(	'duty' => $duty,
-						'week' => $week,
-						'company' => $company,
-						'date' => date('Y-m-d'),
-						'week_nav' => $week_nav,
-						'curent_week' => date('W', $t)
-					);
+		//$used_restaraunts = array_unique($used_restaraunts); var_dump($used_restaraunts); die;
+
+		return array(	'week'			=> $week,
+						'company'		=> $company,
+						'date'			=> date('Y-m-d'),
+						'week_nav'		=> $week_nav,
+						'restaraunts'	=> $used_restaraunts,
+						'curent_week' 	=> date('W', $t)	);
 	}
 	
 }

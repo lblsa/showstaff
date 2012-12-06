@@ -1,15 +1,12 @@
 {% extends 'SupplierBundle::base.html.twig' %}
 
+{% block title %}Расписание{% endblock %}
+
 {% block body %}
-<div class="row-fluid">
-	<form class=" pull-right form-inline">
-		<input type="text" value="{{ date }}" class="wh_datepicker input-small">
-	</form>
-</div>
 
 <div class="row-fluid">
 	<div class="span3">
-		<h1>#{{ app.user.id }} {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h1>
+		<h1><!-- {{ app.user.id }} --> {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h1>
 		<p>Номер телефона: <strong>{{ app.user.username }}</strong></p>
 		<p>Эл. почта: <strong>{{ app.user.email }}</strong></p>
 	</div>
@@ -34,24 +31,24 @@
 		{% endfor %}
 		</ul>
 		
-		<table class="table table-bordered table-striped">
+		<table class="table table-bordered table-striped schedule">
 			<thead>
 				<tr>
-					<th>Должность\Дата</th>
+					<th>Ресторан \ Дата</th>
 					{% for d, v in week %}
-					<th>{{ d }}<br>План/факт</th>
+					<th class="span2">{{ d }}<br>План/факт</th>
 					{% endfor %}
 				</tr>
 			</thead>
 			<tbody>
-				{% for w in duty %}
+				{% for k, w in restaraunts %}
 					<tr>
-						<td>#{{w.id}} {{ w.name }}</td>
+						<td><!-- #{{ k }}--> {{ w }}</td>
 						{% for d, v in week %}
-							{% if v[w.id] is defined %}
-								<td>{{ v[w.id].planhours }} / {{ v[w.id].facthours }}</td>
+							{% if v[k] is defined %}
+								<td>{{ v[k].planhours }} / {{ v[k].facthours }}<hr>{{ v[k].description }}</td>
 							{% else %}
-								<td>0 / 0</td>
+								<td>0 / 0<hr></td>
 							{% endif %}
 						{% endfor %}
 					</tr>

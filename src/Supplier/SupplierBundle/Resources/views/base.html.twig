@@ -84,36 +84,37 @@
                   </a>
           				<ul class="dropdown-menu">
                     <li><a href="/"><strong>Стартовая</strong></a></li>
-          					{% if company.id is defined %}
-                    <li class="divider"></li>
-                    <li class="nav-header">Структура</li>
-          					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
-          					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
-          					<li class="divider"></li>
-          					<li class="nav-header">Заказы</li>
-                    <li><a href="/company/{{ company.id }}/supplier">Поставщики</a></li>
-          					<li><a href="/company/{{ company.id }}/product">Продукты</a></li>
-          					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
-          					{% if is_granted('ROLE_SUPER_ADMIN') %}
+                    {% if  (is_granted('ROLE_ORDER_MANAGER') or is_granted('ROLE_RESTAURANT_ADMIN')) %}
+            					{% if company.id is defined %}
                       <li class="divider"></li>
-                      <li class="nav-header">Супер админ</li>
-                      <li><a href="/company">Компании</a></li>
-                      <li><a href="/user">Администраторы</a></li>
-                    {% endif %}
-                    {% if company.id is defined %}
-                      {% if restaurants_list is defined %}
-                          {% for key, restaurant_name in restaurants_list %}
-                            <li class="divider"></li>
-                            <li class="nav-header">{{ restaurant_name }}</li>
-                            <li><a href="{{ path('WorkingHours_list', {'cid': company.id, 'rid': key }) }}">Смены</a></li>
-                            <li><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid': key }) }}">Заказы</a></li>
-                          {% endfor %}
+                      <li class="nav-header">Структура</li>
+            					<li><a href="/company/{{ company.id }}/restaurant">Рестораны</a></li>
+            					<li><a href="/company/{{ company.id }}/user">Пользователи</a></li>
+            					<li class="divider"></li>
+            					<li class="nav-header">Заказы</li>
+                      <li><a href="/company/{{ company.id }}/supplier">Поставщики</a></li>
+            					<li><a href="/company/{{ company.id }}/product">Продукты</a></li>
+            					<li><a href="/company/{{ company.id }}/order">Заказы</a></li>{% endif %}
+            					{% if is_granted('ROLE_SUPER_ADMIN') %}
+                        <li class="divider"></li>
+                        <li class="nav-header">Супер админ</li>
+                        <li><a href="/company">Компании</a></li>
+                        <li><a href="/user">Администраторы</a></li>
                       {% endif %}
+                      {% if company.id is defined %}
+                        {% if restaurants_list is defined %}
+                            {% for key, restaurant_name in restaurants_list %}
+                              <li class="divider"></li>
+                              <li class="nav-header">{{ restaurant_name }}</li>
+                              <li><a href="{{ path('WorkingHours_list', {'cid': company.id, 'rid': key }) }}">Смены</a></li>
+                              <li><a href="{{ path('OrderItem_list', {'cid': company.id, 'rid': key }) }}">Заказы</a></li>
+                            {% endfor %}
+                        {% endif %}
+                      {% endif %}
+
                     {% endif %}
-          					
-          					
           				</ul>
-                  <h4>{% block title %}{% endblock %}</h4>
+                  <h4>{% block title %}Главная{% endblock %}</h4>
             </div>
             </div>
          </div>

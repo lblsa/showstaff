@@ -2024,7 +2024,12 @@ header h1 {display: inline;}
 
 }
 
-
+.table.schedule td {
+   border-top: 1px solid #eee;
+}
+.schedule hr {
+   margin: 7px 0 4px 0;
+}
 /* Pagination
 -------------------------------------------------- */
 .pagination ul {
