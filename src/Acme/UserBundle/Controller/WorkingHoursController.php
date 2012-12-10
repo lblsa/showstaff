@@ -645,8 +645,14 @@ class WorkingHoursController extends Controller
 			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 			
 			if (!$permission)
-				throw new AccessDeniedHttpException('Нет доступа');
-			else {
+			{
+				//throw new AccessDeniedHttpException('Нет доступа');
+				return $this->render('AcmeUserBundle::user.html.twig', array());
+
+
+			}
+			else
+			{
 				$company = $permission->getCompany();
 			}
 		}

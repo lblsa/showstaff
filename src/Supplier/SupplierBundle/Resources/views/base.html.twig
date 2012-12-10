@@ -79,7 +79,7 @@
                <a id="backbutton" class="win-backbutton" title="Главная" href="/"></a>
                <div class="dropdown margintop10">
                   <a class="header-dropdown dropdown-toggle accent-color" data-toggle="dropdown" href="#">
-                    {% if company.id is defined %}Компания "{{ company.name }}"{% else %}Супер админ{% endif %}
+                    {% if company.id is defined %}Компания "{{ company.name }}"{% else %}{% if is_granted('ROLE_SUPER_ADMIN') %}Супер админ{% else %}Меню пользователя{% endif %}{% endif %}
                      <b class="caret"></b>
                   </a>
           				<ul class="dropdown-menu">
