@@ -88,7 +88,7 @@ class CompanyController extends Controller
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	 public function API_updateAction($cid, Request $request)
-	 {		 
+	 {	 
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $cid == $model['id'])

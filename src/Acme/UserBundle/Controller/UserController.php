@@ -9,12 +9,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\SecurityContext;
+use Symfony\Component\Security\Acl\Dbal\MutableAclProvider;
+use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
+use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+use Symfony\Component\Security\Acl\Permission\MaskBuilder;
+use Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use JMS\SecurityExtraBundle\Annotation\Secure;
-use Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder;
 
 class UserController extends Controller
 {
@@ -351,9 +355,7 @@ class UserController extends Controller
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $uid == $model['id'])
 		{
-			$user = $this->getDoctrine()
-							->getRepository('AcmeUserBundle:User')
-							->find($model['id']);
+			$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($model['id']);
 			
 			if (!$user)
 				return new Response('No user found for id '.$uid, 404, array('Content-Type' => 'application/json'));
@@ -361,24 +363,48 @@ class UserController extends Controller
 			
 			if (isset($model['company']) && (int)$model['company'] > 0)
 			{
+				$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+
 				$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$model['company']);
 							
 				if (!$company)
 					return new Response('Не найдена компаний c id '.(int)$model['company'], 404, array('Content-Type' => 'application/json'));
+
+		    	// currently user
+		        $securityIdentity = UserSecurityIdentity::fromAccount($user);
+				$aclProvider = $this->get('security.acl.provider');
 				
-				$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-				if (!$permission) // Если еще не существаволо то создадим
-				{
-					$permission = new Permission();
-					$permission->setUser($user);
-					$permission->setCompany($company);
-				} else {
-					$permission->setCompany($company);	
+				// clean old Object Ace
+				foreach ($companies as $c) {
+				    try {
+
+						$acl = $aclProvider->findAcl(ObjectIdentity::fromDomainObject($c), array($securityIdentity));
+						
+						foreach($acl->getObjectAces() as $a=>$ace)
+						{
+							if($ace->getSecurityIdentity()->getUsername() == $user->getUsername())
+								$acl->deleteObjectAce($a);
+						}
+
+						$aclProvider->updateAcl($acl);
+
+				    } catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+				        
+				    }
 				}
-				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($permission);
-				$em->flush();
+
+				// creating the ACL
+      			$objectIdentity = ObjectIdentity::fromDomainObject($company);
+
+			    try {
+					$acl = $aclProvider->findAcl($objectIdentity);			        			    
+			    } catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+			        $acl = $aclProvider->createAcl($objectIdentity);
+			    }
+		        // grant owner access
+		        $acl->insertObjectAce($securityIdentity, MaskBuilder::MASK_OWNER);
+		        $aclProvider->updateAcl($acl);
+
 			} else {
 				$model['company'] = 0;
 			}
@@ -421,10 +447,10 @@ class UserController extends Controller
 				$em->flush();
 				
 				$result = array('code'=> 200, 'data' => array(	'fullname' => $user->getFullname(),
-																	'username' => $user->getUsername(), 
-																	'email' => $user->getEmail(),
-																	'company' => $model['company'],
-																));
+																'username' => $user->getUsername(), 
+																'email' => $user->getEmail(),
+																'company' => $model['company'], ));
+
 				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
 		}
@@ -599,23 +625,26 @@ class UserController extends Controller
 					if (!$company) 
 						return new Response('No company found for id '.(int)$model['company'], 404, array('Content-Type' => 'application/json'));
 					
-					$permission = new Permission();
-					$permission->setUser($user);
-					$permission->setCompany($company);
+					// creating the ACL
+          			$objectIdentity = ObjectIdentity::fromDomainObject($company);
+            		$acl = $this->get('security.acl.provider')->createAcl($objectIdentity);
 					
-					$em = $this->getDoctrine()->getEntityManager();
-					$em->persist($permission);
-					$em->flush();
+			    	// currently user
+			        $securityIdentity = UserSecurityIdentity::fromAccount($user);
+
+			        // grant owner access
+			        $acl->insertObjectAce($securityIdentity, MaskBuilder::MASK_OWNER);
+			        $aclProvider->updateAcl($acl);
+
 				} else {
 					$model['company'] = 0;
 				}
 				
-				$result = array(	'code' => 200, 'data' => array(	'id' => $user->getId(),
+				$result = array(	'code' => 200, 'data' => array(		'id' => $user->getId(),
 																		'fullname' => $user->getFullname(), 
 																		'username' => $user->getUsername(), 
 																		'email' => $user->getEmail(),
-																		'company' => (int)$model['company'],
-																	));
+																		'company' => (int)$model['company'], ));
 				
 				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 			}
@@ -719,9 +748,19 @@ class UserController extends Controller
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			$securityContext = $this->get('security.context');
 			
-			if (!$permission)
+			$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();	
+			$available_companies = array();
+
+			foreach ($companies as $c) {
+				if (false !== $securityContext->isGranted('VIEW', $c))
+					$available_companies[] = $c;
+			}
+			echo '<pre>'.count($available_companies).'<hr>';
+			var_dump($available_companies); die;
+
+			if (count(available_companies) == 0)
 				throw new AccessDeniedHttpException('Нет доступа');
 			else
 			{
