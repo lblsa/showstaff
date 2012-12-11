@@ -705,12 +705,13 @@ class UserController extends Controller
 
 		$roles = $user->getRoles();
 
-		if ( count($roles) == 1 && $roles[0]->getRole() == 'ROLE_USER')
-		{
-			$response = $this->forward('AcmeUserBundle:WorkingHours:calendar', array('week'=>0));
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ( count($roles) == 1 && $roles[0]->getRole() == 'ROLE_USER')
+			{
+				$response = $this->forward('AcmeUserBundle:WorkingHours:calendar', array('week'=>0));
 
-			return $response;
-		}
+				return $response;
+			}
 
 		$ROLE_ADMIN = 0;
 		if ($this->get('security.context')->isGranted('ROLE_ADMIN'))

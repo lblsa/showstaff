@@ -82,9 +82,9 @@ class CompanyController extends Controller
 	
 	/**
 	 * @Route(	"api/company/{cid}.{_format}",
-				name="API_company_update",
-				requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_company_update",
+	 *			requirements={"_method" = "PUT", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	 public function API_updateAction($cid, Request $request)
@@ -135,9 +135,9 @@ class CompanyController extends Controller
 
 	/**
 	 * @Route(	"api/company.{_format}", 
-				name="API_company_create", 
-				requirements={"_method" = "POST", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			name="API_company_create", 
+	 *			requirements={"_method" = "POST", "_format" = "json|xml"},
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function API_createAction(Request $request)
@@ -186,7 +186,7 @@ class CompanyController extends Controller
 	 * @Route(	"api/company/{cid}.{_format}", 
 	 * 			name="API_company_delete", 
 	 * 			requirements={"_method" = "DELETE", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_SUPER_ADMIN")
 	 */
 	public function API_deleteAction($cid, Request $request)
