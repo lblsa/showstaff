@@ -5,6 +5,7 @@ namespace Supplier\SupplierBundle\Controller;
 use Supplier\SupplierBundle\Entity\Supplier;
 use Supplier\SupplierBundle\Entity\Product;
 use Supplier\SupplierBundle\Entity\SupplierProducts;
+use Acme\UserBundle\Controller\UserController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -30,12 +31,7 @@ class SupplierProductsController extends Controller
 		$restaurants_list = array();
 
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				throw new AccessDeniedHttpException('Forbidden Company');
-		}
+			UserController::checkCompany($cid);
 		
 		$company = $this->getDoctrine()
 						->getRepository('SupplierBundle:Company')
@@ -88,46 +84,30 @@ class SupplierProductsController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findOneCompanyOneSupplier($cid, $sid);
-
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneSupplier($cid, $sid);
 		if (!$company)
-		{
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
-		}
+			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			UserController::checkCompany($cid);
 		
 		$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find($sid);
 		
 		if (!$supplier)
-			return new Response('No supplier found for supplier_id='.$sid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Не найден поставщик', 404, array('Content-Type' => 'application/json'));
 		
 		if (!$supplier->getActive())
 			return new Response('Запрещено редактирование. Поставщик неактивен', 403, array('Content-Type' => 'application/json'));
 
 		
 		$products = $company->getProducts();
-			
 		$products_array = array();
 		
 		if ($products)
-		{
 			foreach ($products AS $p)
 				$products_array[$p->getId()] = array( 	'id' => $p->getId(),
 														'name'	=> $p->getName(), 
 														'unit'	=> $p->getUnit(), );
-		}
 		
 		$supplier_products = $this->getDoctrine()
 						->getRepository('SupplierBundle:SupplierProducts')
@@ -136,18 +116,14 @@ class SupplierProductsController extends Controller
 		$supplier_products_array = array();
 		
 		foreach ($supplier_products AS $p)
-		{	
 			if ($p->getProduct()->getActive() && $p->getActive())
-			{
 				$supplier_products_array[] = array(	'id'					=>	$p->getId(),
 													'price'					=>	$p->getPrice(),
 													'product'				=>	$p->getProduct()->getId(),
 													'primary_supplier'		=>	$p->getPrime(),
-													//'supplier_product_name'	=>	$p->getSupplierName()?$p->getSupplierName():$p->getProduct()->getName(),
 													'supplier_product_name'	=>	$p->getSupplierName(),
-													);												
-			}
-		}
+													);
+
 		$products_array = array_values($products_array);
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
@@ -164,31 +140,19 @@ class SupplierProductsController extends Controller
 	 * @Route(	"api/company/{cid}/supplier/{sid}/product/{pid}.{_format}",
 	 * 			name="API_supplier_products_update", 
 	 * 			requirements={"_method" = "PUT", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_updateAction($cid, $sid, $pid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
+
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneSupplier($cid, $sid);
+		if (!$company)
+			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findOneCompanyOneSupplier($cid, $sid);
-	
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
-		}
+			UserController::checkCompany($cid);
 		
 		$products = $company->getProducts();
 		foreach ($products AS $p)	$products_array[$p->getId()] = $p;
@@ -273,27 +237,19 @@ class SupplierProductsController extends Controller
 	 * @Route(	"api/company/{cid}/supplier/{sid}/product.{_format}", 
 	 * 			name="API_supplier_products_create",
 	 * 			requirements={"_method" = "POST", "_format" = "json|xml"},
-				defaults={"_format" = "json"})
+	 *			defaults={"_format" = "json"})
 	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_createAction($cid, $sid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findOneCompanyOneSupplier($cid, $sid);
-
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneSupplier($cid, $sid);
 		if (!$company)
 			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
+		
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			UserController::checkCompany($cid);		
 		
 		$products = $company->getProducts();
 		foreach ($products AS $p)	$products_array[$p->getId()] = $p;
@@ -366,32 +322,21 @@ class SupplierProductsController extends Controller
 	 * @Route(	"api/company/{cid}/supplier/{sid}/product/{pid}.{_format}", 
 	 * 			name="API_supplier_products_delete", 
  	 * 			requirements={"_method" = "DELETE", "_format" = "json|xml"},
-				defaults={"_format" = "json"})	
+	 *			defaults={"_format" = "json"})	
  	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteAction($cid, $sid, $pid)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findOneCompanyOneSupplier($cid, $sid);
-		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneSupplier($cid, $sid);
 		if (!$company)
 			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
 
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			UserController::checkCompany($cid);
 		 
-		$supplier_product = $this->getDoctrine()
-				->getRepository('SupplierBundle:SupplierProducts')
-				->find($pid);
+		$supplier_product = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->find($pid);
 		
 		if (!$supplier_product)
 			return new Response('No supplier product found for id '.$pid, 404, array('Content-Type' => 'application/json'));

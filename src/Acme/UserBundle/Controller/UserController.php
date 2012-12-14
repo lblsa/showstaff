@@ -110,7 +110,8 @@ class UserController extends Controller
 			return new Response('No role found for id '.$role_id, 404, array('Content-Type' => 'application/json'));
 		
 		$users = $role->getUsers();
-		
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+
 		$users_array = array();
 		
 		if ($users)
@@ -123,12 +124,30 @@ class UserController extends Controller
 										'name'	=>	$r->getName(),
 										'role'	=>	$r->getRole()	);
 				
-				$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($p->getId());
+							
 				
+      			$securityIdentity = UserSecurityIdentity::fromAccount($user);
+				$aclProvider = $this->get('security.acl.provider');
 				$company = 0;
-				if ($permission != null && $permission->getCompany() != null)
-					$company = $permission->getCompany()->getId();
-					
+				foreach ($companies as $c) {
+				    try {
+
+						$acl = $aclProvider->findAcl(ObjectIdentity::fromDomainObject($c), array($securityIdentity));
+						
+						foreach($acl->getObjectAces() as $a=>$ace)
+						{
+							if($ace->getSecurityIdentity()->getUsername() == $p->getUsername())
+							{
+								$company = $c->getId();
+								break;
+							}
+						}
+
+				    } catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+				        
+				    }
+				}
+
 				$users_array[] = array( 	'id'		=> $p->getId(),
 											'username'	=> $p->getUsername(), 
 											'email'		=> $p->getEmail(),
@@ -214,16 +233,12 @@ class UserController extends Controller
 	 {
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$cid);				
+		if (!$company)
+			return new Response('Компания не найдена', 404, array('Content-Type' => 'application/json'));
 
-			if (	!$permission || 
-					$permission->getCompany()->getId() != $cid || 
-					!$this->get('security.context')->isGranted('ROLE_ADMIN')
-				) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			$this->checkCompanyAction($cid);
 		
 		$model = (array)json_decode($request->getContent());
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $uid == $model['id'])
@@ -231,22 +246,37 @@ class UserController extends Controller
 			$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($model['id']);
 			if (!$user)
 				return new Response('No user found for id '.$uid, 404, array('Content-Type' => 'application/json'));
-						
-			$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$cid);
-						
-			if (!$company)
-				return new Response('No company found for id '.(int)$cid, 404, array('Content-Type' => 'application/json'));
 			
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-			if (!$permission) // Если еще не существаволо то создадим
-			{
-				$permission = new Permission();
-				$permission->setUser($user);
-				$permission->setCompany($company);
-			} else {
-				$permission->setCompany($company);	
+			//--> Add permisson VIEW to curent company
+			$securityIdentity = UserSecurityIdentity::fromAccount($user);
+			$objectIdentity = ObjectIdentity::fromDomainObject($company);
+			$aclProvider = $this->get('security.acl.provider');
+
+			$builder = new MaskBuilder();
+			$builder->add('view');
+			$mask = $builder->get();  // create only view mask
+
+			try {
+				$acl = $aclProvider->findAcl($objectIdentity);
+				
+				$exist = 0;
+				
+				if (count($acl->getObjectAces()))
+					foreach ($acl->getObjectAces() as $ace)
+						if ($ace->getSecurityIdentity()->getUsername() == $user->getUsername())
+							$exist = 1;
+
+				if (!$exist)
+				{
+					$acl->insertObjectAce($securityIdentity, $mask); // add view access
+					$aclProvider->updateAcl($acl);
+				}
+
+			} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+				
 			}
-			
+			//<-- Add permisson VIEW to curent company
+
 			//* User
 			$validator = $this->get('validator');
 
@@ -305,25 +335,70 @@ class UserController extends Controller
 				$em->persist($user);
 				$em->flush();
 				
-				$restaurants = array();
+				$available_restaurants = array();
 				if (isset($model['restaurants']) && is_array($model['restaurants']))
 				{
-					$permission->cleanRestaurants();
-					$available_restaurants = $this->getDoctrine()
-										->getRepository('SupplierBundle:Restaurant')
-										->findByCompany($permission->getCompany()->getId());
+					//--> Add permisson VIEW to restaurants
+					$restaurants = $company->getRestaurants();
 					
-					foreach ($available_restaurants AS $r)
-						if (in_array($r->getId(), $model['restaurants']))
+					if ($restaurants)
+						foreach ($restaurants as $restaurant)
 						{
-							$permission->addRestaurant($r);
-							$restaurants[] = $r->getId();
+							$objectIdentity = ObjectIdentity::fromDomainObject($restaurant);
+							
+							$builder = new MaskBuilder();
+							$builder->add('view');
+							$mask = $builder->get();  // create only view mask
+							
+							try {
+								$acl = $aclProvider->findAcl($objectIdentity);
+
+								if (count($acl->getObjectAces()) > 0)
+								{
+									$exist = 0;
+									foreach($acl->getObjectAces() as $a=>$ace)
+									{
+										if($ace->getSecurityIdentity()->getUsername() == $user->getUsername()) // only curent user
+										{
+											if (!in_array($restaurant->getId(), $model['restaurants']))
+												$acl->deleteObjectAce($a);
+											else
+												$available_restaurants[] = $restaurant->getId();
+
+											$exist = 1;
+										}
+									}
+
+									if (!$exist && in_array($restaurant->getId(), $model['restaurants']))
+									{
+										$available_restaurants[] = $restaurant->getId();
+										$acl->insertObjectAce($securityIdentity, $mask);
+									}
+
+								}
+								else
+								{
+									if (in_array($restaurant->getId(), $model['restaurants']))
+									{
+										$available_restaurants[] = $restaurant->getId();
+										$acl->insertObjectAce($securityIdentity, $mask);
+									}
+								}
+
+							} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+								$acl = $aclProvider->createAcl($objectIdentity);
+
+								if (in_array($restaurant->getId(), $model['restaurants']))
+								{
+									$available_restaurants[] = $restaurant->getId();
+									$acl->insertObjectAce($securityIdentity, $mask);
+								}
+							}
+
+							$aclProvider->updateAcl($acl);
 						}
+					//<-- Add permisson VIEW to restaurants
 				}
-				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($permission);
-				$em->flush();
 
 
 				$code = 200;
@@ -331,7 +406,7 @@ class UserController extends Controller
 																		'fullname' => $user->getFullname(), 
 																		'username' => $user->getUsername(), 
 																		'email' => $user->getEmail(),
-																		'restaurants' => $restaurants,
+																		'restaurants' => $available_restaurants,
 																		'roles' => $roles,
 																	));
 				
@@ -469,15 +544,13 @@ class UserController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+		// check exist this company
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
+		if (!$company)
+			throw $this->createNotFoundException('Компания не найдена');
 
-			if (	!$permission || 
-					$permission->getCompany()->getId() != $cid ||
-					!$this->get('security.context')->isGranted('ROLE_ADMIN')	) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			$this->checkCompany($cid);
 		
 		$model = (array)json_decode($request->getContent());
 		
@@ -512,6 +585,7 @@ class UserController extends Controller
 					$available_roles = $this->getDoctrine()
 											->getRepository('AcmeUserBundle:Role')
 											->findBy(array('role' => array(	'ROLE_RESTAURANT_ADMIN',
+																			'ROLE_RESTAURANT_DIRECTOR',
 																			'ROLE_ORDER_MANAGER',
 																			'ROLE_ADMIN')));
 					
@@ -526,41 +600,64 @@ class UserController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($new_user);
 				$em->flush();
-			
-				$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
-								
-				if (!$company)
-					return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 				
-				$permission = new Permission();
-				$permission->setUser($new_user);
-				$permission->setCompany($company);
+				//--> Add permisson VIEW to curent company
+				$securityIdentity = UserSecurityIdentity::fromAccount($new_user);
+				$objectIdentity = ObjectIdentity::fromDomainObject($company);
+				$aclProvider = $this->get('security.acl.provider');
+
+				$builder = new MaskBuilder();
+				$builder->add('view');
+				$mask = $builder->get();  // create only view mask
+
+				try {
+					$acl = $aclProvider->findAcl($objectIdentity);			        			    
+				} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+					$acl = $aclProvider->createAcl($objectIdentity);
+				}
+
+				$acl->insertObjectAce($securityIdentity, $mask); // add view access
+				$aclProvider->updateAcl($acl);
+				//<-- Add permisson VIEW to curent company
 				
-				$restaurants = array();
-				if (isset($model['restaurants']) && is_array($model['restaurants']) && count($model['restaurants'])>0)
+				$available_restaurants = array();
+				if (isset($model['restaurants']) && is_array($model['restaurants']))
 				{
-					$available_restaurants = $this->getDoctrine()
-										->getRepository('SupplierBundle:Restaurant')
-										->findByCompany($permission->getCompany()->getId());
+					//--> Add permisson VIEW to restaurants
+					$restaurants = $company->getRestaurants();
 					
-					foreach ($available_restaurants AS $r)
-						if (in_array($r->getId(), $model['restaurants']))
+					if ($restaurants)
+						foreach ($restaurants as $restaurant)
 						{
-							$permission->addRestaurant($r);
-							$restaurants[] = $r->getId();
+							$objectIdentity = ObjectIdentity::fromDomainObject($restaurant);
+							
+							$builder = new MaskBuilder();
+							$builder->add('view');
+							$mask = $builder->get();  // create only view mask
+							
+							try {
+								$acl = $aclProvider->findAcl($objectIdentity);
+							} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+								$acl = $aclProvider->createAcl($objectIdentity);
+							}
+
+							if (in_array($restaurant->getId(), $model['restaurants']))
+							{
+								$available_restaurants[] = $restaurant->getId();
+								$acl->insertObjectAce($securityIdentity, $mask);
+							}
+
+							$aclProvider->updateAcl($acl);
 						}
+					//<-- Add permisson VIEW to restaurants
 				}
 				
-				$em = $this->getDoctrine()->getEntityManager();
-				$em->persist($permission);
-				$em->flush();
-				
 				$result = array(	'code' => 200, 'data' => array(	'id' => $new_user->getId(),
-																		'fullname' => $new_user->getFullname(), 
-																		'username' => $new_user->getUsername(), 
-																		'email' => $new_user->getEmail(),
-																		'restaurants' => $restaurants,
-																		'roles' => $roles,
+																	'fullname' => $new_user->getFullname(), 
+																	'username' => $new_user->getUsername(), 
+																	'email' => $new_user->getEmail(),
+																	'restaurants' => $available_restaurants,
+																	'roles' => $roles,
 																	));
 				
 				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
@@ -627,7 +724,13 @@ class UserController extends Controller
 					
 					// creating the ACL
           			$objectIdentity = ObjectIdentity::fromDomainObject($company);
-            		$acl = $this->get('security.acl.provider')->createAcl($objectIdentity);
+            		$aclProvider = $this->get('security.acl.provider');
+
+					try {
+						$acl = $aclProvider->findAcl($objectIdentity);
+					} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+						$acl = $this->get('security.acl.provider')->createAcl($objectIdentity);
+					}
 					
 			    	// currently user
 			        $securityIdentity = UserSecurityIdentity::fromAccount($user);
@@ -665,14 +768,7 @@ class UserController extends Controller
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($curent_user->getId());
-
-			if (	!$permission || 
-					$permission->getCompany()->getId() != $cid || 
-					!$this->get('security.context')->isGranted('ROLE_ADMIN')	) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
+			$this->checkCompany($cid);
 		
 		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($uid);
 					
@@ -728,9 +824,6 @@ class UserController extends Controller
 		$restaurants_array = array();
 
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		//var_dump($user->getUsername()); die;
-
 
 		$roles = $user->getRoles();
 
@@ -738,7 +831,6 @@ class UserController extends Controller
 			if ( count($roles) == 1 && $roles[0]->getRole() == 'ROLE_USER')
 			{
 				$response = $this->forward('AcmeUserBundle:WorkingHours:calendar', array('week'=>0));
-
 				return $response;
 			}
 
@@ -757,19 +849,15 @@ class UserController extends Controller
 				if (false !== $securityContext->isGranted('VIEW', $c))
 					$available_companies[] = $c;
 			}
-			echo '<pre>'.count($available_companies).'<hr>';
-			var_dump($available_companies); die;
+			//echo '<pre>'.count($available_companies).'<hr>';	var_dump($available_companies); die;
 
-			if (count(available_companies) == 0)
+			if (count($available_companies) == 0)
 				throw new AccessDeniedHttpException('Нет доступа');
 			else
 			{
-				$company = $permission->getCompany();
+				$company = $available_companies[0];
 
-				if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-					$restaurants = $permission->getRestaurants();
-				else
-					$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany($company->getId());
+				$restaurants = $this->getAvailableRestaurantsAction($company->getId());
 
 				if ($restaurants)
 					foreach ($restaurants as $r)
@@ -802,22 +890,17 @@ class UserController extends Controller
 		$user = $this->get('security.context')->getToken()->getUser();
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Нет доступа', 403, array('Content-Type' => 'application/json'));
-		}
+			$this->checkCompany($cid);
 
 		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		if (!$company)
 			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
-		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
+		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_DIRECTOR', 
+																													'ROLE_RESTAURANT_ADMIN',
+																													'ROLE_ORDER_MANAGER',
+																													'ROLE_ADMIN'))); // available roles
 
 		if ($available_roles)
 		{
@@ -828,42 +911,72 @@ class UserController extends Controller
 				
 		}
 
-		
-		$permissions = $this->getDoctrine()
-					->getRepository('AcmeUserBundle:Permission')
-					->findByCompany($cid);
 
 		$users_array = array();
-		if ($permissions)
-		{
-			foreach ($permissions AS $p)
+		$aclProvider = $this->get('security.acl.provider');
+		$objectIdentity = ObjectIdentity::fromDomainObject($company);
+
+		try {
+			$acl = $aclProvider->findAcl($objectIdentity);
+
+			if (count($acl->getObjectAces()) > 0)
 			{
-				$available_role = true;
-				foreach ($p->getUser()->getRoles() AS $r)
-					if ($r->getRole() == 'ROLE_COMPANY_ADMIN')
-						$available_role = false;
-						
-				if ($available_role)
+				foreach($acl->getObjectAces() as $a=>$ace)
 				{
-					$restaurants = array();
-					foreach ($p->getRestaurants() AS $r)
-						$restaurants[] = $r->getId();
-					
-					
-					$roles = array();
-					foreach ($p->getUser()->getRoles() AS $r)
-						$roles[] = $r->getId();
-					
-					$users_array[] = array( 	'id'		=> $p->getUser()->getId(),
-												'username'	=> $p->getUser()->getUsername(), 
-												'email'		=> $p->getUser()->getEmail(),  
-												'company'	=> $cid,
-												'fullname'	=> $p->getUser()->getFullname(),
-												'roles'		=> $roles,
-												'restaurants'		=> $restaurants,
-											);
+					$available_role = true;
+
+					$employee = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->findOneByUsername($ace->getSecurityIdentity()->getUsername());
+					if ($employee)
+					{
+						foreach ($employee->getRoles() AS $r)
+							if ($r->getRole() == 'ROLE_COMPANY_ADMIN')
+								$available_role = false;
+
+						if ($available_role)
+						{
+							$restaurants = array();
+							$all_company_restaurants = $company->getRestaurants();
+							if ($all_company_restaurants)
+							{
+								foreach ($all_company_restaurants as $restaurant)
+								{
+									$objectIdentity = ObjectIdentity::fromDomainObject($restaurant);
+							
+									try {
+										$acl = $aclProvider->findAcl($objectIdentity);
+
+										if (count($acl->getObjectAces()) > 0)
+										{
+											foreach($acl->getObjectAces() as $a=>$ace)
+											{
+												if($ace->getSecurityIdentity()->getUsername() == $employee->getUsername()) // only curent user
+													$restaurants[] = $restaurant->getId();
+											}
+										}
+									} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+
+									}
+								}
+							}
+
+							$roles = array();
+							foreach ($employee->getRoles() AS $r)
+								$roles[] = $r->getId();
+
+							$users_array[] = array( 	'id'				=> $employee->getId(),
+														'username'			=> $employee->getUsername(), 
+														'email'				=> $employee->getEmail(),  
+														'company'			=> $cid,
+														'fullname'			=> $employee->getFullname(),
+														'roles'				=> $roles,
+														'restaurants'		=> $restaurants,
+													);
+						}
+					}
 				}
 			}
+		} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+
 		}
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
@@ -889,32 +1002,13 @@ class UserController extends Controller
 
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			$this->checkCompany($cid);
 
-			if (!$permission)// проверим из какой компании
-				throw new AccessDeniedHttpException('Нет доступа к компании');	
-			else
-			{
-				if ($permission->getCompany()->getId() != $cid)// проверим из какой компании
-					throw new AccessDeniedHttpException('Нет доступа к компании');	
+			$restaurants = $this->getAvailableRestaurants($cid);
 
-				if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-				{
-					$restaurants = $permission->getRestaurants();
-
-					if ($restaurants)
-						foreach ($restaurants as $r)
-							$restaurants_array[$r->getId()] = $r->getName();
-				}
-				else
-				{
-					$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
-
-					if ($restaurants)
-						foreach ($restaurants as $r)
-							$restaurants_array[$r->getId()] = $r->getName();
-				}
-			}
+			if ($restaurants)
+				foreach ($restaurants as $r)
+					$restaurants_array[$r->getId()] = $r->getName();
 		}
 
 		$company = $this->getDoctrine()
@@ -924,7 +1018,7 @@ class UserController extends Controller
 		if (!$company)
 			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
-		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
+		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_DIRECTOR', 'ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
 
 		if ($available_roles)
 		{
@@ -1134,4 +1228,139 @@ class UserController extends Controller
 			return new Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));
 	}
 
+	/**
+	 * @Route(	"cup/{cid}", name="checkUserPermission", requirements={	"_method" = "GET"})
+	 * @Secure(roles="ROLE_COMPANY_ADMIN")
+	 */
+	public function checkUserPermissionAction($cid)
+	{
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find((int)$cid);				
+		if (!$company)
+			return new Response('Компания не найдена', 404, array('Content-Type' => 'application/json'));
+
+		$all_company_restaurants = $company->getRestaurants();
+
+		$securityContext = $this->get('security.context');
+		$aclProvider = $this->get('security.acl.provider');
+		
+		$users = array();
+		try {
+			
+			$acl = $aclProvider->findAcl(ObjectIdentity::fromDomainObject($company));
+
+			if (count($acl->getObjectAces()) > 0)
+			{
+				foreach($acl->getObjectAces() as $ace)
+				{		
+					$roles = array();
+					$restaurants = array();
+					$employee = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->findOneByUsername($ace->getSecurityIdentity()->getUsername());
+					if ($employee)
+					{
+						foreach ($employee->getRoles() AS $r)
+							$roles[$r->getRole()] = $r->getName();
+
+						if ($all_company_restaurants)
+							foreach ($all_company_restaurants as $restaurant)
+							{
+								$objectIdentity = ObjectIdentity::fromDomainObject($restaurant);
+						
+								try {
+									$acl = $aclProvider->findAcl($objectIdentity);
+
+									if (count($acl->getObjectAces()) > 0)
+									{
+										foreach($acl->getObjectAces() as $a=>$ace)
+										{
+											if($ace->getSecurityIdentity()->getUsername() == $employee->getUsername()) // only curent user
+												$restaurants[$restaurant->getId()] = $restaurant->getName();
+										}
+									}
+								} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+
+								}
+							}
+					}
+					echo '<strong>'.$employee->getUsername().'</strong>';
+					$users[$employee->getUsername()] = array('restaurants'=>$restaurants, 'roles' => $roles);
+					//echo 	'<table border=1><tr><td>restaurants</td><td>roles</td></tr><tr><td>';
+					var_dump($restaurants);
+					//echo 	'</td><td>';
+					var_dump($roles);
+					echo 	'<hr>';
+				}
+			}
+			else
+			{
+				echo 'Нет сотрудников';
+			}
+
+		} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+
+		}
+		die;
+	}
+   public function __construct($container = null)
+    {
+        $this->container = $container;
+        // ... deal with any more arguments etc here
+    }
+
+    public function get($service)
+    {
+        return $this->container->get($service);
+    }
+
+	public function checkCompanyAction($cid)
+	{
+		$securityContext = $this->get('security.context');
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();	
+		$available_companies = array();
+
+		foreach ($companies as $c)
+			if (false !== $securityContext->isGranted('VIEW', $c))
+				$available_companies[$c->getId()] = $c;
+
+		if (count($available_companies) == 0  || !array_key_exists($cid, $available_companies))
+			return 1;
+		else
+			return 0;
+	}
+
+	public function getAvailableRestaurantsAction($cid)
+	{
+		$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany($cid);
+		$user = $this->get('security.context')->getToken()->getUser();
+		$aclProvider = $this->get('security.acl.provider');
+		$available_restaurants = array();
+		if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
+		{
+			$securityContext = $this->get('security.context');
+			foreach ($restaurants as $restaurant)
+			{
+				$objectIdentity = ObjectIdentity::fromDomainObject($restaurant);
+		
+				try {
+					$acl = $aclProvider->findAcl($objectIdentity);
+
+					if (count($acl->getObjectAces()) > 0)
+					{
+						foreach($acl->getObjectAces() as $a=>$ace)
+						{
+							if($ace->getSecurityIdentity()->getUsername() == $user->getUsername()) // only curent user
+								$available_restaurants[] = $restaurant;
+						}
+					}
+				} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+
+				}
+			}
+		}
+		else
+		{
+			$available_restaurants = $restaurants;
+		}
+
+		return $available_restaurants;
+	}
 }
