@@ -4,7 +4,6 @@ namespace Supplier\SupplierBundle\Controller;
 
 use Supplier\SupplierBundle\Entity\Company;
 use Supplier\SupplierBundle\Entity\Restaurant;
-use Acme\UserBundle\Controller\UserController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -35,7 +34,7 @@ class RestaurantController extends Controller
 		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			if ($this->get("my.user.service")->checkCompanyAction($cid))
-				throw new AccessDeniedHttpException('Нет доступа к компании');
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 					
 		$restaurants = $company->getRestaurants();
 		$available_restaurants = array();
@@ -144,7 +143,7 @@ class RestaurantController extends Controller
 		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			if ($this->get("my.user.service")->checkCompanyAction($cid))
-				throw new AccessDeniedHttpException('Нет доступа к компании');
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 		
@@ -206,7 +205,7 @@ class RestaurantController extends Controller
 		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			if ($this->get("my.user.service")->checkCompanyAction($cid))
-				throw new AccessDeniedHttpException('Нет доступа к компании');
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
 		if (!$restaurant)
@@ -240,7 +239,7 @@ class RestaurantController extends Controller
 		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			if ($this->get("my.user.service")->checkCompanyAction($cid))
-				throw new AccessDeniedHttpException('Нет доступа к компании');
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 

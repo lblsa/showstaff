@@ -29,37 +29,23 @@ class SupplierProductsController extends Controller
 		$user = $this->get('security.context')->getToken()->getUser();
 
 		$restaurants_list = array();
-
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			UserController::checkCompany($cid);
 		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findOneCompanyOneSupplier($cid, $sid);
-
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneSupplier($cid, $sid);
 		if (!$company)
 			throw $this->createNotFoundException('No supplier found for supplier_id='.$sid.' and company_id='.$cid );
 
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-		{
-			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-		else
-		{
-			$restaurants = $permission->getRestaurants();
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
 
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
+		if ($restaurants)
+			foreach ($restaurants as $r)
+				$restaurants_list[$r->getId()] = $r->getName();
 
-		$supplier = $this->getDoctrine()
-						->getRepository('SupplierBundle:Supplier')
-						->find($sid);
+		$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find($sid);
 
 		if (!$supplier || $supplier->getActive() == 0)
 			throw $this->createNotFoundException('Не найден поставщик');
@@ -88,8 +74,10 @@ class SupplierProductsController extends Controller
 		if (!$company)
 			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			UserController::checkCompany($cid);
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find($sid);
 		
@@ -151,8 +139,10 @@ class SupplierProductsController extends Controller
 		if (!$company)
 			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			UserController::checkCompany($cid);
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$products = $company->getProducts();
 		foreach ($products AS $p)	$products_array[$p->getId()] = $p;
@@ -248,8 +238,10 @@ class SupplierProductsController extends Controller
 		if (!$company)
 			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			UserController::checkCompany($cid);		
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));	
 		
 		$products = $company->getProducts();
 		foreach ($products AS $p)	$products_array[$p->getId()] = $p;
@@ -333,8 +325,10 @@ class SupplierProductsController extends Controller
 		if (!$company)
 			return new Response('No supplier found for supplier_id='.$sid.' and company_id='.$cid, 404, array('Content-Type' => 'application/json'));
 
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			UserController::checkCompany($cid);
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		 
 		$supplier_product = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->find($pid);
 		

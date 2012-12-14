@@ -3,7 +3,6 @@
 namespace Acme\UserBundle\Controller;
 
 use Acme\UserBundle\Entity\User;
-use Acme\UserBundle\Entity\Permission;
 use Acme\UserBundle\Form\Type\UserType;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -126,11 +125,11 @@ class UserController extends Controller
 				
 							
 				
-      			$securityIdentity = UserSecurityIdentity::fromAccount($user);
+				$securityIdentity = UserSecurityIdentity::fromAccount($user);
 				$aclProvider = $this->get('security.acl.provider');
 				$company = 0;
 				foreach ($companies as $c) {
-				    try {
+					try {
 
 						$acl = $aclProvider->findAcl(ObjectIdentity::fromDomainObject($c), array($securityIdentity));
 						
@@ -198,11 +197,27 @@ class UserController extends Controller
 										'name'	=>	$r->getName(),
 										'role'	=>	$r->getRole()	);
 				
-				$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($p->getId());
-				
+				$securityIdentity = UserSecurityIdentity::fromAccount($user);
+				$aclProvider = $this->get('security.acl.provider');
 				$company = 0;
-				if ($permission != null && $permission->getCompany() != null)
-					$company = $permission->getCompany()->getId();
+				foreach ($companies as $c) {
+					try {
+
+						$acl = $aclProvider->findAcl(ObjectIdentity::fromDomainObject($c), array($securityIdentity));
+						
+						foreach($acl->getObjectAces() as $a=>$ace)
+						{
+							if($ace->getSecurityIdentity()->getUsername() == $p->getUsername())
+							{
+								$company = $c->getId();
+								break;
+							}
+						}
+
+				    } catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+				        
+				    }
+				}
 					
 				$users_array[] = array( 	'id'		=> $p->getId(),
 											'username'	=> $p->getUsername(), 
@@ -238,7 +253,8 @@ class UserController extends Controller
 			return new Response('Компания не найдена', 404, array('Content-Type' => 'application/json'));
 
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			$this->checkCompanyAction($cid);
+			if ($this->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $uid == $model['id'])
@@ -550,7 +566,8 @@ class UserController extends Controller
 			throw $this->createNotFoundException('Компания не найдена');
 
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			$this->checkCompany($cid);
+			if ($this->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 		
@@ -768,7 +785,8 @@ class UserController extends Controller
 		$curent_user = $this->get('security.context')->getToken()->getUser();
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			$this->checkCompany($cid);
+			if ($this->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->find($uid);
 					
@@ -890,7 +908,8 @@ class UserController extends Controller
 		$user = $this->get('security.context')->getToken()->getUser();
 		
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			$this->checkCompany($cid);
+			if ($this->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
@@ -1000,25 +1019,27 @@ class UserController extends Controller
 		
 		$restaurants_array = array();
 
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$this->checkCompany($cid);
+			if ($this->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 
-			$restaurants = $this->getAvailableRestaurants($cid);
+			$restaurants = $this->getAvailableRestaurantsAction($cid);
 
 			if ($restaurants)
 				foreach ($restaurants as $r)
 					$restaurants_array[$r->getId()] = $r->getName();
 		}
 
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
 		
-		if (!$company)
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-		
-		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array('ROLE_RESTAURANT_DIRECTOR', 'ROLE_RESTAURANT_ADMIN','ROLE_ORDER_MANAGER','ROLE_ADMIN'))); // available roles
+		$available_roles = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findBy(array('role' => array(	'ROLE_RESTAURANT_DIRECTOR', 
+																														'ROLE_RESTAURANT_ADMIN',
+																														'ROLE_ORDER_MANAGER',
+																														'ROLE_ADMIN'))); // available roles
 
 		if ($available_roles)
 		{
@@ -1027,44 +1048,6 @@ class UserController extends Controller
 										'name' => $r->getName(),
 										'role' => $r->getRole(), );
 				
-		}
-
-		
-		$permissions = $this->getDoctrine()
-					->getRepository('AcmeUserBundle:Permission')
-					->findByCompany($cid);
-
-		$users_array = array();
-		if ($permissions)
-		{
-			foreach ($permissions AS $p)
-			{
-				$available_role = true;
-				foreach ($p->getUser()->getRoles() AS $r)
-					if ($r->getRole() == 'ROLE_COMPANY_ADMIN')
-						$available_role = false;
-						
-				if ($available_role)
-				{
-					$restaurants = array();
-					foreach ($p->getRestaurants() AS $r)
-						$restaurants[] = $r->getId();
-					
-					
-					$roles = array();
-					foreach ($p->getUser()->getRoles() AS $r)
-						$roles[] = $r->getId();
-					
-					$users_array[] = array( 	'id'			=> $p->getUser()->getId(),
-												'username'		=> $p->getUser()->getUsername(), 
-												'email'			=> $p->getUser()->getEmail(),  
-												'company'		=> $cid,
-												'fullname'		=> $p->getUser()->getFullname(),
-												'roles'			=> $roles,
-												'restaurants'	=> $restaurants,
-											);
-				}
-			}
 		}
 
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
