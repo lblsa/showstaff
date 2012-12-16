@@ -39,63 +39,35 @@ class OrderItemController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);	
+		if (!$company)
+			throw $this->createNotFoundException('No restaurant found for id '.$rid.' in company #'.$cid);
+
 		$restaurants_list = array();
+		$available_restaurants = array();
 
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
 		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				throw new AccessDeniedHttpException('Forbidden Company');
-
-			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-			{
-				$restaurants = $permission->getRestaurants();
-				if (!$restaurants)
-					throw new AccessDeniedHttpException('Forbidden Restaurant');
-				else
-				{
-					$available_restaurants = array();
-					foreach ($restaurants AS $r)
-						$available_restaurants[] = $r->getId();
-						
-					if (!in_array($rid, $available_restaurants))
-						throw new AccessDeniedHttpException('Forbidden Restaurant');
-				}
-			}
+			$available_restaurants[] = $r->getId();
+			$restaurants_list[$r->getId()] = $r->getName();
+			if ($r->getId() == $rid)
+				$restaurant = $r;
 		}
 
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-		{
-			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-		else
-		{
-			$restaurants = $permission->getRestaurants();
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}		
+		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
+			throw new AccessDeniedHttpException('Нет доступа к ресторану');
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
-			
-		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findOneCompanyOneRestaurant($cid, $rid);
-		
-		if (!$company)
-			throw $this->createNotFoundException('No restaurant found for id '.$rid.' in company #'.$cid);
-		
-		$restaurants = $company->getRestaurants();
-		foreach ($restaurants AS $r) $restaurant = $r;
 
-		$suppler_products = $this->getDoctrine()
-								->getRepository('SupplierBundle:SupplierProducts')
-								->findByCompany($cid);
+		$suppler_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findByCompany($cid);
 
 		$products_array = array();
 		foreach ($suppler_products as $sp)
@@ -105,9 +77,9 @@ class OrderItemController extends Controller
 																		'unit' => $sp->getProduct()->getUnit(),
 																		'use' => 0 );
 
-		$bookings = $this->getDoctrine()
-						->getRepository('SupplierBundle:OrderItem')
-						->findBy( array(	'company'=>$cid, 'restaurant'=>$rid, 'date' => $booking_date) );
+		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->findBy( array(	'company'=>$cid,
+																									'restaurant'=>$rid,
+																									'date' => $booking_date) );
 
 		$bookings_array = array();
 		
@@ -136,10 +108,10 @@ class OrderItemController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 
-		return array(	'restaurant' => $restaurant,
-						'restaurants_list'=>$restaurants_list,
-						'company' => $company,
-						'booking_date' => $booking_date );
+		return array(	'restaurant'		=> $restaurant,
+						'restaurants_list'	=> $restaurants_list,
+						'company'			=> $company,
+						'booking_date'		=> $booking_date );
 		
 	}
 	
@@ -170,30 +142,19 @@ class OrderItemController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
-			// check restaurant {rid} for admin restaurant
-			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-			{
-				$restaurants = $permission->getRestaurants();
-				if (!$restaurants)
-					return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				else
-				{
-					$available_restaurants = array();
-					foreach ($restaurants AS $r)
-						$available_restaurants[] = $r->getId();
-						
-					if (!in_array($rid, $available_restaurants))
-						return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				}
-			}
-		}
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+			
+		$available_restaurants = array();
+		foreach ($restaurants AS $r)
+			$available_restaurants[] = $r->getId();
+			
+		if (!in_array($rid, $available_restaurants))
+			return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -206,9 +167,7 @@ class OrderItemController extends Controller
 		$restaurants = $company->getRestaurants();
 		foreach ($restaurants AS $r) $restaurant = $r;
 
-		$suppler_products = $this->getDoctrine()
-								->getRepository('SupplierBundle:SupplierProducts')
-								->findByCompany($cid);
+		$suppler_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findByCompany($cid);
 
 		$products_array = array();
 		foreach ($suppler_products as $sp)
@@ -296,45 +255,27 @@ class OrderItemController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+			
+		$restaurants = $restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-			
-			
-			// check restaurant {rid} for admin restaurant
-			if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
-					!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
-					!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
-				)
-			{
-				$restaurants = $permission->getRestaurants();
-				if (!$restaurants)
-					return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				else
-				{
-					$available_restaurants = array();
-					foreach ($restaurants AS $r)
-						$available_restaurants[] = $r->getId();
-						
-					if (!in_array($rid, $available_restaurants))
-						return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				}
-			}
+		$available_restaurants = array();
+		foreach ($restaurants AS $r)
+		{
+			$available_restaurants[] = $r->getId();
+			if ($r->getId() == $rid)
+				$restaurant = $r;
 		}
+
+		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
 			$booking_date = date('Y-m-d');
 
-		$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->findOneByIdJoinedToCompany($rid, $cid);
-
-		if (!$restaurant)
-			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
-		
 		$company = $restaurant->getCompany();
 		
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
@@ -436,41 +377,28 @@ class OrderItemController extends Controller
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 			
-			// check restaurant {rid} for admin restaurant
-			if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
-					!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
-					!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
-				)
-			{
-				$restaurants = $permission->getRestaurants();
-				if (!$restaurants)
-					return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				else
-				{
-					$available_restaurants = array();
-					foreach ($restaurants AS $r)
-						$available_restaurants[] = $r->getId();
-						
-					if (!in_array($rid, $available_restaurants))
-						return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				}
-			}	
+		$restaurants = $restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+
+		$available_restaurants = array();
+		foreach ($restaurants AS $r)
+		{
+			$available_restaurants[] = $r->getId();
+			if ($r->getId() == $rid)
+				$restaurant = $r;
 		}
+
+		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
 		if ( !$booking_date > date('Y-m-d') )
 			return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
 		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-		
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		if (!$company) 
 			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
 		
@@ -484,17 +412,8 @@ class OrderItemController extends Controller
 				if($order->getCompleted())
 					return new Response('Order is completed. You can not edit order.', 403, array('Content-Type' => 'application/json'));
 		}
-		
-		$restaurant = $this->getDoctrine()
-					->getRepository('SupplierBundle:Restaurant')
-					->find($rid);
-					
-		if (!$restaurant)
-			return new Response('No restaurant found for id '.$rid, 404, array('Content-Type' => 'application/json'));
 	
-		$booking = $this->getDoctrine()
-					->getRepository('SupplierBundle:OrderItem')
-					->find($bid);
+		$booking = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->find($bid);
 		
 		if (!$booking)
 		{
@@ -530,33 +449,23 @@ class OrderItemController extends Controller
 	{ 
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 			
-			// check restaurant {rid} for admin restaurant
-			if (	$this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && 
-					!$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') &&
-					!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN')
-				)
-			{
-				$restaurants = $permission->getRestaurants();
-				if (!$restaurants)
-					return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				else
-				{
-					$available_restaurants = array();
-					foreach ($restaurants AS $r)
-						$available_restaurants[] = $r->getId();
-						
-					if (!in_array($rid, $available_restaurants))
-						return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
-				}
-			}
+		$restaurants = $restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+
+		$available_restaurants = array();
+		foreach ($restaurants AS $r)
+		{
+			$available_restaurants[] = $r->getId();
+			if ($r->getId() == $rid)
+				$restaurant = $r;
 		}
+
+		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
 			$booking_date = date('Y-m-d');
@@ -574,9 +483,7 @@ class OrderItemController extends Controller
 			if ( $model['amount'] == "0" ||  $model['amount'] == "")
 				return new Response('Amount should not be 0', 404, array('Content-Type' => 'application/json'));
 			
-			$company = $this->getDoctrine()
-							->getRepository('SupplierBundle:Company')
-							->find($cid);
+			$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 			if (!$company)
 				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
@@ -593,13 +500,6 @@ class OrderItemController extends Controller
 						return new Response('Order is completed. You can not edit order.', 403, array('Content-Type' => 'application/json'));
 			}
 			
-			$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->find($rid);
-			if (!$restaurant)
-				return new Response('No restaurant found for id '.$rid, 404, array('Content-Type' => 'application/json'));
-
-			
 			$booking = $this->getDoctrine()
 									->getRepository('SupplierBundle:OrderItem')
 									->find($bid);
@@ -615,9 +515,7 @@ class OrderItemController extends Controller
 				
 				$validator = $this->get('validator');
 				
-				$product = $this->getDoctrine()
-						->getRepository('SupplierBundle:Product')
-						->find((int)$model['product']);
+				$product = $this->getDoctrine()->getRepository('SupplierBundle:Product')->find((int)$model['product']);
 						
 				if (!$product)
 					return new Response('No product found for id '.$pid, 404, array('Content-Type' => 'application/json'));

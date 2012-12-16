@@ -15,10 +15,11 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
+use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\HttpFoundation\Response;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use Acme\UserBundle\Entity\WorkingHours;
-use Acme\UserBundle\Entity\Permission;
 use Acme\UserBundle\Entity\Shift;
 
 /**
@@ -42,68 +43,29 @@ class WorkingHoursController extends Controller
 			$date = date('Y-m-d');
 		
 		$restaurants_list = array();
-
-		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
-		
+		// check exist this company
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
 		if (!$company)
-			throw $this->createNotFoundException('Company not found');		
-			
-		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
-		
-		if (!$restaurant)
-			throw $this->createNotFoundException('Restaurant not found');
-		
+			throw $this->createNotFoundException('Компания не найдена');
+
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+
+		$available_restaurants = array();
+		foreach ($restaurants AS $r)
 		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-			{
-				$restaurants = $permission->getRestaurants();
-				if (!$restaurants)
-					throw new AccessDeniedHttpException('Forbidden Restaurant');
-				else
-				{
-					$available_restaurants = array();
-					foreach ($restaurants AS $r)
-						$available_restaurants[] = $r->getId();
-						
-					if (!in_array($rid, $available_restaurants))
-						throw new AccessDeniedHttpException('Forbidden Restaurant');
-				}
-			}
-
-			if (!$permission)
-				throw new AccessDeniedHttpException('Forbidden Company');
-			else
-			{
-				 if ($permission->getCompany()->getId() != $cid) // проверим из какой компании
-				 	throw new AccessDeniedHttpException('Forbidden Company');
-
-				$restaurants = $permission->getRestaurants();
-
-				if ($restaurants)
-					foreach ($restaurants as $r)
-						$restaurants_list[$r->getId()] = $r->getName();
-			}
+			$available_restaurants[] = $r->getId();
+			$restaurants_list[$r->getId()] = $r->getName();
+			if ($r->getId() == $rid)
+				$restaurant = $r;
 		}
-
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-		{
-			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-		else
-		{
-			$restaurants = $permission->getRestaurants();
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
+			
+		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
+			throw new AccessDeniedHttpException('Нет доступа к ресторану');
 
 		$agreed = 0;
 
@@ -166,6 +128,20 @@ class WorkingHoursController extends Controller
 		if (!$company)
 			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
+			if ($r->getId() == $rid)
+				$restaurant = $r;
+
+		if (!isset($restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
+
 		if ($date == '0' || $date == 0)
 			$date = date('Y-m-d');
 		
@@ -243,15 +219,27 @@ class WorkingHoursController extends Controller
      */
     public function API_createAction($cid, $rid, $date, Request $request)
     {
-		$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->findOneByIdJoinedToCompany($rid, $cid);
+		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findOneByIdJoinedToCompany($rid, $cid);
 
 		if (!$restaurant)
 			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 		
 		$company = $restaurant->getCompany();
 		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
+			if ($r->getId() == $rid)
+				$available_restaurant = $r;
+
+		if (!isset($available_restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
+
 		if ($date == '0')
 			$date = date('Y-m-d');
 			
@@ -332,13 +320,25 @@ class WorkingHoursController extends Controller
 	 */
 	public function API_deleteAction($cid, $rid, $date, $sid)
 	{
-		$restaurant = $this->getDoctrine()
-						->getRepository('SupplierBundle:Restaurant')
-						->findOneByIdJoinedToCompany($rid, $cid);
+		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findOneByIdJoinedToCompany($rid, $cid);
 
 		if (!$restaurant)
 			return new Response('No restaurant found for id '.$rid.' in company #'.$cid, 404, array('Content-Type' => 'application/json'));
 		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
+			if ($r->getId() == $rid)
+				$available_restaurant = $r;
+
+		if (!isset($available_restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
+
 		if ($date == '0' || $date == 0) 
 			$date = date('Y-m-d');
 			
@@ -394,6 +394,20 @@ class WorkingHoursController extends Controller
 		
 		$company = $restaurant->getCompany();
 		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
+			if ($r->getId() == $rid)
+				$available_restaurant = $r;
+
+		if (!isset($available_restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
+
 		if ($date == '0' || $date == 0)
 			$date = date('Y-m-d');
 		
@@ -548,6 +562,19 @@ class WorkingHoursController extends Controller
 		if (!$company)
 			return new Response('Не найден ресторан #'.$rid.' в компании #'.$cid, 404, array('Content-Type' => 'application/json'));
 	
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
+			if ($r->getId() == $rid)
+				$available_restaurant = $r;
+
+		if (!isset($available_restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 
 		$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
 																								'date'			=> $date));
@@ -597,6 +624,19 @@ class WorkingHoursController extends Controller
 		if (!$company)
 			return new Response('Не найден ресторан #'.$rid.' в компании #'.$cid, 404, array('Content-Type' => 'application/json'));
 	
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+		
+		foreach ($restaurants AS $r)
+			if ($r->getId() == $rid)
+				$available_restaurant = $r;
+
+		if (!isset($available_restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 
 		$shift = $this->getDoctrine()->getRepository('AcmeUserBundle:Shift')->findOneBy(array(	'restaurant'	=> (int)$rid,
 																								'date'			=> $date));
@@ -640,17 +680,32 @@ class WorkingHoursController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-			
-			if (!$permission)
-				throw new AccessDeniedHttpException('Нет доступа');
-			else {
-				$company = $permission->getCompany();
-			}
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+		$securityIdentity = UserSecurityIdentity::fromAccount($user);
+		$aclProvider = $this->get('security.acl.provider');
+		$company = 0;
+		foreach ($companies as $c) {
+			try {
+
+				$acl = $aclProvider->findAcl(ObjectIdentity::fromDomainObject($c), array($securityIdentity));
+				
+				foreach($acl->getObjectAces() as $a=>$ace)
+				{
+					if($ace->getSecurityIdentity()->getUsername() == $user->getUsername())
+					{
+						$company = $c->getId();
+						break;
+					}
+				}
+
+		    } catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+		        
+		    }
 		}
-		
+
+		if ($company == 0)
+			throw new AccessDeniedHttpException('Нет доступа к компании');
+
 		if ($week == '0' || $week == 0)
 			$week = date('W');
 		

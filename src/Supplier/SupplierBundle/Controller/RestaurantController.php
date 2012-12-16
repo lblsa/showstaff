@@ -26,33 +26,40 @@ class RestaurantController extends Controller
 	public function API_listAction($cid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
-		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
-		
 		if (!$company)
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Компания не найдена', 404, array('Content-Type' => 'application/json'));
 		
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			$restaurants = $permission->getRestaurants();
-			
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-			$restaurants = $company->getRestaurants();
-			
-		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-			$restaurants = $company->getRestaurants();
-
-			
-		$restaurants_array = array();
-		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+					
+		$restaurants = $company->getRestaurants();
+		$available_restaurants = array();
 		if ($restaurants)
-			foreach ($restaurants AS $p)
+		{
+			foreach ($restaurants as $r)
+			{
+				// list available restaraunts for restaurant manager OR all for admin
+				if (	$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN') || 
+						$this->get('security.context')->isGranted('ROLE_ORDER_MANAGER') ||
+						$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN') )
+				{
+					$available_restaurants[] = $r;
+				}
+				else
+				{
+					if (false !== $securityContext->isGranted('VIEW', $r))
+						$available_restaurants[] = $r;
+				}
+			}
+		}
+
+		$restaurants_array = array();		
+		if ($available_restaurants)
+			foreach ($available_restaurants AS $p)
 				$restaurants_array[] = array(	'id' => $p->getId(),
 												'name'=> $p->getName(),
 												'address'=> $p->getAddress(),
@@ -67,6 +74,7 @@ class RestaurantController extends Controller
 		$result = array('code' => 200, 'data' => $restaurants_array);
 		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 	}
+
 	/**
 	 * @Route(	"/company/{cid}/restaurant", name="restaurant",	requirements={"_method" = "GET"})
 	 * @Template()
@@ -78,59 +86,31 @@ class RestaurantController extends Controller
 
 		$restaurants_list = array();
 
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission)
-				throw new AccessDeniedHttpException('Forbidden Company');
-			else
-			{
-				 if ($permission->getCompany()->getId() != $cid) // проверим из какой компании
-				 	throw new AccessDeniedHttpException('Forbidden Company');
-
-				$restaurants = $permission->getRestaurants();
-
-				if ($restaurants)
-					foreach ($restaurants as $r)
-						$restaurants_list[$r->getId()] = $r->getName();
-			}
-		}
-		
+		// check exist this company
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
-		
 		if (!$company)
-			throw $this->createNotFoundException('No company found for id '.$cid);
-				
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-		{
-			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+			throw $this->createNotFoundException('Компания не найдена');
 
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-			$restaurants = $permission->getRestaurants();
-			
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-			$restaurants = $company->getRestaurants();
-			
-		if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-			$restaurants = $company->getRestaurants();
-
-			
-		$restaurants_array = array();
+		$available_restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
 		
-		if ($restaurants)
-			foreach ($restaurants AS $p)
-				$restaurants_array[] = array(	'id' => $p->getId(),
-												'name'=> $p->getName(),
-												'address'=> $p->getAddress(),
-												'director'=> $p->getDirector(), );
+		$restaurants_array = array();
+		$restaurants_list = array();
+
+		foreach ($available_restaurants AS $p)
+		{
+			$restaurants_array[] = array(	'id' => $p->getId(),
+											'name'=> $p->getName(),
+											'address'=> $p->getAddress(),
+											'director'=> $p->getDirector(), );
+			$restaurants_list[$p->getId()] = $p->getName();
+		}
 												
-		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN') && !$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))	
+		if (!$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))	
 			return $this->render('SupplierBundle:Restaurant:listToOrder.html.twig', array(	'restaurants'		=> $restaurants_array,
 																							'restaurants_list'	=> $restaurants_list,
 																							'company'			=> $company 	));
@@ -141,7 +121,7 @@ class RestaurantController extends Controller
 		header("Cache-Control: post-check=0, pre-check=0", false);
 		header("Pragma: no-cache");// HTTP/1.0
 		
-		return array(	'company' => $company, 'restaurants_list' => $restaurants_list	);
+		return array('company' => $company, 'restaurants_list' => $restaurants_list	);
 	}
 	
 	/**
@@ -155,26 +135,21 @@ class RestaurantController extends Controller
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+		// check exist this company
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
+		if (!$company)
+			return new Response('Компания не найдена', 400, array('Content-Type' => 'application/json'));
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 		
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $rid == $model['id'])
 		{
-			$restaurant = $this->getDoctrine()
-							->getRepository('SupplierBundle:Restaurant')
-							->find($model['id']);
+			$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($model['id']);
 			
 			if (!$restaurant)
 				return new Response('No restaurant found for id '.$rid, 404, array('Content-Type' => 'application/json'));
@@ -222,25 +197,19 @@ class RestaurantController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
+		// check exist this company
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
+		if (!$company)
+			return new Response('Компания не найдена', 400, array('Content-Type' => 'application/json'));
 		
-		$restaurant = $this->getDoctrine()
-					->getRepository('SupplierBundle:Restaurant')
-					->find($rid);
-					
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+		
+		$restaurant = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->find($rid);
 		if (!$restaurant)
-			return new Response('No restaurant found for id '.$rid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Ресторан не найден', 400, array('Content-Type' => 'application/json'));
 		
 
 		$em = $this->getDoctrine()->getEntityManager();				
@@ -261,30 +230,19 @@ class RestaurantController extends Controller
 	public function API_createAction($cid, Request $request)
 	{	
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-						
+		// check exist this company
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllRestaurantsByCompany((int)$cid);
 		if (!$company)
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Компания не найдена', 400, array('Content-Type' => 'application/json'));
+
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		$model = (array)json_decode($request->getContent());
 
-		
 		if (count($model) > 0 && isset($model['name']))
 		{
 			$validator = $this->get('validator');

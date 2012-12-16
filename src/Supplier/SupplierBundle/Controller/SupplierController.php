@@ -27,29 +27,14 @@ class SupplierController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllProductsByCompany($cid);
+		if (!$company)
+			throw $this->createNotFoundException('No company found for id '.$cid);
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findAllSupplierByCompany($cid);
-		
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No company found for id '.$cid);
-		}
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 		
 		$suppliers = $company->getSuppliers();
 		$suppliers_array = array();
@@ -86,41 +71,20 @@ class SupplierController extends Controller
 		
 		$restaurants_list = array();
 
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAllProductsByCompany($cid);
+		if (!$company)
+			throw $this->createNotFoundException('No company found for id '.$cid);
+
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				throw new AccessDeniedHttpException('Forbidden Company');
-		}
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 		
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-		{
-			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
 
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-		else
-		{
-			$restaurants = $permission->getRestaurants();
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->findAllSupplierByCompany($cid);
-		
-		if (!$company) {
-			if ($request->isXmlHttpRequest()) 
-				return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No company found for id '.$cid);
-		}
+		if ($restaurants)
+			foreach ($restaurants as $r)
+				$restaurants_list[$r->getId()] = $r->getName();
 		
 		$suppliers = $company->getSuppliers();
 		$suppliers_array = array();
@@ -157,18 +121,14 @@ class SupplierController extends Controller
 	 {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+		if (!$company)
+			throw $this->createNotFoundException('No company found for id '.$cid);
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest())
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 			 
 		$model = (array)json_decode($request->getContent());
 		
@@ -219,23 +179,17 @@ class SupplierController extends Controller
 	public function API_deleteAction($cid, $sid, Request $request)
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+		if (!$company)
+			throw $this->createNotFoundException('No company found for id '.$cid);
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest())
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 		
-		$supplier = $this->getDoctrine()
-					->getRepository('SupplierBundle:Supplier')
-					->find($sid);
+		$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find($sid);
 					
 		if (!$supplier)
 			return new Response('Не найден поставщик', 404, array('Content-Type' => 'application/json'));		
@@ -280,34 +234,20 @@ class SupplierController extends Controller
 	{
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
-		
-		$company = $this->getDoctrine()
-						->getRepository('SupplierBundle:Company')
-						->find($cid);
-						
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		if (!$company)
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			throw $this->createNotFoundException('No company found for id '.$cid);
+
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 		
 		$model = (array)json_decode($request->getContent());
 
-		
 		if (count($model) > 0 && isset($model['name']))
 		{
-			$supplier = $this->getDoctrine()
-							->getRepository('SupplierBundle:Supplier')
-							->findOneByName($model['name']);
+			$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->findOneByName($model['name']);
 
 			if ($supplier)
 			{

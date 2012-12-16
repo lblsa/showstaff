@@ -33,31 +33,17 @@ class OrderController extends Controller
 
 		$restaurants_list = array();
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				throw new AccessDeniedHttpException('Forbidden Company');
-		}
+		$restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
 		
-		if ($this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
-		{
-			$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany((int)$cid);
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-		else
-		{
-			$restaurants = $permission->getRestaurants();
-
-			if ($restaurants)
-				foreach ($restaurants as $r)
-					$restaurants_list[$r->getId()] = $r->getName();
-		}
-
+		if ($restaurants)
+			foreach ($restaurants as $r)
+				$restaurants_list[$r->getId()] = $r->getName();
+		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 		
@@ -101,13 +87,10 @@ class OrderController extends Controller
     {
 		$user = $this->get('security.context')->getToken()->getUser();
 		
+		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -232,14 +215,11 @@ class OrderController extends Controller
 	public function API_saveAction($cid, $booking_date, Request $request)
 	{		
 		$user = $this->get('security.context')->getToken()->getUser();
-		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
 
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-				return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-		}
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
 		
 		if ($booking_date != '0' && $booking_date < date('Y-m-d'))
 			return new Response('Нельзя редактировать заказы прошлых дней', 403, array('Content-Type' => 'application/json'));
@@ -340,19 +320,6 @@ class OrderController extends Controller
 		
 		$user = $this->get('security.context')->getToken()->getUser();
 		
-		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
-		{
-			$permission = $this->getDoctrine()->getRepository('AcmeUserBundle:Permission')->find($user->getId());
-
-			if (!$permission || $permission->getCompany()->getId() != $cid) // проверим из какой компании
-			{
-				if ($request->isXmlHttpRequest()) 
-					return new Response('Forbidden Company', 403, array('Content-Type' => 'application/json'));
-				else
-					throw new AccessDeniedHttpException('Forbidden Company');
-			}
-		}
-		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
 		if (!$company) {
@@ -361,6 +328,11 @@ class OrderController extends Controller
 			else
 				throw $this->createNotFoundException('No found company #'.$cid);
 		}
+		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				throw new AccessDeniedHttpException('Нет доступа к компании');
 		
 		
 		$supplier_products = $this->getDoctrine()

@@ -6,6 +6,59 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
 
+CREATE TABLE `acl_classes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `class_type` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UNIQ_69DD750638A36066` (`class_type`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=3 ;
+
+CREATE TABLE `acl_entries` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `class_id` int(10) unsigned NOT NULL,
+  `object_identity_id` int(10) unsigned DEFAULT NULL,
+  `security_identity_id` int(10) unsigned NOT NULL,
+  `field_name` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `ace_order` smallint(5) unsigned NOT NULL,
+  `mask` int(11) NOT NULL,
+  `granting` tinyint(1) NOT NULL,
+  `granting_strategy` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
+  `audit_success` tinyint(1) NOT NULL,
+  `audit_failure` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UNIQ_46C8B806EA000B103D9AB4A64DEF17BCE4289BF4` (`class_id`,`object_identity_id`,`field_name`,`ace_order`),
+  KEY `IDX_46C8B806EA000B103D9AB4A6DF9183C9` (`class_id`,`object_identity_id`,`security_identity_id`),
+  KEY `IDX_46C8B806EA000B10` (`class_id`),
+  KEY `IDX_46C8B8063D9AB4A6` (`object_identity_id`),
+  KEY `IDX_46C8B806DF9183C9` (`security_identity_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=120 ;
+
+CREATE TABLE `acl_object_identities` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `parent_object_identity_id` int(10) unsigned DEFAULT NULL,
+  `class_id` int(10) unsigned NOT NULL,
+  `object_identifier` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `entries_inheriting` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UNIQ_9407E5494B12AD6EA000B10` (`object_identifier`,`class_id`),
+  KEY `IDX_9407E54977FA751A` (`parent_object_identity_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=32 ;
+
+CREATE TABLE `acl_object_identity_ancestors` (
+  `object_identity_id` int(10) unsigned NOT NULL,
+  `ancestor_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`object_identity_id`,`ancestor_id`),
+  KEY `IDX_825DE2993D9AB4A6` (`object_identity_id`),
+  KEY `IDX_825DE299C671CEA1` (`ancestor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `acl_security_identities` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `identifier` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+  `username` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UNIQ_8835EE78772E836AF85E0677` (`identifier`,`username`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=15 ;
 
 CREATE TABLE `Company` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -212,6 +265,18 @@ ALTER TABLE `WorkingHours`
   ADD CONSTRAINT `FK_50B58B90979B1AD6` FOREIGN KEY (`company_id`) REFERENCES `Company` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `FK_50B58B90A76ED395` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `FK_50B58B90B1E7706E` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `acl_entries`
+  ADD CONSTRAINT `FK_46C8B8063D9AB4A6` FOREIGN KEY (`object_identity_id`) REFERENCES `acl_object_identities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_46C8B806DF9183C9` FOREIGN KEY (`security_identity_id`) REFERENCES `acl_security_identities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_46C8B806EA000B10` FOREIGN KEY (`class_id`) REFERENCES `acl_classes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `acl_object_identities`
+  ADD CONSTRAINT `FK_9407E54977FA751A` FOREIGN KEY (`parent_object_identity_id`) REFERENCES `acl_object_identities` (`id`);
+
+ALTER TABLE `acl_object_identity_ancestors`
+  ADD CONSTRAINT `FK_825DE2993D9AB4A6` FOREIGN KEY (`object_identity_id`) REFERENCES `acl_object_identities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_825DE299C671CEA1` FOREIGN KEY (`ancestor_id`) REFERENCES `acl_object_identities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;q
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

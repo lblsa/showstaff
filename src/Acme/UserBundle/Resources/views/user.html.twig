@@ -1,0 +1,15 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block title %}Стартовая{% endblock %}
+
+{% block body %}
+
+<div class="row-fluid">
+	<div class="span3">
+		<h1><!-- {{ app.user.id }} --> {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h1>
+		<p>Номер телефона: <strong>{{ app.user.username }}</strong></p>
+		<p>Эл. почта: <strong>{{ app.user.email }}</strong></p>
+	</div>
+</div>
+
+{% endblock %}
