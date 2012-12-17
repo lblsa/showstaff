@@ -184,6 +184,7 @@ class UserController extends Controller
 			return new Response('No role found for id '.$role_id, 404, array('Content-Type' => 'application/json'));
 		
 		$users = $role->getUsers();
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
 		
 		$users_array = array();
 		
