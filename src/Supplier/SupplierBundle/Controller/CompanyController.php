@@ -6,6 +6,10 @@ use Supplier\SupplierBundle\Entity\Company;
 use Supplier\SupplierBundle\Entity\User;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Acl\Dbal\MutableAclProvider;
+use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
+use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+use Symfony\Component\Security\Acl\Permission\MaskBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
@@ -50,13 +54,13 @@ class CompanyController extends Controller
 	 * @Route(	"api/company.{_format}", 
 	 *			name="API_company", 
 	 *			requirements={"_method" = "GET", "_format" = "json|xml"},
-	 *			defaults={"_format" = "json"})	 
+	 *			defaults={"_format" = "json"})
 	 * @Template()
-     * @Secure(roles="ROLE_SUPER_ADMIN")
+     * @Secure(roles="ROLE_SUPER_ADMIN, ROLE_USER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_listAction(Request $request)
 	{
-		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+		$companies = $this->get("my.user.service")->getAvailableCompaniesAction();
 
 		$companies_array = array();
 		
@@ -85,12 +89,20 @@ class CompanyController extends Controller
 	 *			name="API_company_update",
 	 *			requirements={"_method" = "PUT", "_format" = "json|xml"},
 	 *			defaults={"_format" = "json"})
-	 * @Secure(roles="ROLE_SUPER_ADMIN")
+	 * @Secure(roles="ROLE_SUPER_ADMIN, ROLE_USER, ROLE_COMPANY_ADMIN")
 	 */
 	 public function API_updateAction($cid, Request $request)
 	 {	 
 		$model = (array)json_decode($request->getContent());
-		
+
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
+		if (!$company)
+			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyEditAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
 		if (count($model) > 0 && isset($model['id']) && is_numeric($model['id']) && $cid == $model['id'])
 		{
 			$company = $this->getDoctrine()
@@ -138,12 +150,12 @@ class CompanyController extends Controller
 	 *			name="API_company_create", 
 	 *			requirements={"_method" = "POST", "_format" = "json|xml"},
 	 *			defaults={"_format" = "json"})
-	 * @Secure(roles="ROLE_SUPER_ADMIN")
+	 * @Secure(roles="ROLE_SUPER_ADMIN, ROLE_USER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_createAction(Request $request)
 	{
 		$model = (array)json_decode($request->getContent());
-		
+
 		if (count($model) > 0 && isset($model['inn']) && isset($model['name']))
 		{
 			$validator = $this->get('validator');
@@ -151,7 +163,7 @@ class CompanyController extends Controller
 			$company->setName($model['name']);
 			$company->setExtendedName($model['extended_name']);
 			$company->setInn((int)$model['inn']);
-			
+
 			$errors = $validator->validate($company);
 			
 			if (count($errors) > 0) {
@@ -166,6 +178,25 @@ class CompanyController extends Controller
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($company);
 				$em->flush();
+				
+
+				if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+				{
+					$user = $this->get('security.context')->getToken()->getUser();
+					$securityIdentity = UserSecurityIdentity::fromAccount($user);
+					$aclProvider = $this->get('security.acl.provider');
+					// creating the ACL
+	      			$objectIdentity = ObjectIdentity::fromDomainObject($company);
+
+				    try {
+						$acl = $aclProvider->findAcl($objectIdentity);			        			    
+				    } catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+				        $acl = $aclProvider->createAcl($objectIdentity);
+				    }
+			        // grant owner access
+			        $acl->insertObjectAce($securityIdentity, MaskBuilder::MASK_OWNER);
+			        $aclProvider->updateAcl($acl);
+				}
 				
 				$code = 200;
 				$result = array(	'code' => $code, 'data' => array(	'id' => $company->getId(),
@@ -187,17 +218,19 @@ class CompanyController extends Controller
 	 * 			name="API_company_delete", 
 	 * 			requirements={"_method" = "DELETE", "_format" = "json|xml"},
 	 *			defaults={"_format" = "json"})
-	 * @Secure(roles="ROLE_SUPER_ADMIN")
+	 * @Secure(roles="ROLE_SUPER_ADMIN, ROLE_USER, ROLE_COMPANY_ADMIN")
 	 */
 	public function API_deleteAction($cid, Request $request)
 	{
-		$company = $this->getDoctrine()
-					->getRepository('SupplierBundle:Company')
-					->find($cid);
-					
+		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		if (!$company)
 			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
-		
+
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyDeleteAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+
+
 		$em = $this->getDoctrine()->getEntityManager();				
 		$em->remove($company);
 		$em->flush();

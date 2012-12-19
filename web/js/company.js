@@ -114,7 +114,7 @@ $(function(){
 		className: "company",
 		
 		template: _.template(	'<td class="p_name">'+
-									'<input type="text" class="input-small name" tabindex="1" name="name" value="<%= name %>">'+
+									'<input type="text" class="name" tabindex="1" name="name" value="<%= name %>">'+
 								'</td>'+
 								'<td class="p_extended_name">'+
 									'<input type="text" class="extended_name" tabindex="2" name="extended_name" value="<%= extended_name %>">'+
@@ -347,4 +347,62 @@ $(function(){
 	$(document).keydown(function(e) {
 		if (e.keyCode == 27) view_companies.renderAll();
 	});
+			
+	// Collection products
+	Companies = Backbone.Collection.extend({
+	  
+	  model: CompanyModel,
+	  
+	  url: 'api/company',
+	  
+	  initialize: function(){
+		  this.bind('add', this.addCompany);
+	  },
+	  
+	  addCompany: function(company){
+		company.save({wait: true});
+	  },		
+
+	  parse: function(response, xhr){
+
+	  	$('#preloader').fadeOut('fast');
+
+		if(response && 'code' in response && response.code == 200 && 'data' in response) {
+			return response.data;
+		} else {
+			error_fetch('Ошибка. Обновите страницу или обратитесь к администратору');
+		}
+	}
+	  
+	});
+			
+	companies = new Companies; 
+			
+	 // initialize view
+			
+	companies.comparator = function(company) {
+	  return company.get("name");
+	};
+	
+	 // add template
+
+	$('#preloader').width($('#add_row').width());
+	$('#preloader').height($('#add_row').height());
+	var p = $('#add_row').position();
+	$('#preloader').css({'left':p.left, 'top': p.top});
+	$('#preloader').fadeIn('fast');
+
+	companies.fetch({	success: function(collection, response) {
+							$('#preloader').fadeOut('fast');
+							view_companies = new ViewCompanies({collection: collection});
+							$('#companies_list').append(view_companies.render().el);
+							view_companies.renderAll();	
+						},
+						error: function(){
+							$('#preloader').fadeOut('fast');
+							error_fetch('Ошибка при получении смен. Обновите страницу или обратитесь к администратору');
+						}
+					});
+				
+		
 });

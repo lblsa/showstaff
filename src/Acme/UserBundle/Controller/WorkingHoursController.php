@@ -704,72 +704,75 @@ class WorkingHoursController extends Controller
 		}
 
 		if ($company == 0)
-			throw new AccessDeniedHttpException('Нет доступа к компании');
-
-		if ($week == '0' || $week == 0)
-			$week = date('W');
-		
-		$str = $week-date('W').' week';
-		
-		if (($timestamp = strtotime($str)) === -1)
-			throw $this->createNotFoundException('Строка ($str) недопустима');
-		
-		$t = strtotime($str);
-		
-		$week_nav = array();
-		for ($j=-3; $j<4; $j++)
-			$week_nav[$week+$j] = date('d M',strtotime($week+$j-date('W').' week last Monday')).'-'.date('d M',strtotime($week+$j-date('W').' week next Sunday'));
-		
-		$user = $this->get('security.context')->getToken()->getUser();
-		
-		$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->loadUserByUsername($user->getUsername());
-		
-		if (!$user)
-			throw $this->createNotFoundException('Пользователь не найден');
-		
-		$week = array();
-		$used_restaraunts = array();
-
-		for ($i=1; $i<8; $i++)
+			return $this->render('AcmeUserBundle::create_company.html.twig', array());
+		else
 		{
-			$date = date('Y-m-d',$t+( $i - date('w'))*24*3600);
+
+			if ($week == '0' || $week == 0)
+				$week = date('W');
 			
-			$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'user'	=> $user->getId(),
-																											'date'	=> $date	));
-			$entities_array = array();
-			if ($entities)
+			$str = $week-date('W').' week';
+			
+			if (($timestamp = strtotime($str)) === -1)
+				throw $this->createNotFoundException('Строка ($str) недопустима');
+			
+			$t = strtotime($str);
+			
+			$week_nav = array();
+			for ($j=-3; $j<4; $j++)
+				$week_nav[$week+$j] = date('d M',strtotime($week+$j-date('W').' week last Monday')).'-'.date('d M',strtotime($week+$j-date('W').' week next Sunday'));
+			
+			$user = $this->get('security.context')->getToken()->getUser();
+			
+			$user = $this->getDoctrine()->getRepository('AcmeUserBundle:User')->loadUserByUsername($user->getUsername());
+			
+			if (!$user)
+				throw $this->createNotFoundException('Пользователь не найден');
+			
+			$week = array();
+			$used_restaraunts = array();
+
+			for ($i=1; $i<8; $i++)
 			{
-				foreach ($entities AS $p)
+				$date = date('Y-m-d',$t+( $i - date('w'))*24*3600);
+				
+				$entities = $this->getDoctrine()->getRepository('AcmeUserBundle:WorkingHours')->findBy(array(	'user'	=> $user->getId(),
+																												'date'	=> $date	));
+				$entities_array = array();
+				if ($entities)
 				{
-					$entities_array[$p->getRestaurant()->getId()] = array( 	'company'		=> $p->getCompany()->getName(),
-																			'company_id'	=> $p->getCompany()->getId(),
-																			'restaurant'	=> $p->getRestaurant()->getName(),
-																			'restaurant_id'	=> $p->getRestaurant()->getId(),
-																			'planhours'		=> $p->getPlanhours(),
-																			'facthours'		=> $p->getFacthours(),
-																			'description'	=> $p->getDescription(),
-																			'date'			=> $p->getDate() 
-																			);
+					foreach ($entities AS $p)
+					{
+						$entities_array[$p->getRestaurant()->getId()] = array( 	'company'		=> $p->getCompany()->getName(),
+																				'company_id'	=> $p->getCompany()->getId(),
+																				'restaurant'	=> $p->getRestaurant()->getName(),
+																				'restaurant_id'	=> $p->getRestaurant()->getId(),
+																				'planhours'		=> $p->getPlanhours(),
+																				'facthours'		=> $p->getFacthours(),
+																				'description'	=> $p->getDescription(),
+																				'date'			=> $p->getDate() 
+																				);
 
-					$used_restaraunts[$p->getRestaurant()->getId()] = $p->getRestaurant()->getName();
+						$used_restaraunts[$p->getRestaurant()->getId()] = $p->getRestaurant()->getName();
+					}
 				}
-			}
-			else
-			{
-				$entities_array = null;
-			}
+				else
+				{
+					$entities_array = null;
+				}
 
-			$week[$date] = $entities_array;
-		
+				$week[$date] = $entities_array;
+			
+			}
+			//$used_restaraunts = array_unique($used_restaraunts); var_dump($used_restaraunts); die;
+
+			return array(	'week'			=> $week,
+							'company'		=> $company,
+							'date'			=> date('Y-m-d'),
+							'week_nav'		=> $week_nav,
+							'restaraunts'	=> $used_restaraunts,
+							'curent_week' 	=> date('W', $t)	);
 		}
-		//$used_restaraunts = array_unique($used_restaraunts); var_dump($used_restaraunts); die;
-
-		return array(	'week'			=> $week,
-						'company'		=> $company,
-						'date'			=> date('Y-m-d'),
-						'week_nav'		=> $week_nav,
-						'restaraunts'	=> $used_restaraunts,
-						'curent_week' 	=> date('W', $t)	);
 	}
 	
 }
