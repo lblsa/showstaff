@@ -1,0 +1,48 @@
+{% extends 'SupplierBundle::base.html.twig' %}
+
+{% block title %}Расписание{% endblock %}
+
+{% block body %}
+
+<div class="row-fluid">
+	<div class="span3">
+		<h2><!-- {{ app.user.id }} --> {% if app.user.fullname is defined %}{{ app.user.fullname }}{% else %}{{ app.user.username }}{% endif %}</h2>
+		<p>Номер телефона: <strong>{{ app.user.username }}</strong></p>
+		<p>Эл. почта: <strong>{{ app.user.email }}</strong></p>
+	</div>
+	<div class="span9">
+		
+		<h2>Если Вы не числитесь ни в какой компании, то можете создать свою</h2>
+
+		<table class="table table-striped" id="companies_list">
+		 <thead>
+		  <tr>
+			<th>Название
+				<a href="#" class="sort sort_by_name"><i class="icon-arrow-up"></i></a>
+			</th>
+			<th>Длинное наименование
+				<a href="#" class="sort sort_by_exname"><i class="icon-arrow-up"></i></a>
+			</th>
+			<th>ИНН
+				<a href="#" class="sort sort_by_inn"><i class="icon-arrow-up"></i></a>
+			</th>
+			<th></th>
+		  </tr>
+		  <tr id="add_row">
+			<th colspan="4" class="add">
+				<a href="#" id="add_company" class="create btn btn-small">Создать компанию <i class="icon-plus-sign"></i></a>
+				<div class="form-inline hide forms">
+					<input name="name_add" type="text" placeholder="Name" class="input-small name_add">
+					<input name="extended_name_add" type="text"  placeholder="Extended name" class="extended_name_add">
+					<input name="inn_add" type="text"  placeholder="INN" class="inn_add">
+					<button class="add_company btn btn-mini btn-success">Создать</button>
+				</div>
+			</th>
+		  </tr>
+		 </thead>
+		</table>
+		<script src="/js/company.js"></script>
+	</div>
+</div>
+
+{% endblock %}
