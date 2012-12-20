@@ -567,5 +567,61 @@ class OrderItemController extends Controller
 		}
 		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
+
+	/**
+	 * @Route(	"api/company/{cid}/restaurant/{rid}/last_order/{booking_date}/{pid}.{_format}", 
+	 * 			name="API_OrderItem_last_order_product", 
+	 * 			requirements={	"_method" = "GET",
+	 *							"_format" = "json|xml",
+	 *							"booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
+	 *			defaults={	"booking_date" = 0,
+	 *						"_format" = "json"	})
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_RESTAURANT_ADMIN, ROLE_COMPANY_ADMIN")
+	 */
+	public function API_last_orderAction($cid, $rid, $booking_date, $pid, Request $request)
+	{ 
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+		
+		$restaurants = $restaurants = $this->get("my.user.service")->getAvailableRestaurantsAction($cid);
+
+		$available_restaurants = array();
+		foreach ($restaurants AS $r)
+		{
+			$available_restaurants[] = $r->getId();
+			if ($r->getId() == $rid)
+				$restaurant = $r;
+		}
+
+		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
+
+		//$order_item = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->findOneByProduct($pid);
+		
+		$query = $this->getDoctrine()->getEntityManager()
+					->createQuery('SELECT p FROM SupplierBundle:OrderItem p WHERE p.product = :pid AND p.date < :booking_date ORDER BY p.date DESC')
+					->setMaxResults(1)
+					->setParameters( array(	'booking_date'	=> $booking_date,
+											'pid' 			=> $pid		));
+
+		try {
+			$order_item = $query->getSingleResult();
+		} catch (\Doctrine\ORM\NoResultException $e) {
+			$order_item = 0;
+		}
+
+		if (!$order_item)
+			$message = 'Ранее продукт в этом ресторане не заказывался';
+		else
+			$message = $order_item->getDate()." числа было заказано ".$order_item->getAmount().$order_item->getProduct()->getUnit()->getName()." этого товара";
+
+		$result = array('code' => 200, 'data' => $pid, 'message' => $message);
+
+		return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+	}
 }
 

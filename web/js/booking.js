@@ -471,9 +471,23 @@ $(function(){
 				$('.product_add').append(view.render().el);
 			}
         });
-        
+
+
         if ($('.product_add option').length == 0)
         	$('#add_row').fadeOut();
+
+
+        if ($('.product_add option').length> 0)
+        {
+			$.ajax({
+				url: "/api/company/"+href[2]+"/restaurant/"+href[4]+"/last_order/"+$('.wh_datepicker').val()+"/"+$('.product_add option:selected').val(),
+				success: function(data) {
+					$('.controls .label').remove();
+					$('.controls').append('<span class="label label-info">'+data.message+'</span>');
+				},
+				dataType: "json"
+			});
+        }
     })
     	
     products.each(function(p){
@@ -542,6 +556,19 @@ $(function(){
 	$(document).keydown(function(e) {
 		if (e.keyCode == 27) view_content.renderAll();
 	});
+
+	$(".product_add").change(function () {
+		 if ($('.product_add option').length > 1) {
+			$.ajax({
+				url: "/api/company/"+href[2]+"/restaurant/"+href[4]+"/last_order/"+$('.wh_datepicker').val()+"/"+$('.product_add option:selected').val(),
+				success: function(data) {
+					$('.controls .label').remove();
+					$('.controls').append('<span class="label label-info">'+data.message+'</span>');
+				},
+				dataType: "json"
+			});
+        }
+	})
 })
 
 function update(strDate){
@@ -611,4 +638,5 @@ function update(strDate){
 								error_fetch('Ошибка при получении продуктов. Обновите страницу или обратитесь к администратору');
 							}
 						});
+
 }
