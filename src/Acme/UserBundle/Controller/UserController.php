@@ -181,7 +181,7 @@ class UserController extends Controller
 		$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneBy(array('role'=>$role_id));
 		
 		if (!$role)
-			return new Response('No role found for id '.$role_id, 404, array('Content-Type' => 'application/json'));
+			throw $this->createNotFoundException('Роль не найдена');
 		
 		$users = $role->getUsers();
 		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
@@ -1022,7 +1022,7 @@ class UserController extends Controller
 
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		if (!$company)
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			throw $this->createNotFoundException('Компания не найдена');
 
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 		{
@@ -1071,6 +1071,13 @@ class UserController extends Controller
 		$form = $this->createForm(new UserType(), $user);
 		$errorMessage = array();
 		$error = '';
+
+		$role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneByRole('ROLE_USER');
+		if (!$role)
+			throw $this->createNotFoundException('Роль не найдена');
+
+		$user->addRole($role);
+
 		if ($request->getMethod() == 'POST')
 		{
 			$validator = $this->get('validator');
@@ -1099,7 +1106,6 @@ class UserController extends Controller
 					}
 					else
 					{
-						
 						$user->setSalt(md5(time()));
 						$encoder = new MessageDigestPasswordEncoder('sha1', true, 10);
 						$password = $encoder->encodePassword($user->getPassword(), $user->getSalt());
@@ -1115,7 +1121,7 @@ class UserController extends Controller
 								->setSubject('Подтверждение регистрации')
 								->setFrom('showstaff.auth@gmail.com')
 								->setTo($user->getEmail())
-								->setBody('Для подтверждение регистрации пройдите по этой ссылке '.$_SERVER['HTTP_ORIGIN'].'/confirmation/'.$activation_code);
+								->setBody('Для подтверждение регистрации пройдите по этой ссылке http://'.$this->get('request')->server->get('HTTP_HOST').'/confirmation/'.$activation_code);
 				
 						$this->get('mailer')->send($message);
 						
@@ -1311,6 +1317,39 @@ class UserController extends Controller
 			return 0;
 	}
 
+
+	public function checkCompanyEditAction($cid)
+	{
+		$securityContext = $this->get('security.context');
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();	
+		$available_companies = array();
+
+		foreach ($companies as $c)
+			if (false !== $securityContext->isGranted('EDIT', $c))
+				$available_companies[$c->getId()] = $c;
+
+		if (count($available_companies) == 0  || !array_key_exists($cid, $available_companies))
+			return 1;
+		else
+			return 0;
+	}
+
+	public function checkCompanyDeleteAction($cid)
+	{
+		$securityContext = $this->get('security.context');
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();	
+		$available_companies = array();
+
+		foreach ($companies as $c)
+			if (false !== $securityContext->isGranted('DELETE', $c))
+				$available_companies[$c->getId()] = $c;
+
+		if (count($available_companies) == 0  || !array_key_exists($cid, $available_companies))
+			return 1;
+		else
+			return 0;
+	}
+
 	public function getAvailableRestaurantsAction($cid)
 	{
 		$restaurants = $this->getDoctrine()->getRepository('SupplierBundle:Restaurant')->findByCompany($cid);
@@ -1346,5 +1385,44 @@ class UserController extends Controller
 		}
 
 		return $available_restaurants;
+	}
+	public function getAvailableCompaniesAction()
+	{
+		$companies = $this->getDoctrine()->getRepository('SupplierBundle:Company')->findAll();
+
+
+
+		$user = $this->get('security.context')->getToken()->getUser();
+		$aclProvider = $this->get('security.acl.provider');
+		$available_companies = array();
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+		{
+			$securityContext = $this->get('security.context');
+			foreach ($companies as $company)
+			{
+				$objectIdentity = ObjectIdentity::fromDomainObject($company);
+				//var_dump($objectIdentity); die;
+				try {
+					$acl = $aclProvider->findAcl($objectIdentity);
+
+					if (count($acl->getObjectAces()) > 0)
+					{
+						foreach($acl->getObjectAces() as $a=>$ace)
+						{
+							if($ace->getSecurityIdentity()->getUsername() == $user->getUsername()) // only curent user
+								$available_companies[] = $company;
+						}
+					}
+				} catch (\Symfony\Component\Security\Acl\Exception\Exception $e) {
+
+				}
+			}
+		}
+		else
+		{
+			$available_companies = $companies;
+		}
+
+		return $available_companies;
 	}
 }
