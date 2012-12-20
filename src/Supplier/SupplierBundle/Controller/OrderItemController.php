@@ -273,7 +273,7 @@ class OrderItemController extends Controller
 		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
 			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
-		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
+		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 
 		$company = $restaurant->getCompany();
@@ -506,7 +506,7 @@ class OrderItemController extends Controller
 			if (!$booking)
 				return new Response('No booking found for id '.$rid, 404, array('Content-Type' => 'application/json'));
 			
-			if ($booking->getDate() < date('Y-m-d') )
+			if ($booking->getDate() < date('Y-m-d') && !$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN'))
 				return new Response('You can not edit the old booking', 403, array('Content-Type' => 'application/json'));
 			else
 			{

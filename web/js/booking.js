@@ -213,7 +213,7 @@ $(function(){
 						});
 						
 						if ($('.product_add option').length > 0)
-							$('.create, .forms').fadeIn();
+							$('#add_row').fadeIn();
 						
 						$(model.view.el).remove();
 						model.collection.remove(model, {silent: true});
@@ -273,7 +273,7 @@ $(function(){
 						$('.product_add option[value="'+resp.data.product+'"]').remove();
 						
 						if ($('.product_add option').length == 0)
-							$('.create, .forms').fadeOut();
+							$('#add_row').fadeOut();
 						
 						$('.bookings .alert_row').remove();
 						
@@ -431,6 +431,17 @@ $(function(){
 														if (typeof(products._byId[b.attributes.product]) != 'undefined')
 															products._byId[b.attributes.product].attributes.use = 1;
 													})
+
+													
+													var show_add_row = 0;
+													products.each(function(p){ 
+														if (p.attributes.use == 0 )
+															show_add_row = 1					
+													});
+
+													if (show_add_row == 0)
+														$('#add_row').fadeOut();
+
 													
 												},
 												error:function(){
@@ -462,7 +473,7 @@ $(function(){
         });
         
         if ($('.product_add option').length == 0)
-        	$('.create, .forms').fadeOut();
+        	$('#add_row').fadeOut();
     })
     	
     products.each(function(p){
@@ -535,6 +546,8 @@ $(function(){
 
 function update(strDate){
 
+		$('.forms').slideUp();
+
 		$('.curent-date-header').html(strDate);
 		$('.wh_datepicker').val(strDate);
 		
@@ -577,12 +590,22 @@ function update(strDate){
 									if (typeof(products._byId[b.attributes.product]) != 'undefined')
 										products._byId[b.attributes.product].attributes.use = 1;
 								})
-			
+
 								view_content.remove();
 								$('.bookings').remove();
 								view_content = new ViewBookings({collection: collection});
 								$('#bookin_list').append(view_content.render().el);
 								view_content.renderAll().el;
+
+								var show_add_row = 0;
+								products.each(function(p){ 
+									if (p.attributes.use == 0 )
+										show_add_row = 1					
+								});
+
+								if (show_add_row == 0)
+									$('#add_row').fadeOut();
+
 							}, 
 							error: function(){
 								error_fetch('Ошибка при получении продуктов. Обновите страницу или обратитесь к администратору');
