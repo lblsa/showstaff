@@ -106,29 +106,30 @@ class ProductController extends Controller
 		$suppliers_array = array();
 		foreach($suppliers AS $supplier)
 			$suppliers_array[] = $supplier->getId();
-						
+				
 		if ($products)
 		{
 			foreach ($products AS $p)
 			{
 				if ($p->getActive())
-				{			
-					$best_supplier_offer = $this->getDoctrine()
-											->getRepository('SupplierBundle:SupplierProducts')
-											->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
-					
-
+				{
 					$price = 0;
 					$supplier_product = 0;
-					if ($best_supplier_offer)
+	
+					if (count($suppliers_array) > 0)
 					{
-						if ($best_supplier_offer->getActive() && $best_supplier_offer->getSupplier()->getActive())
+						$best_supplier_offer = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
+
+						if ($best_supplier_offer)
 						{
-							$price = $best_supplier_offer->getPrice();
-							$supplier_product = $best_supplier_offer->getId();
+							if ($best_supplier_offer->getActive() && $best_supplier_offer->getSupplier()->getActive())
+							{
+								$price = $best_supplier_offer->getPrice();
+								$supplier_product = $best_supplier_offer->getId();
+							}
 						}
 					}
-				
+
 					$products_array[] = array( 	'id' => $p->getId(),
 												'name'=> $p->getName(), 
 												'unit' => $p->getUnit()->getId(),
@@ -138,6 +139,7 @@ class ProductController extends Controller
 				}
 			}
 		}
+	
 		
 		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");// дата в прошлом
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");  // всегда модифицируется

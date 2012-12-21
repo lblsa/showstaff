@@ -196,6 +196,14 @@ class CompanyController extends Controller
 			        // grant owner access
 			        $acl->insertObjectAce($securityIdentity, MaskBuilder::MASK_OWNER);
 			        $aclProvider->updateAcl($acl);
+
+
+			        // add role ROLE_COMPANY_ADMIN
+			        $role = $this->getDoctrine()->getRepository('AcmeUserBundle:Role')->findOneByRole('ROLE_COMPANY_ADMIN');
+					if (!$role)
+						throw $this->createNotFoundException('Роль не найдена');
+					else
+						$user->addRole($role);
 				}
 				
 				$code = 200;

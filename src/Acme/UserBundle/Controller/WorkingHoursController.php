@@ -672,7 +672,7 @@ class WorkingHoursController extends Controller
     /**
      * My Plan.
      *
-     * @Route("calendar/{week}", name="my_calendar", defaults={	"week" = 0})
+     * @Route("profile/{week}", name="my_calendar", defaults={	"week" = 0})
      * @Template()
      * @Secure(roles="ROLE_USER")
      */
