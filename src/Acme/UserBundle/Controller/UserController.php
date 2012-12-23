@@ -347,6 +347,10 @@ class UserController extends Controller
 							$roles[] = $r->getId();
 						}
 				}
+				else
+				{
+					$user->cleanRoles();
+				}
 			
 				$em = $this->getDoctrine()->getEntityManager();
 				$em->persist($user);

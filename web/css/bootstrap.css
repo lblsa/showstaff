@@ -5910,3 +5910,6 @@ textarea {
 .login-metro  input[type="password"] {
   display: block;
 }
+.change_supplier select {
+  font-size: 13px;
+}

@@ -464,10 +464,12 @@ class OrderItemController extends Controller
 				$restaurant = $r;
 		}
 
+		//var_dump($available_restaurants);		var_dump($rid);		var_dump($restaurant);		 die;
+
 		if (!in_array($rid, $available_restaurants) || !isset($restaurant))
 			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
-		if ($booking_date == '0' || $booking_date < date('Y-m-d'))
+		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
 		
 		$model = (array)json_decode($request->getContent());
@@ -565,6 +567,48 @@ class OrderItemController extends Controller
 				}
 			}
 		}
+		elseif (count($model) > 0 && isset($model['supplier'])  && $model['supplier']!=0 )
+		{
+			if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
+			{
+				$booking = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->find($bid);
+				if (!$booking)
+					return new Response('Заказ не найден', 404, array('Content-Type' => 'application/json'));
+
+				$supplier = $this->getDoctrine()->getRepository('SupplierBundle:Supplier')->find((int) $model['supplier']);
+				if (!$booking)
+					return new Response('Поставщик не найден', 404, array('Content-Type' => 'application/json'));
+
+				$supplier_product = $this->getDoctrine()
+										->getRepository('SupplierBundle:SupplierProducts')
+										->findOneBy(	array(	'active'	=> 1,
+																'supplier'	=> $supplier->getId(),
+																'product'	=> $booking->getProduct()->getId()	));
+
+				$booking->setSupplier($supplier);
+				$booking->setPrice($supplier_product->getPrice());
+
+				$em = $this->getDoctrine()->getEntityManager();
+				$em->persist($booking);
+				$em->flush();
+				
+				$result = array('code'=> 200, 
+								'data' => array(	'name'		=> $booking->getProduct()->getName(),
+													'amount'	=> $booking->getAmount(),
+													'product'	=> $booking->getProduct()->getId(),
+													'price'		=> $supplier_product->getPrice(),
+													'id' 		=> $booking->getId()	));
+
+				return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
+			}
+			else
+				return new Response('У вас нет доступа к редакатированию поставщика', 403, array('Content-Type' => 'application/json'));
+			
+			//echo $bid.'-'.$model['supplier'];			die;
+		}
+
+
+
 		return new Response('Invalid request', 400, array('Content-Type' => 'application/json'));
 	}
 

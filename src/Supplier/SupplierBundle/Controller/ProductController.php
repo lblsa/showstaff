@@ -130,12 +130,48 @@ class ProductController extends Controller
 						}
 					}
 
-					$products_array[] = array( 	'id' => $p->getId(),
-												'name'=> $p->getName(), 
-												'unit' => $p->getUnit()->getId(),
-												'use'	=> 0,
-												'price'	=> $price,
-												'supplier_product'	=> $supplier_product );
+					// get all available supplier with supplier_product
+					if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+					{ 
+						//echo "isGranted('ROLE_ORDER_MANAGER')"; die;
+						$available_supplier = array();
+						$supplier_products = $this->getDoctrine()
+												->getRepository('SupplierBundle:SupplierProducts')
+												->findBy(array(	
+																'product'	=> $p->getId(),
+																'active'	=> 1
+																));
+						if ($supplier_products)
+						{
+							foreach ($supplier_products as $supplier_product)
+							{
+							
+								$available_supplier[] = array(	'supplier'					=> $supplier_product->getSupplier()->getId(),
+																'supplier_product'			=> $supplier_product->getId(),
+																'price'						=> $supplier_product->getPrice(),
+																'supplier_name'				=> $supplier_product->getSupplier()->getName(),
+																'supplier_product_name'		=> $supplier_product->getSupplierName()				);
+							}
+						}
+
+						$products_array[] = array( 	'id' => $p->getId(),
+													'name'=> $p->getName(), 
+													'unit' => $p->getUnit()->getId(),
+													'use'	=> 0,
+													'price'	=> $price,
+													'supplier_product'	=> $supplier_product,
+													'available_supplier' => $available_supplier );
+					}
+					else
+					{
+						$products_array[] = array( 	'id' => $p->getId(),
+													'name'=> $p->getName(), 
+													'unit' => $p->getUnit()->getId(),
+													'use'	=> 0,
+													'price'	=> $price,
+													'supplier_product'	=> $supplier_product );
+					}
+
 				}
 			}
 		}
