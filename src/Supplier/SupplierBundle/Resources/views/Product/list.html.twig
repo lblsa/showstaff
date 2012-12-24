@@ -19,7 +19,7 @@
 			<a href="#" class="create btn btn-small">Добавить продукт <i class="icon-plus-sign"></i></a>
 			<div class="form-inline hide forms">
 				<div class="controls-group">
-					<input name="name_add" type="text" class="input name_add">
+					<input name="name_add" autocomplete="off" type="text" class="input name_add">
 					<select class="span2 unit_add" name="unit"></select>
 					<button class="add_product btn btn-mini btn-success">Добавить</button>
 				</div>
@@ -28,6 +28,8 @@
 	  </tr>
 	 </thead>
 	</table>
+	<script src="/js/jquery-ui-1.9.2.custom.min.js"></script>
+	<script src="/js/jquery.ui.My_autocomplete.js"></script>
 	<script src="/js/products.js"></script>
 	</div>
 </div>

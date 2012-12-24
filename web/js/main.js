@@ -169,7 +169,7 @@ $(document).ready(function(){
 	});
 	
 	$('.add').mouseout(function(){
-		hide_add = setTimeout('$(".forms").fadeOut()', 3000);
+		hide_add = setTimeout('$(".forms").fadeOut()', 5000);
 	});
 
 	$('.add').mouseover(function(){

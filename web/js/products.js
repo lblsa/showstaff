@@ -5,6 +5,46 @@
 var sort = 'asc';
 var view_products, products;
 $(function(){
+
+	$(".name_add").focusin(function() { 	clearTimeout(hide_add);  });
+	$(".name_add").keydown(function() { 	clearTimeout(hide_add);  });
+	$(".name_add").keypress(function() { 	clearTimeout(hide_add);  });
+	$(".name_add").keyup(function() { 	clearTimeout(hide_add);  });
+
+    function log( message ) {
+        $( "<div>" ).text( message ).prependTo( "#log" );
+        $( "#log" ).scrollTop( 0 );
+    }
+ 
+	$( ".name_add" ).autocomplete({
+
+		delay: 500, 
+        
+        source: function( request, response ) {
+            $.ajax({
+                url: "/api/company/"+href[2]+"/product_search",
+                dataType: "json",
+                type: "POST",
+                data: '{ "name_contains": "'+request.term+'" }',
+                success: function( data ) {
+                    response( $.map( data, function( item ) {
+                        return { value: item.name }
+                    }));
+                }
+            });
+        },
+
+        minLength: 2,
+
+        open: function() {
+            $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+        },
+
+        close: function() {
+            $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+        }
+    });
+
 	// view list products
 	var ViewProducts = Backbone.View.extend({
 		
@@ -251,24 +291,17 @@ $(function(){
 
 	$('#product_list').append(view_products.render().el); // add template	
 	
-	$('.create').toggle(function() {
-		$('i', this).attr('class', 'icon-minus-sign');
+	
+	$('.create').click(function() {
 		var option = '';
 		units.each(function(u){
 			option += '<option value="'+u.id+'">'+u.get('name')+'</option>';
 		})						
 		
-		$(".forms .alert").remove();
-		$('.name_add').val('');
-		$('.forms').slideDown();
 		$('.unit_add').html(option);
 		$('.name_add').focus();
-		return false;
-	}, function() {
-		$('i', this).attr('class', 'icon-plus-sign');
-		$('.forms').slideUp();
-		return false;
 	});
+	
 	
 	$('.add_product').click(function() {
 		$(".forms .alert").remove();
