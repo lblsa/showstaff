@@ -130,12 +130,48 @@ class ProductController extends Controller
 						}
 					}
 
-					$products_array[] = array( 	'id' => $p->getId(),
-												'name'=> $p->getName(), 
-												'unit' => $p->getUnit()->getId(),
-												'use'	=> 0,
-												'price'	=> $price,
-												'supplier_product'	=> $supplier_product );
+					// get all available supplier with supplier_product
+					if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
+					{ 
+						//echo "isGranted('ROLE_ORDER_MANAGER')"; die;
+						$available_supplier = array();
+						$supplier_products = $this->getDoctrine()
+												->getRepository('SupplierBundle:SupplierProducts')
+												->findBy(array(	
+																'product'	=> $p->getId(),
+																'active'	=> 1
+																));
+						if ($supplier_products)
+						{
+							foreach ($supplier_products as $supplier_product)
+							{
+							
+								$available_supplier[] = array(	'supplier'					=> $supplier_product->getSupplier()->getId(),
+																'supplier_product'			=> $supplier_product->getId(),
+																'price'						=> $supplier_product->getPrice(),
+																'supplier_name'				=> $supplier_product->getSupplier()->getName(),
+																'supplier_product_name'		=> $supplier_product->getSupplierName()				);
+							}
+						}
+
+						$products_array[] = array( 	'id' => $p->getId(),
+													'name'=> $p->getName(), 
+													'unit' => $p->getUnit()->getId(),
+													'use'	=> 0,
+													'price'	=> $price,
+													'supplier_product'	=> $supplier_product,
+													'available_supplier' => $available_supplier );
+					}
+					else
+					{
+						$products_array[] = array( 	'id' => $p->getId(),
+													'name'=> $p->getName(), 
+													'unit' => $p->getUnit()->getId(),
+													'use'	=> 0,
+													'price'	=> $price,
+													'supplier_product'	=> $supplier_product );
+					}
+
 				}
 			}
 		}
@@ -354,5 +390,57 @@ class ProductController extends Controller
 		}
 		
 		return Response('Некорректный запрос', 400, array('Content-Type' => 'application/json'));
+	}
+
+	/**
+	 * @Route(	"api/company/{cid}/product_search", name="API_product_search", requirements={"_method" = "POST"})	 
+	 * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
+	 */
+	 public function API_searchAction($cid, Request $request)
+	 {
+		$user = $this->get('security.context')->getToken()->getUser();
+		
+		// check permission
+		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
+			if ($this->get("my.user.service")->checkCompanyAction($cid))
+				return new Response('Нет доступа к компании', 403, array('Content-Type' => 'application/json'));
+		
+		$model = (array)json_decode($request->getContent());
+
+//		var_dump($model); die;
+		
+		if (count($model) > 0 && isset($model['name_contains']))
+		{
+			$result = $this->getDoctrine()->getRepository('SupplierBundle:Product')->createQueryBuilder('o')
+						->where('o.company = :company')
+						->andwhere('o.active = 1')
+						->andWhere('o.name LIKE :name')
+						->setParameter('company', $cid)
+						->setParameter('name', '%'.$model['name_contains'].'%')
+						->getQuery()->getResult();
+
+			/*echo $this->getDoctrine()->getRepository('SupplierBundle:Product')->createQueryBuilder('o')
+						->where('o.company = :company')
+						->andWhere('o.name LIKE :name')
+						->setParameter('company', $cid)
+						->setParameter('name', '%'.$model['name_contains'].'%')
+						->getQuery(); die;
+			*/
+			if ($result)
+			{	
+				$list_prodict = array();
+				foreach ($result as $product) {
+					$list_product[] = array('id' => $product->getId(), 'name' => $product->getName());
+				}
+
+				return $this->render('SupplierBundle::API.json.twig', array('result' => $list_product));
+			}
+			else
+				return new Response(null, 404, array('Content-Type' => 'application/json'));
+		}
+		else
+		{
+			return new Response(null, 404, array('Content-Type' => 'application/json'));
+		}
 	}
 }

@@ -58,8 +58,6 @@ $(function(){
 							$('td tbody', content).append(order_content);
 						});
 						
-						
-						
 					} else {
 						
 						$('td', content).append('<span class="label pull-right">У ресторана нет заказов</span>');
@@ -129,32 +127,82 @@ $(function(){
 
 	ViewOrders = Backbone.View.extend({
 		tagName: "tr",
+		
 		className: "order",
 		
+		events: {
+			'change .change_supplier select':  'change_supplier',
+		},
+
 		template_one: _.template(	'<td><%= supplier_name %> (<%= name %>)</td>'+
 									'<td><%= amount %></td>'+
 									'<td><%= price %></td>'+
 									'<td><% print(units._byId[unit].attributes.name); %></td>'+
-									'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
+									'<td class="change_supplier"><% print(suppliers._byId[supplier].attributes.name) %></td>'),
 								
 		template_two: _.template(	'<td><%= name %></td>'+
 									'<td><%= amount %></td>'+
 									'<td><%= price %></td>'+
 									'<td><% print(units._byId[unit].attributes.name); %></td>'+
-									'<td><% print(suppliers._byId[supplier].attributes.name) %></td>'),
+									'<td class="change_supplier"><% print(suppliers._byId[supplier].attributes.name) %></td>'),
 		
 		initialize: function() {
 			this.model.view = this;
 		},
 		
-		render: function(){
+		change_supplier: function (){
+			$('#preloader').width($('#order_list').width());
+			$('#preloader').height($('#order_list').height());
+			var p = $('#order_list').position();
+			$('#preloader').css({'left':p.left, 'top': p.top});
+			$('#preloader').fadeIn('fast');
+
+			$.ajax({
+			  type: "PUT",
+			  url: "/api/company/"+href[2]+"/restaurant/"+this.model.get("restaurant")+"/order/"+$('.wh_datepicker').val()+'/'+this.model.id,
+			  data: '{ "supplier": '+$('.change_supplier select', this.$el).val()+' }',
+			  success: function(data) {
+			  	
+			  	update($('.wh_datepicker').val());
+			  		
+			  },
+			  error: function(data) {
+			  	alert('Ошибка!');
+			  	console.log(data);
+			  },
+			  dataType: "json"
+			});
+		},
+
+		render: function() {
 			
 			if (this.model.get('name') == this.model.get('supplier_name') || this.model.get('supplier_name') == '')
 				var content = this.template_two(this.model.toJSON());
 			else
 				var content = this.template_one(this.model.toJSON());
-				
+
 			this.$el.html(content);
+
+			if (products._byId[this.model.get('product')].attributes.available_supplier != 'undefined') {
+
+				$('.change_supplier', this.$el).html('<select class="span4"></select>');
+
+				var available_suppliers = products._byId[this.model.get('product')].attributes.available_supplier;
+				var select = $('.change_supplier select', this.$el);
+				//console.log(available_suppliers);		console.log('--');
+				_.each(available_suppliers, function(available_supplier){
+					console.log(available_supplier.supplier_name);
+					select.append(	'<option value="'+available_supplier.supplier+'">'+
+										available_supplier.supplier_name+
+										' ('+available_supplier.supplier_product_name+' '+
+										available_supplier.price+'руб)'+
+									'</option>');
+				});
+
+			}
+
+			$('.change_supplier option[value='+this.model.get("supplier")+']', this.$el).attr('selected', 'selected')
+			
 			return this;
 		}
 	});
