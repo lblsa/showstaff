@@ -189,9 +189,7 @@ $(function(){
 
 				var available_suppliers = products._byId[this.model.get('product')].attributes.available_supplier;
 				var select = $('.change_supplier select', this.$el);
-				//console.log(available_suppliers);		console.log('--');
 				_.each(available_suppliers, function(available_supplier){
-					console.log(available_supplier.supplier_name);
 					select.append(	'<option value="'+available_supplier.supplier+'">'+
 										available_supplier.supplier_name+
 										' ('+available_supplier.supplier_product_name+' '+
@@ -506,6 +504,14 @@ $(function(){
 	});
 	
 	if (!edit_mode) $('.restaurant .edit_order').remove();
+
+	$('.download_excel').click(function(){
+		if (orders.length == 0)
+			return false;
+		else {
+			
+		}
+	})
 })
 
 function update(strDate){
