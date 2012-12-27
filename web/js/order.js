@@ -59,7 +59,8 @@ $(function(){
 						});
 						
 					} else {
-						
+						$('td label', content).remove();
+						$('td', content).removeClass('selected-td');
 						$('td', content).append('<span class="label pull-right">У ресторана нет заказов</span>');
 						
 					}
@@ -257,19 +258,36 @@ $(function(){
 	   
 		tagName: "tr",
 		className: "restaurant",
+
+		events: {
+			"click .for_export" : 'select'
+		},
 		
-		template: _.template(	'<td>'+
+		template: _.template(	'<td class="bordered-td selected-td">'+
 									'<h4 class="pull-left"> <%= name %> <span class="edit_order">( '+
 										'<a href="">править заказ ресторана</a>'+
 									' )</span></h4>'+
+									'<label class="checkbox pull-right">'+
+										'<input type="checkbox" class="for_export" name="restaurants[<%= id %>]" value="<%= id %>" checked="checked">'+
+										'<span class="metro-checkbox">Экспортировать</span>'+
+									'</label>'+
 								'</td>'),
 		
 		initialize: function() {
 			this.model.view = this;
 		},
 		
+		select: function(){
+			if ($('.for_export', this.$el).is(':checked')){
+				$('.bordered-td', this.$el).addClass('selected-td');
+			} else {
+				$('.bordered-td', this.$el).removeClass('selected-td');
+			}
+		},
+
 		render: function(){
 			var content = this.template(this.model.toJSON());
+
 			this.$el.html(content);
 
 			$('.edit_order a', this.$el).attr('href', '/company/'+href[2]+'/restaurant/'+this.model.id+'/order/'+$('.wh_datepicker').val());
@@ -509,7 +527,7 @@ $(function(){
 		if (orders.length == 0)
 			return false;
 		else {
-			
+
 		}
 	})
 })

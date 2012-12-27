@@ -2297,3 +2297,10 @@ Responsive Media Queries
    }
 
 }
+
+#order_list.table td.bordered-td {
+  border-bottom: 1px solid #ddd;
+}
+#order_list.table td.selected-td {
+  background-color: #F6F6F6;
+}
