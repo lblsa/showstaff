@@ -118,7 +118,9 @@ class ProductController extends Controller
 	
 					if (count($suppliers_array) > 0)
 					{
-						$best_supplier_offer = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
+						$best_supplier_offer = $this->getDoctrine()
+													->getRepository('SupplierBundle:SupplierProducts')
+													->getBestOffer((int)$cid, (int)$p->getId(), $suppliers_array);
 
 						if ($best_supplier_offer)
 						{
@@ -132,7 +134,7 @@ class ProductController extends Controller
 
 					// get all available supplier with supplier_product
 					if ($this->get('security.context')->isGranted('ROLE_ORDER_MANAGER'))
-					{ 
+					{
 						//echo "isGranted('ROLE_ORDER_MANAGER')"; die;
 						$available_supplier = array();
 						$supplier_products = $this->getDoctrine()
@@ -145,12 +147,14 @@ class ProductController extends Controller
 						{
 							foreach ($supplier_products as $supplier_product)
 							{
-							
-								$available_supplier[] = array(	'supplier'					=> $supplier_product->getSupplier()->getId(),
-																'supplier_product'			=> $supplier_product->getId(),
-																'price'						=> $supplier_product->getPrice(),
-																'supplier_name'				=> $supplier_product->getSupplier()->getName(),
-																'supplier_product_name'		=> $supplier_product->getSupplierName()				);
+								if ($supplier_product->getSupplier()->getActive()) 
+								{
+									$available_supplier[] = array(	'supplier'					=> $supplier_product->getSupplier()->getId(),
+																	'supplier_product'			=> $supplier_product->getId(),
+																	'price'						=> $supplier_product->getPrice(),
+																	'supplier_name'				=> $supplier_product->getSupplier()->getName(),
+																	'supplier_product_name'		=> $supplier_product->getSupplierName()				);
+								}
 							}
 						}
 

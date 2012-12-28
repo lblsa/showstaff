@@ -206,7 +206,7 @@ $(function(){
 						products._byId[model.attributes.product].attributes.use = 0;
 						$('.product_add').html('');
 						products.each(function(p){
-							if (p.attributes.use == 0) {
+							if (p.attributes.use == 0 && p.attributes.available_supplier.length > 0) {
 								var view = new OptionProducts({model:p});
 								$('.product_add').append(view.render().el);
 							}
@@ -241,7 +241,7 @@ $(function(){
 						products._byId[resp.data.product].attributes.use = 1;
 						$('.product_add').html('');
 						products.each(function(p){
-							if (p.attributes.use == 0) {
+							if (p.attributes.use == 0 && p.attributes.available_supplier.length > 0) {
 								var view = new OptionProducts({model:p});
 								$('.product_add').append(view.render().el);
 							}
@@ -465,8 +465,9 @@ $(function(){
 
     $('.create').click(function(){
 		$('.product_add').html('');
-        products.each(function(p){
-			if (p.attributes.use == 0) {
+
+        products.each(function(p){		
+			if (p.attributes.use == 0 && p.attributes.available_supplier.length > 0) {
 				var view = new OptionProducts({model:p});
 				$('.product_add').append(view.render().el);
 			}
@@ -491,7 +492,7 @@ $(function(){
     })
     	
     products.each(function(p){
-		if (p.attributes.use == 0) {
+		if (p.attributes.use == 0 && p.attributes.available_supplier.length > 0) {
 			var view = new OptionProducts({model:p});
 			$('.product_add').append(view.render().el);
 		}

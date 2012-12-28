@@ -302,7 +302,7 @@ class OrderItemController extends Controller
 							->find((int)$model['product']);
 									
 			if (!$product)
-				return new Response('No product found for id '.$pid, 404, array('Content-Type' => 'application/json'));
+				return new Response('Продукт не найден', 404, array('Content-Type' => 'application/json'));
 			
 			$model['amount'] = str_replace(',', '.', $model['amount']);
 			$amount = 0 + $model['amount'];
@@ -321,6 +321,8 @@ class OrderItemController extends Controller
 			foreach($suppliers AS $supplier)
 				$suppliers_array[] = $supplier->getId();
 			
+			//var_dump($cid);			var_dump($product->getId());			var_dump($suppliers_array);			die;
+
 			$best_supplier_offer = $this->getDoctrine()
 										->getRepository('SupplierBundle:SupplierProducts')
 										->getBestOffer((int)$cid, (int)$product->getId(), $suppliers_array);
@@ -396,11 +398,11 @@ class OrderItemController extends Controller
 			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
 		if ( !$booking_date > date('Y-m-d') )
-			return new Response('Forbidden Restaurant', 403, array('Content-Type' => 'application/json'));
+			return new Response('Нет доступа к ресторану', 403, array('Content-Type' => 'application/json'));
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		if (!$company) 
-			return new Response('No company found for id '.$cid, 404, array('Content-Type' => 'application/json'));
+			return new Response('Компания не найдена', 404, array('Content-Type' => 'application/json'));
 		
 		if ($this->get('security.context')->isGranted('ROLE_RESTAURANT_ADMIN'))
 		{
@@ -410,7 +412,7 @@ class OrderItemController extends Controller
 			
 			if($order)
 				if($order->getCompleted())
-					return new Response('Order is completed. You can not edit order.', 403, array('Content-Type' => 'application/json'));
+					return new Response('Заказ сформирован, вы не можете его редактировать', 403, array('Content-Type' => 'application/json'));
 		}
 	
 		$booking = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')->find($bid);
@@ -421,7 +423,7 @@ class OrderItemController extends Controller
 			return $this->render('SupplierBundle::API.'.$this->getRequest()->getRequestFormat().'.twig', array('result' => $result));
 		}
 
-		if ($booking->getDate() < date('Y-m-d') )
+		if ($booking->getDate() < date('Y-m-d') && !$this->get('security.context')->isGranted('ROLE_COMPANY_ADMIN') )
 			return new Response('You can not remove the old booking', 403, array('Content-Type' => 'application/json'));
 		else
 		{
