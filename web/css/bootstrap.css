@@ -5913,3 +5913,15 @@ textarea {
 .change_supplier select {
   font-size: 13px;
 }
+.logo {
+  position: relative;
+  top: -9px;
+  left: -18px;
+}
+.caret-logo {
+  position: relative;
+  left: -18px;
+}
+.for-logo-shift {
+  margin-left: 25px;
+}
