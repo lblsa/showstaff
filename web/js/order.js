@@ -240,11 +240,29 @@ $(function(){
 	   
 		tagName: "tr",
 		className: "supplier",
-		
-		template: _.template(	'<td><h4 class="pull-left"><%= name %></h4></td>'),
+
+		events: {
+			"click .for_export" : 'select'
+		},
+
+		template: _.template(	'<td class="bordered-td selected-td" data-supplier-id="<%= id %>">'+
+									'<h4 class="pull-left"> <%= name %></h4>'+
+									'<label class="checkbox pull-right">'+
+										'<input type="checkbox" class="for_export" name="suppliers[<%= id %>]" value="<%= id %>" checked="checked">'+
+										'<span class="metro-checkbox">Экспортировать</span>'+
+									'</label>'+
+								'</td>'),
 		
 		initialize: function() {
 			this.model.view = this;
+		},
+		
+		select: function(){
+			if ($('.for_export', this.$el).is(':checked')){
+				$('.bordered-td', this.$el).addClass('selected-td');
+			} else {
+				$('.bordered-td', this.$el).removeClass('selected-td');
+			}
 		},
 		
 		render: function(){
@@ -263,7 +281,7 @@ $(function(){
 			"click .for_export" : 'select'
 		},
 		
-		template: _.template(	'<td class="bordered-td selected-td">'+
+		template: _.template(	'<td class="bordered-td selected-td" data-restaurant-id="<%= id %>">'+
 									'<h4 class="pull-left"> <%= name %> <span class="edit_order">( '+
 										'<a href="">править заказ ресторана</a>'+
 									' )</span></h4>'+
@@ -527,7 +545,27 @@ $(function(){
 		if (orders.length == 0)
 			return false;
 		else {
+			var restaurants_for_export = [];
+			var suppliers_for_export = [];
+			
+			$('.orders_by_rest .bordered-td.selected-td').each(function(i,n){
+				if (n.getAttribute("data-restaurant-id"))
+					restaurants_for_export.push(n.getAttribute("data-restaurant-id"));
+			});
 
+			$('.order_by_supp .bordered-td.selected-td:not(.hide)').each(function(i,n){
+				if (n.getAttribute("data-supplier-id"))
+					suppliers_for_export.push(n.getAttribute("data-supplier-id"));
+			});
+
+			var download_href = '/company/'+href[2]+'/order/export/'+$('.wh_datepicker').val();
+			if (suppliers_for_export.length != 0) {
+				download_href += '/supplier/'+suppliers_for_export.join('-');
+			} else if (restaurants_for_export.length != 0) {
+				download_href += '/restaurant/'+restaurants_for_export.join('-');
+			}
+			$('.download_excel').attr('href', download_href);
+			return true;
 		}
 	})
 })
