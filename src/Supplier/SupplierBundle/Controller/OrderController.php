@@ -303,17 +303,16 @@ class OrderController extends Controller
 	}
 
     /**
-     * @Route("/company/{cid}/order/export/{booking_date}", name="export_order", 
+     * @Route("/company/{cid}/order/export/{booking_date}/{type}/{list}", name="export_order", 
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
-     * @Route("/company/{cid}/order/export/{booking_date}/", name="export_order_", 
+     * @Route("/company/{cid}/order/export/{booking_date}/{type}/{list}/", name="export_order_", 
      * 			requirements={"_method" = "GET", "booking_date" = "^(19|20)\d\d[-](0[1-9]|1[012])[-](0[1-9]|[12][0-9]|3[01])$"},
      *			defaults={"booking_date" = 0} )
-     * @Route("/company/{cid}/order/export/", name="export_order__", requirements={"_method" = "GET"}, defaults={"booking_date" = 0} )
      * @Template()
      * @Secure(roles="ROLE_ORDER_MANAGER, ROLE_COMPANY_ADMIN")
      */
-	public function exportAction($cid, $booking_date, Request $request)
+	public function exportAction($cid, $booking_date, $type, $list, Request $request)
 	{
 		if ($booking_date == '0')
 			$booking_date = date('Y-m-d');
@@ -322,22 +321,15 @@ class OrderController extends Controller
 		
 		$company = $this->getDoctrine()->getRepository('SupplierBundle:Company')->find($cid);
 		
-		if (!$company) {
-			if ($request->isXmlHttpRequest())
-				return new Response('No found company #'.$cid, 404, array('Content-Type' => 'application/json'));
-			else
-				throw $this->createNotFoundException('No found company #'.$cid);
-		}
-		
+		if (!$company) throw $this->createNotFoundException('No found company #'.$cid);
+
 		// check permission
 		if (!$this->get('security.context')->isGranted('ROLE_SUPER_ADMIN'))
 			if ($this->get("my.user.service")->checkCompanyAction($cid))
 				throw new AccessDeniedHttpException('Нет доступа к компании');
 		
 		
-		$supplier_products = $this->getDoctrine()
-								->getRepository('SupplierBundle:SupplierProducts')
-								->findByCompany($cid);
+		$supplier_products = $this->getDoctrine()->getRepository('SupplierBundle:SupplierProducts')->findByCompany($cid);
 								
 		$supplier_products_array = array();
 		if ($supplier_products)
@@ -348,9 +340,33 @@ class OrderController extends Controller
 			}
 		
 		
-		
-		$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')
-										->findBy( array(	'company'=>$cid, 'date' => $booking_date) );
+		if ($type == 'restaurant')
+		{
+			$query = $this->getDoctrine()->getEntityManager()
+			          ->createQuery('SELECT p FROM SupplierBundle:OrderItem p WHERE p.company = :cid AND p.date = :booking_date AND p.restaurant IN (:restaurant)')
+			          ->setParameters( array(	'booking_date'  => $booking_date,
+			                      				'cid'       	=> $cid,
+			                      				'restaurant'    => explode('-', $list)
+			                      			));
+		}
+		/*$bookings = $this->getDoctrine()->getRepository('SupplierBundle:OrderItem')
+											->findBy( array(	'company'=>$cid,
+																'date' => $booking_date,
+																'restaurant'=>explode('-',$list)) ); */
+		if ($type == 'supplier')
+		{
+			$query = $this->getDoctrine()->getEntityManager()
+			          ->createQuery('SELECT p FROM SupplierBundle:OrderItem p WHERE p.company = :cid AND p.date = :booking_date AND p.supplier IN (:supplier)')
+			          ->setParameters( array(	'booking_date'  => $booking_date,
+			                      				'cid'       	=> $cid,
+			                      				'supplier'    	=> explode('-', $list)
+			                      			));
+		}
+
+
+
+		$bookings = $query->getResult();
+
 		$bookings_array = array();
 		if ($bookings)
 		{
@@ -358,19 +374,42 @@ class OrderController extends Controller
 			{
 				if ($p->getProduct()->getActive() && $p->getSupplier()->getActive())
 				{
-					$bookings_array[$p->getSupplier()->getName()][] = array(	'id' => $p->getId(),
-												'amount' => $p->getAmount(),
-												'product' => $p->getProduct()->getName(),
-												'restaurant' => $p->getRestaurant()->getName(),
-												'supplier' => $p->getSupplier()->getName(),
-												'name' => $p->getProduct()->getName(),
-												'unit' => $p->getProduct()->getUnit()->getName(),
-												'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
-												'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0);
+					if ($type == 'supplier')
+					{
+						$bookings_array[ $p->getSupplier()->getName() ][] = array(	
+							'id' => $p->getId(),
+							'amount' => $p->getAmount(),
+							'product' => $p->getProduct()->getName(),
+							'restaurant' => $p->getRestaurant()->getName(),
+							'supplier' => $p->getSupplier()->getName(),
+							'name' => $p->getProduct()->getName(),
+							'unit' => $p->getProduct()->getUnit()->getName(),
+							'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+							'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0
+						);
+					}
+					elseif ($type == 'restaurant')
+					{
+						$bookings_array[ $p->getRestaurant()->getName() ][] = array(	
+							'id' => $p->getId(),
+							'amount' => $p->getAmount(),
+							'product' => $p->getProduct()->getName(),
+							'restaurant' => $p->getRestaurant()->getName(),
+							'supplier' => $p->getSupplier()->getName(),
+							'name' => $p->getProduct()->getName(),
+							'unit' => $p->getProduct()->getUnit()->getName(),
+							'supplier_name' => isset($supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_name_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0,
+							'price' => isset($supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()])?$supplier_products_array[$p->getProduct()->getId()][$p->getSupplier()->getId()]:0
+						);
+
+					}
 				}
 			}
 		}
 	
+		
+		// echo '<pre>'; var_dump($query->getSql());	var_dump($query->getParameters()); print_r($bookings_array); //print_r($supplier_products_array); print_r($supplier_products_name_array); die;
+		
         // ask the service for a Excel5
         $excelService = $this->get('xls.service_xls5');
         // or $this->get('xls.service_pdf');
@@ -384,27 +423,48 @@ class OrderController extends Controller
                             ->setDescription("Test document for Office 2005 XLSX, generated using PHP classes.")
                             ->setKeywords("Order")
                             ->setCategory("Order result file");
+
         $sheet = $excelService->excelObj->setActiveSheetIndex(0);
 
 		$sheet->setCellValue('A1', 'Название продукта поставщика');
 		$sheet->setCellValue('B1', 'Количество');
 		$sheet->setCellValue('C1', 'Единица измерения');
 		$sheet->setCellValue('D1', 'Цена');
-		$sheet->setCellValue('E1', 'Ресторан');
+		if ($type == 'supplier')
+			$sheet->setCellValue('E1', 'Ресторан');
+        elseif ($type == 'restaurant')
+        	$sheet->setCellValue('E1', 'Поставщик');
         
         $i = 2;
         foreach ($bookings_array AS $k=>$v)
         {
-			$sheet->setCellValue('A'.$i++, $k);
-			foreach ($v AS $b)
+			if ($type == 'supplier')
 			{
-				$sheet->setCellValue('A'.$i, $b['supplier_name']);
-				$sheet->setCellValue('B'.$i, $b['amount']);
-				$sheet->setCellValue('C'.$i, $b['unit']);
-				$sheet->setCellValue('D'.$i, $b['price']);
-				$sheet->setCellValue('E'.$i, $b['restaurant']);
-				$i++;
+				$sheet->setCellValue('A'.$i++, 'Поставщик: '.$k);
+				foreach ($v AS $b)
+				{
+					$sheet->setCellValue('A'.$i, $b['supplier_name']);
+					$sheet->setCellValue('B'.$i, $b['amount']);
+					$sheet->setCellValue('C'.$i, $b['unit']);
+					$sheet->setCellValue('D'.$i, $b['price']);
+					$sheet->setCellValue('E'.$i, $b['restaurant']);
+					$i++;
+				}
 			}
+			elseif ($type == 'restaurant')
+			{
+				$sheet->setCellValue('A'.$i++, 'Ресторан: '.$k);
+				foreach ($v AS $b)
+				{
+					$sheet->setCellValue('A'.$i, $b['supplier_name']);
+					$sheet->setCellValue('B'.$i, $b['amount']);
+					$sheet->setCellValue('C'.$i, $b['unit']);
+					$sheet->setCellValue('D'.$i, $b['price']);
+					$sheet->setCellValue('E'.$i, $b['supplier']);
+					$i++;
+				}
+			}
+
 			$i++;
 		}
         //$excelService->excelObj->setCellValue('B2', '3world!');
