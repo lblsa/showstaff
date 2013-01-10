@@ -334,7 +334,7 @@ $(function(){
 		$("#smena_datapicker").datepicker( "setDate", new_day );
 
 		var dd = new_day.getDate()<10?'0'+new_day.getDate():new_day.getDate();
-		var mm = new_day.getMonth()+1; //January is 0!
+		var mm = (new_day.getMonth()+1)<10?'0'+(new_day.getMonth()+1):new_day.getMonth()+1;//January is 0!
 		var yyyy = new_day.getFullYear();
 
 		update(yyyy+'-'+mm+'-'+dd);
@@ -366,7 +366,7 @@ function update(strDate){
 		
 		var today = new Date();
 		var dd = today.getDate()<10?'0'+today.getDate():today.getDate();
-		var mm = today.getMonth()+1; //January is 0!
+		var mm = (today.getMonth()+1)<10?'0'+(today.getMonth()+1):today.getMonth()+1;//January is 0!
 		var yyyy = today.getFullYear();
 
 		if ( yyyy+'-'+mm+'-'+dd < strDate)
